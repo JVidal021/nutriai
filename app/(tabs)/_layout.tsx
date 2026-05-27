@@ -1,7 +1,8 @@
 import { Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { Platform, View, TouchableOpacity, StyleSheet, Text } from 'react-native'
+import { Platform, TouchableOpacity, StyleSheet, Text } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 const LIME = '#C8F060', GRAY = '#444440', BG = '#111111', BORDER = '#2A2A2A'
 type IconName = React.ComponentProps<typeof Ionicons>['name']
@@ -44,6 +45,11 @@ const VISIBLE_TABS: Array<{
 const HIDDEN = ['ranks','coach','coop','optimize','routine','subscription','report','feedback']
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets()
+  // paddingBottom dinâmico: respeita a barra de navegação do Android (soft buttons)
+  const tabBarPaddingBottom = Platform.OS === 'ios' ? 24 : Math.max(insets.bottom, 8)
+  const tabBarHeight = Platform.OS === 'ios' ? 88 : 56 + tabBarPaddingBottom
+
   return (
     <Tabs
       screenOptions={{
@@ -52,8 +58,8 @@ export default function TabsLayout() {
           backgroundColor:  BG,
           borderTopColor:   BORDER,
           borderTopWidth:   1,
-          height:           Platform.OS === 'ios' ? 88 : 65,
-          paddingBottom:    Platform.OS === 'ios' ? 24 : 8,
+          height:           tabBarHeight,
+          paddingBottom:    tabBarPaddingBottom,
           paddingTop:       8,
         },
         tabBarActiveTintColor:   LIME,
