@@ -55,10 +55,11 @@
           "cameraPermission": "O NutriAI precisa da câmera para fotografar seus pratos."
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-font"
     ],
     "scheme": "nutriai",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "extra": {
       "router": {},
       "eas": {
