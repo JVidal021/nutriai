@@ -1,0 +1,45 @@
+{
+  "cli": {
+    "version": ">= 12.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://nrlspfndloqzodujnajp.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ybHNwZm5kbG9xem9kdWpuYWpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODgzMjUsImV4cCI6MjA5NDE2NDMyNX0.c8GUFym1lyfhnhG2qgfdcPJ_tpiJBsA6DC5ES_ylTAM"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "ios": {
+        "resourceClass": "m-medium"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://nrlspfndloqzodujnajp.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ybHNwZm5kbG9xem9kdWpuYWpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODgzMjUsImV4cCI6MjA5NDE2NDMyNX0.c8GUFym1lyfhnhG2qgfdcPJ_tpiJBsA6DC5ES_ylTAM"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "internal"
+      }
+    }
+  }
+}

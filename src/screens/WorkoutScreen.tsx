@@ -1,0 +1,459 @@
+import React, { useState } from 'react'
+import {
+  View, Text, StyleSheet, ScrollView,
+  TouchableOpacity, ActivityIndicator, Alert,
+} from 'react-native'
+import ExerciseVideoModal from '@components/ui/ExerciseVideoModal'
+import { router } from 'expo-router'
+import * as Haptics from 'expo-haptics'
+import { Colors, Spacing, Radius, MOODS } from '@constants/index'
+import { useWorkoutStore, useUserStore, useProgressStore, useCoachStore } from '@store/index'
+import { swapPlanItem } from '@services/ai'
+import { db } from '@services/supabase'
+import { format, addDays, startOfWeek } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
+import SwapItemModal from '@components/ui/SwapItemModal'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import type { WorkoutSession } from '@/types/index'
+
+const DAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+const BLOCK_LABELS: Record<string, string> = {
+  warmup: 'Aquecimento', main: 'Principal', cardio: 'Cardio', cooldown: 'Resfriamento',
+}
+const BLOCK_STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
+  fixed:   { label: 'Fixo',     color: Colors.teal,   bg: Colors.teal   + '18' },
+  adapted: { label: 'Adaptado', color: Colors.accent,  bg: Colors.accent + '18' },
+  ai_added:{ label: 'IA',       color: Colors.orange,  bg: Colors.orange + '18' },
+  locked:  { label: 'Bloqueado',color: Colors.text3,   bg: Colors.bg3 },
+}
+
+export default function WorkoutScreen() {
+  const insets = useSafeAreaInsets()
+  const today = new Date().toISOString().split('T')[0]
+  const [selectedDay, setSelectedDay] = useState(today)
+  const [generating,   setGenerating]   = useState(false)
+  const [swapModal,    setSwapModal]    = useState<WorkoutSession | null>(null)
+  const [swapping,     setSwapping]     = useState(false)
+  const [adaptingMood,  setAdaptingMood]  = useState(false)
+  const [expandedTips,  setExpandedTips]  = useState<Set<string>>(new Set())
+  const [videoModal,    setVideoModal]    = useState<{ name: string; searchName?: string } | null>(null)
+
+  const toggleTip = (exId: string) =>
+    setExpandedTips(prev => {
+      const next = new Set(prev)
+      next.has(exId) ? next.delete(exId) : next.add(exId)
+      return next
+    })
+
+  const { user, isLoading }                                              = useUserStore()
+  const { weekWorkouts, setWeekWorkouts, completeSet, completeWorkout, swapWorkoutDay } = useWorkoutStore()
+  const { addXp, getTodayCheckin }                                       = useProgressStore()
+  const { setPlanContext }                                               = useCoachStore()
+
+  const checkin        = getTodayCheckin()
+  const moodData       = checkin ? MOODS.find(m => m.id === checkin.mood) : null
+  const moodIntensity  = moodData?.workoutIntensity ?? 1
+  const isMoodReduced  = selectedDay === today && moodIntensity < 1
+
+  // Adapta o treino de hoje automaticamente com base no humor
+  const handleMoodAdapt = async () => {
+    const workout = weekWorkouts.find(w => w.date === today)
+    if (!workout || !checkin) return
+    const reason = checkin.mood === 'exhausted'
+      ? 'Estou exausto hoje. Quero um treino muito leve: apenas mobilidade, alongamento ou caminhada curta'
+      : 'Estou cansado hoje. Quero um treino mais curto e de intensidade reduzida, sem cargas pesadas'
+    setAdaptingMood(true)
+    try {
+      const newWorkout = await swapPlanItem('workout', workout as unknown as Record<string, unknown>, today, reason)
+      swapWorkoutDay(today, newWorkout as unknown as WorkoutSession)
+      Alert.alert('✅ Treino adaptado!', 'A IA gerou uma versão mais leve para o seu humor de hoje.')
+    } catch (err) {
+      Alert.alert('Erro', err instanceof Error ? err.message : 'Tente novamente.')
+    } finally {
+      setAdaptingMood(false)
+    }
+  }
+
+  if (isLoading || !user) return null
+
+  const weekStart  = startOfWeek(new Date(), { weekStartsOn: 1 })
+  const weekDates  = Array.from({ length: 7 }, (_, i) =>
+    format(addDays(weekStart, i), 'yyyy-MM-dd')
+  )
+  const todayWorkout = weekWorkouts.find(w => w.date === selectedDay)
+
+  // Navega para feedback se já existe plano
+  const handleGenerate = () => {
+    if (!user?.isPremium) {
+      Alert.alert('Premium', 'Geração de treinos requer plano Premium.',
+        [{ text: 'Cancelar', style: 'cancel' }, { text: 'Ver Premium', onPress: () => router.push('/(tabs)/subscription') }])
+      return
+    }
+    router.push('/(tabs)/feedback?type=workout')
+  }
+
+  // Trocar dia de treino via IA
+  const handleSwap = async (reason: string) => {
+    if (!swapModal) return
+    setSwapping(true)
+    try {
+      const newWorkout = await swapPlanItem(
+        'workout',
+        swapModal as unknown as Record<string, unknown>,
+        swapModal.date,
+        reason,
+      )
+      swapWorkoutDay(swapModal.date, newWorkout as unknown as WorkoutSession)
+      setSwapModal(null)
+      Alert.alert('✅ Treino trocado!', 'A IA adaptou o treino de hoje com base no seu motivo.')
+    } catch (err) {
+      Alert.alert('Erro', err instanceof Error ? err.message : 'Tente novamente.')
+    } finally {
+      setSwapping(false)
+    }
+  }
+
+  // Abre o Coach com contexto do treino
+  const handleAskCoach = (workout: WorkoutSession) => {
+    const dayName = format(new Date(workout.date + 'T12:00:00'), 'EEEE', { locale: ptBR })
+    setPlanContext({
+      type:  'workout',
+      label: `Treino - ${dayName}`,
+      date:  workout.date,
+      item:  workout,
+    })
+    router.push('/(tabs)/coach')
+  }
+
+  const handleSetDone = (workoutId: string, blockId: string, exerciseId: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    completeSet(workoutId, blockId, exerciseId)
+  }
+
+  const handleFinishWorkout = (workoutId: string) => {
+    Alert.alert('Finalizar treino?', 'Parabéns! Você vai ganhar +40 XP.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Finalizar 💪',
+          onPress: () => {
+            const workout = weekWorkouts.find(w => w.id === workoutId)
+            completeWorkout(workoutId)
+            addXp('WORKOUT_DONE')
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+
+            if (workout && user?.id) {
+              db.logWorkout({
+                id:          workout.id,
+                user_id:     user.id,
+                title:       workout.title,
+                date:        workout.date,
+                completed:   true,
+                completed_at: new Date().toISOString(),
+              }).then(
+                () => {},
+                (err) => console.warn('[NutriAI] Falha ao salvar treino no banco:', err)
+              )
+            }
+          },
+        },
+      ])
+  }
+
+  return (
+    <>
+    <ExerciseVideoModal
+      visible={videoModal !== null}
+      exerciseName={videoModal?.name ?? ''}
+      searchName={videoModal?.searchName}
+      onClose={() => setVideoModal(null)}
+    />
+    <SwapItemModal
+      visible={swapModal !== null}
+      type="workout"
+      title={swapModal ? `Trocar treino de ${format(new Date(swapModal.date + 'T12:00:00'), 'EEEE', { locale: ptBR })}` : ''}
+      loading={swapping}
+      onClose={() => setSwapModal(null)}
+      onSwap={handleSwap}
+    />
+    <ScrollView style={s.root} contentContainerStyle={[s.content, { paddingTop: insets.top + 20 }]} showsVerticalScrollIndicator={false}>
+
+      <View style={s.header}>
+        <View>
+          <Text style={s.title}>💪 Treinos</Text>
+          <Text style={s.sub}>Semana atual · Gerado por IA</Text>
+        </View>
+        <TouchableOpacity style={[s.genBtn, generating && { opacity: 0.6 }]} onPress={handleGenerate} disabled={generating}>
+          {generating ? <ActivityIndicator size="small" color={Colors.bg} /> : <Text style={s.genBtnText}>✨ Gerar</Text>}
+        </TouchableOpacity>
+      </View>
+
+      {/* Day selector */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.dayScroll} contentContainerStyle={s.dayRow}>
+        {weekDates.map((date, i) => {
+          const w = weekWorkouts.find(w => w.date === date)
+          const isSelected = date === selectedDay
+          const isToday    = date === today
+          return (
+            <TouchableOpacity key={date} style={[s.dayPill, isSelected && s.dayPillSel, w?.completed && s.dayPillDone]} onPress={() => setSelectedDay(date)}>
+              <Text style={[s.dayLabel, isSelected && s.dayLabelSel, w?.completed && s.dayLabelDone]}>{DAYS[i]}</Text>
+              {isToday && !w?.completed && <View style={s.dot} />}
+              {w?.completed && <Text style={s.doneCheck}>✓</Text>}
+            </TouchableOpacity>
+          )
+        })}
+      </ScrollView>
+
+      {/* No workout */}
+      {!todayWorkout ? (
+        <View style={s.emptyCard}>
+          <Text style={s.emptyEmoji}>🏋️</Text>
+          <Text style={s.emptyTitle}>Nenhum treino para este dia</Text>
+          <Text style={s.emptySub}>{user?.isPremium ? 'Gere seu plano semanal de treinos.' : 'Plano de treinos disponível no Premium.'}</Text>
+          <TouchableOpacity style={s.emptyBtn} onPress={user?.isPremium ? handleGenerate : () => router.push('/(tabs)/subscription')}>
+            <Text style={s.emptyBtnText}>{user?.isPremium ? '✨ Gerar treinos' : '👑 Ver Premium'}</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <>
+          {/* Mood adaptation banner */}
+          {isMoodReduced && checkin && !todayWorkout?.completed && (
+            <View style={s.moodBanner}>
+              <Text style={s.moodBannerTitle}>
+                {checkin.moodEmoji} Você está {checkin.mood === 'exhausted' ? 'exausto' : 'cansado'} hoje
+              </Text>
+              <Text style={s.moodBannerSub}>
+                A IA pode gerar uma versão mais leve do treino de hoje, adaptada para {Math.round(moodIntensity * 100)}% da intensidade normal.
+              </Text>
+              <TouchableOpacity
+                style={[s.moodAdaptBtn, adaptingMood && { opacity: 0.6 }]}
+                onPress={handleMoodAdapt}
+                disabled={adaptingMood}
+              >
+                {adaptingMood
+                  ? <ActivityIndicator size="small" color={Colors.bg} />
+                  : <Text style={s.moodAdaptBtnText}>↺ Adaptar treino ao meu humor</Text>
+                }
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Overview */}
+          <View style={s.overviewCard}>
+            <Text style={s.overviewTitle}>{todayWorkout.title}</Text>
+            <View style={s.overviewStats}>
+              {[
+                { label: 'Exercícios', val: todayWorkout.blocks.reduce((a, b) => a + (b.exercises?.length ?? 0), 0) },
+                { label: 'Minutos', val: `~${todayWorkout.estimatedDuration}` },
+                { label: 'kcal est.', val: todayWorkout.estimatedCalories },
+              ].map(stat => (
+                <View key={stat.label} style={s.overviewStat}>
+                  <Text style={s.overviewVal}>{stat.val}</Text>
+                  <Text style={s.overviewLbl}>{stat.label}</Text>
+                </View>
+              ))}
+            </View>
+            {!todayWorkout.completed && (
+              <>
+                <TouchableOpacity style={s.finishBtn} onPress={() => handleFinishWorkout(todayWorkout.id)}>
+                  <Text style={s.finishBtnText}>🏁 Finalizar treino · +40 XP</Text>
+                </TouchableOpacity>
+                <View style={s.aiRow}>
+                  <TouchableOpacity style={s.swapBtn} onPress={() => setSwapModal(todayWorkout)}>
+                    <Text style={s.swapBtnText}>↺ Trocar treino</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={s.coachBtn} onPress={() => handleAskCoach(todayWorkout)}>
+                    <Text style={s.coachBtnText}>💬 Pedir ao Coach</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+            {todayWorkout.completed && (
+              <View style={s.completedBanner}>
+                <Text style={s.completedText}>✓ Treino finalizado! +40 XP ganhos</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Blocks */}
+          {todayWorkout.blocks.map(block => {
+            const statusStyle = BLOCK_STATUS_LABELS[block.status] ?? BLOCK_STATUS_LABELS.fixed
+            return (
+              <View key={block.id} style={[s.blockCard, block.status === 'adapted' && s.blockAdapted]}>
+                <View style={s.blockHeader}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.blockTitle}>{block.title}</Text>
+                    <Text style={s.blockSub}>{BLOCK_LABELS[block.type]} · {block.durationMin} min</Text>
+                    {block.originalTitle && (
+                      <Text style={s.blockOriginal}>Original: {block.originalTitle}</Text>
+                    )}
+                  </View>
+                  <View style={[s.statusBadge, { backgroundColor: statusStyle.bg }]}>
+                    <Text style={[s.statusText, { color: statusStyle.color }]}>{statusStyle.label}</Text>
+                  </View>
+                </View>
+
+                {block.exercises && block.exercises.map(ex => {
+                  const allDone    = ex.completedSets >= ex.sets
+                  const tipVisible = expandedTips.has(ex.id)
+                  const hasActions = !!ex.searchName || !!ex.tip
+                  return (
+                    <View key={ex.id} style={s.exBlock}>
+                      {/* Linha principal: ícone + info + séries */}
+                      <View style={s.exRow}>
+                        <View style={[s.exIcon, allDone && s.exIconDone]}>
+                          <Text style={{ fontSize: 15 }}>🏋️</Text>
+                        </View>
+                        <View style={s.exInfo}>
+                          <Text style={[s.exName, allDone && { color: Colors.teal }]} numberOfLines={2}>
+                            {ex.name}
+                          </Text>
+                          <Text style={s.exDetail}>
+                            {ex.sets} séries · {ex.reps} reps{ex.weight ? ` · ${ex.weight} kg` : ''}
+                          </Text>
+                        </View>
+                        <View style={s.setRow}>
+                          {Array.from({ length: ex.sets }, (_, i) => (
+                            <TouchableOpacity
+                              key={i}
+                              style={[s.setBtn, i < ex.completedSets && s.setBtnDone]}
+                              onPress={() => !todayWorkout.completed && handleSetDone(todayWorkout.id, block.id, ex.id)}
+                              disabled={todayWorkout.completed}
+                            >
+                              <Text style={[s.setBtnText, i < ex.completedSets && s.setBtnTextDone]}>
+                                {i + 1}
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      </View>
+
+                      {/* Chips de ação */}
+                      {hasActions && (
+                        <View style={s.exActions}>
+                          {ex.searchName && (
+                            <TouchableOpacity
+                              style={s.chipDemo}
+                              onPress={() => setVideoModal({ name: ex.name, searchName: ex.searchName })}
+                            >
+                              <Text style={s.chipDemoIcon}>▶</Text>
+                              <Text style={s.chipDemoText}>Ver demonstração</Text>
+                            </TouchableOpacity>
+                          )}
+                          {ex.tip && (
+                            <TouchableOpacity
+                              style={[s.chipTip, tipVisible && s.chipTipActive]}
+                              onPress={() => toggleTip(ex.id)}
+                            >
+                              <Text style={s.chipTipIcon}>{tipVisible ? '✕' : '💡'}</Text>
+                              <Text style={[s.chipTipText, tipVisible && { color: Colors.accent }]}>
+                                {tipVisible ? 'Fechar dica' : 'Dica de execução'}
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      )}
+
+                      {/* Caixa da dica */}
+                      {tipVisible && ex.tip && (
+                        <View style={s.tipBox}>
+                          <Text style={s.tipText}>{ex.tip}</Text>
+                        </View>
+                      )}
+                    </View>
+                  )
+                })}
+              </View>
+            )
+          })}
+        </>
+      )}
+
+    </ScrollView>
+    </>
+  )
+}
+
+const s = StyleSheet.create({
+  root:            { flex: 1, backgroundColor: Colors.bg },
+  content:         { padding: Spacing[5], paddingBottom: 100 },
+  header:          { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
+  title:           { fontSize: 22, fontWeight: '800', color: Colors.text },
+  sub:             { fontSize: 13, color: Colors.text2, marginTop: 2 },
+  genBtn:          { backgroundColor: Colors.accent, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 9 },
+  genBtnText:      { fontSize: 13, fontWeight: '700', color: Colors.bg },
+  dayScroll:       { marginBottom: 14 },
+  dayRow:          { gap: 8, paddingRight: 4 },
+  dayPill:         { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: Colors.border, alignItems: 'center', gap: 3 },
+  dayPillSel:      { backgroundColor: Colors.text, borderColor: Colors.text },
+  dayPillDone:     { backgroundColor: Colors.teal + '18', borderColor: Colors.teal + '44' },
+  dayLabel:        { fontSize: 12, fontWeight: '600', color: Colors.text2 },
+  dayLabelSel:     { color: Colors.bg },
+  dayLabelDone:    { color: Colors.teal },
+  dot:             { width: 5, height: 5, borderRadius: 3, backgroundColor: Colors.accent },
+  doneCheck:       { fontSize: 10, color: Colors.teal },
+  emptyCard:       { backgroundColor: Colors.bg2, borderRadius: Radius.lg, padding: 32, alignItems: 'center', borderWidth: 1, borderColor: Colors.border },
+  emptyEmoji:      { fontSize: 48, marginBottom: 12 },
+  emptyTitle:      { fontSize: 16, fontWeight: '700', color: Colors.text, marginBottom: 6 },
+  emptySub:        { fontSize: 13, color: Colors.text2, textAlign: 'center', marginBottom: 20 },
+  emptyBtn:        { backgroundColor: Colors.accent, borderRadius: 10, paddingHorizontal: 20, paddingVertical: 11 },
+  emptyBtnText:    { fontSize: 14, fontWeight: '700', color: Colors.bg },
+  overviewCard:    { backgroundColor: Colors.bg2, borderRadius: Radius.lg, padding: 16, borderWidth: 1, borderColor: Colors.border, marginBottom: 10 },
+  overviewTitle:   { fontSize: 18, fontWeight: '800', color: Colors.text, marginBottom: 12 },
+  overviewStats:   { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  overviewStat:    { flex: 1, backgroundColor: Colors.bg3, borderRadius: 10, padding: 10, alignItems: 'center' },
+  overviewVal:     { fontSize: 18, fontWeight: '700', color: Colors.accent },
+  overviewLbl:     { fontSize: 10, color: Colors.text2, marginTop: 2 },
+  finishBtn:       { backgroundColor: Colors.accent, borderRadius: 10, padding: 12, alignItems: 'center', marginBottom: 8 },
+  finishBtnText:   { fontSize: 14, fontWeight: '700', color: Colors.bg },
+  aiRow:           { flexDirection: 'row', gap: 8 },
+  swapBtn:         { flex: 1, borderWidth: 1, borderColor: Colors.border2, borderRadius: 10, padding: 10, alignItems: 'center' },
+  swapBtnText:     { fontSize: 12, fontWeight: '600', color: Colors.text2 },
+  coachBtn:        { flex: 2, borderWidth: 1, borderColor: Colors.accent + '60', borderRadius: 10, padding: 10, alignItems: 'center', backgroundColor: Colors.accent + '10' },
+  coachBtnText:    { fontSize: 12, fontWeight: '600', color: Colors.accent },
+  completedBanner:  { backgroundColor: Colors.teal + '18', borderRadius: 10, padding: 10, alignItems: 'center' },
+  completedText:    { fontSize: 13, fontWeight: '600', color: Colors.teal },
+  moodBanner:       { backgroundColor: Colors.orange + '14', borderRadius: Radius.lg, padding: 13, borderWidth: 1, borderColor: Colors.orange + '30', marginBottom: 10, gap: 6 },
+  moodBannerTitle:  { fontSize: 13, fontWeight: '700', color: Colors.orange },
+  moodBannerSub:    { fontSize: 12, color: Colors.orange, opacity: 0.85, lineHeight: 17 },
+  moodAdaptBtn:     { backgroundColor: Colors.orange, borderRadius: 9, padding: 10, alignItems: 'center', marginTop: 4 },
+  moodAdaptBtnText: { fontSize: 13, fontWeight: '700', color: Colors.bg },
+  blockCard:        { backgroundColor: Colors.bg2, borderRadius: Radius.lg, padding: 14, borderWidth: 1, borderColor: Colors.border, marginBottom: 8, borderLeftWidth: 3, borderLeftColor: Colors.border2 },
+  blockAdapted:     { borderLeftColor: Colors.accent, backgroundColor: '#111800' },
+  blockHeader:      { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 10 },
+  blockTitle:       { fontSize: 14, fontWeight: '600', color: Colors.text },
+  blockSub:         { fontSize: 11, color: Colors.text2, marginTop: 2 },
+  blockOriginal:    { fontSize: 10, color: Colors.text3, marginTop: 2 },
+  statusBadge:      { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  statusText:       { fontSize: 10, fontWeight: '700' },
+
+  // Exercício
+  exBlock:          { borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: 10, paddingBottom: 4, gap: 8 },
+  exRow:            { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  exIcon:           { width: 34, height: 34, borderRadius: 10, backgroundColor: Colors.bg3, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 },
+  exIconDone:       { backgroundColor: Colors.teal + '20' },
+  exInfo:           { flex: 1 },
+  exName:           { fontSize: 13, fontWeight: '600', color: Colors.text, lineHeight: 18 },
+  exDetail:         { fontSize: 11, color: Colors.text2, marginTop: 2 },
+
+  // Chips de ação
+  exActions:        { flexDirection: 'row', gap: 6, marginLeft: 44, flexWrap: 'wrap' },
+  chipDemo:         { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: Colors.accent, borderRadius: 20, paddingHorizontal: 11, paddingVertical: 5 },
+  chipDemoIcon:     { fontSize: 9, color: Colors.bg, fontWeight: '900' },
+  chipDemoText:     { fontSize: 11, fontWeight: '700', color: Colors.bg },
+  chipTip:          { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: Colors.bg3, borderRadius: 20, paddingHorizontal: 11, paddingVertical: 5, borderWidth: 1, borderColor: Colors.border2 },
+  chipTipActive:    { backgroundColor: Colors.accent + '15', borderColor: Colors.accent + '50' },
+  chipTipIcon:      { fontSize: 11 },
+  chipTipText:      { fontSize: 11, fontWeight: '600', color: Colors.text2 },
+
+  // Dica
+  tipBox:           { marginLeft: 44, backgroundColor: Colors.accent + '10', borderRadius: 9, padding: 10, borderLeftWidth: 2, borderLeftColor: Colors.accent },
+  tipText:          { fontSize: 12, color: Colors.text2, lineHeight: 18 },
+
+  // Séries
+  setRow:           { flexDirection: 'row', gap: 4, flexShrink: 0 },
+  setBtn:           { width: 26, height: 26, borderRadius: 7, borderWidth: 1, borderColor: Colors.border2, alignItems: 'center', justifyContent: 'center' },
+  setBtnDone:       { backgroundColor: Colors.teal, borderColor: Colors.teal },
+  setBtnText:       { fontSize: 11, color: Colors.text2, fontWeight: '600' },
+  setBtnTextDone:   { color: Colors.bg },
+})
