@@ -4,11 +4,25 @@ import {
   TouchableOpacity, KeyboardAvoidingView, Platform,
   ActivityIndicator, Alert, Clipboard,
 } from 'react-native'
+import { router } from 'expo-router'
 import { Colors, Spacing, Radius } from '@constants/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useCoachStore, useUserStore, useNutritionStore, useProgressStore, useWorkoutStore } from '@store/index'
 import { sendCoachMessage, swapPlanItem } from '@services/ai'
 import type { ChatMessage, PlannedMeal, WorkoutSession } from '@types/index'
+
+// ─── Intent detection ────────────────────────────────────────────────────────
+type NavIntent = 'diet' | 'workout' | null
+
+const DIET_KEYWORDS    = ['dieta','caloria','alimenta','refeição','refeicao','comer','macros','proteína','proteina','carbo','gordura','plano alimentar','café da manhã','almoço','jantar','lanche']
+const WORKOUT_KEYWORDS = ['treino','exercício','exercicio','série','serie','musculação','musculacao','academia','malhar','peito','costas','perna','ombro','bíceps','biceps','tríceps','triceps']
+
+function detectIntent(text: string): NavIntent {
+  const t = text.toLowerCase()
+  if (WORKOUT_KEYWORDS.some(k => t.includes(k))) return 'workout'
+  if (DIET_KEYWORDS.some(k => t.includes(k)))    return 'diet'
+  return null
+}
 
 const QUICK_MSGS = [
   'Quais alimentos têm mais proteína?',
@@ -31,19 +45,21 @@ export default function CoachScreen() {
   const [input, setInput]           = useState('')
   const [loading, setLoading]       = useState(false)
   const [applyingSwap, setApplying] = useState(false)
+  const [navSuggestion, setNavSuggestion] = useState<NavIntent>(null)
   const scrollRef = useRef<ScrollView>(null)
 
   const { user, isLoading }                                            = useUserStore()
   const { messages, addMessage, planContext, setPlanContext }          = useCoachStore()
   const { getTodayTotals, weekPlan, swapMeal }                        = useNutritionStore()
   const { progress }                                                   = useProgressStore()
-  const { getTodayWorkout, swapWorkoutDay }                           = useWorkoutStore()
+  const { weekWorkouts, swapWorkoutDay }                             = useWorkoutStore()
 
   if (isLoading || !user) return null
 
-  const todayPlan    = weekPlan.find(d => d.date === new Date().toISOString().split('T')[0])
+  const todayStr     = new Date().toISOString().split('T')[0]
+  const todayPlan    = weekPlan.find(d => d.date === todayStr)
   const totals       = getTodayTotals()
-  const todayWorkout = getTodayWorkout()
+  const todayWorkout = weekWorkouts.find(w => w.date === todayStr)
 
   // ID of the last assistant message (for "Apply" button placement)
   const lastAIMessageId = [...messages].reverse().find(m => m.role === 'assistant')?.id
@@ -58,6 +74,10 @@ export default function CoachScreen() {
 
     setInput('')
     setLoading(true)
+    setNavSuggestion(null) // reset previous suggestion
+
+    // Detect intent to suggest tab navigation
+    const intent = detectIntent(msg)
 
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
@@ -86,6 +106,8 @@ export default function CoachScreen() {
         content: response,
         timestamp: new Date().toISOString(),
       })
+      // Show navigation suggestion after AI responds
+      if (intent) setNavSuggestion(intent)
     } catch {
       addMessage({
         id: (Date.now() + 1).toString(),
@@ -293,6 +315,33 @@ export default function CoachScreen() {
         </View>
       )}
 
+      {/* ── Tab navigation suggestion ────────────────────── */}
+      {navSuggestion && (
+        <View style={s.navSuggest}>
+          <Text style={s.navSuggestText}>
+            {navSuggestion === 'diet'
+              ? '🥗 Quer ver seu plano alimentar de hoje?'
+              : '💪 Quer ver o treino de hoje?'}
+          </Text>
+          <View style={s.navSuggestBtns}>
+            <TouchableOpacity
+              style={s.navSuggestGo}
+              onPress={() => {
+                setNavSuggestion(null)
+                router.push(navSuggestion === 'diet' ? '/(tabs)/diet' : '/(tabs)/workout')
+              }}
+            >
+              <Text style={s.navSuggestGoText}>
+                {navSuggestion === 'diet' ? 'Ver Dieta →' : 'Ver Treino →'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setNavSuggestion(null)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Text style={s.navSuggestDismiss}>✕</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
       <View style={s.inputRow}>
         <TextInput
           style={s.input}
@@ -357,6 +406,13 @@ const s = StyleSheet.create({
   supportChip:     { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, backgroundColor: Colors.bg3, borderWidth: 1, borderColor: Colors.teal + '40' },
   supportChipEmoji:{ fontSize: 14 },
   supportChipText: { fontSize: 12, fontWeight: '500', color: Colors.teal },
+  // Nav suggestion
+  navSuggest:         { marginHorizontal: Spacing[4], marginBottom: 6, backgroundColor: Colors.accent + '12', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: Colors.accent + '30' },
+  navSuggestText:     { fontSize: 13, fontWeight: '600', color: Colors.accent, marginBottom: 8 },
+  navSuggestBtns:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  navSuggestGo:       { backgroundColor: Colors.accent, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 7 },
+  navSuggestGoText:   { fontSize: 12, fontWeight: '800', color: Colors.bg },
+  navSuggestDismiss:  { fontSize: 16, color: Colors.text3, paddingHorizontal: 4 },
   // Input
   inputRow:        { flexDirection: 'row', gap: 8, padding: Spacing[4], paddingBottom: 32, borderTopWidth: 1, borderTopColor: Colors.border, alignItems: 'flex-end' },
   input:           { flex: 1, backgroundColor: Colors.bg3, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, fontSize: 14, color: Colors.text, borderWidth: 1, borderColor: Colors.border2, maxHeight: 100 },

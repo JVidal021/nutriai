@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, ActivityIndicator, Alert,
+  TouchableOpacity, ActivityIndicator, Alert, Animated,
 } from 'react-native'
 import ExerciseVideoModal from '@components/ui/ExerciseVideoModal'
 import { router } from 'expo-router'
@@ -37,6 +37,44 @@ export default function WorkoutScreen() {
   const [adaptingMood,  setAdaptingMood]  = useState(false)
   const [expandedTips,  setExpandedTips]  = useState<Set<string>>(new Set())
   const [videoModal,    setVideoModal]    = useState<{ name: string; searchName?: string } | null>(null)
+
+  // ─── Rest timer ────────────────────────────────────────────────────────────
+  const REST_SECONDS = 60
+  const [restSecondsLeft, setRestSecondsLeft] = useState(0)
+  const [restActive,      setRestActive]      = useState(false)
+  const restIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const restAnim        = useRef(new Animated.Value(0)).current
+
+  const startRestTimer = () => {
+    if (restIntervalRef.current) clearInterval(restIntervalRef.current)
+    setRestSecondsLeft(REST_SECONDS)
+    setRestActive(true)
+    Animated.spring(restAnim, { toValue: 1, tension: 60, friction: 10, useNativeDriver: true }).start()
+    restIntervalRef.current = setInterval(() => {
+      setRestSecondsLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(restIntervalRef.current!)
+          setRestActive(false)
+          Animated.spring(restAnim, { toValue: 0, tension: 60, friction: 10, useNativeDriver: true }).start()
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }
+
+  const dismissRestTimer = () => {
+    if (restIntervalRef.current) clearInterval(restIntervalRef.current)
+    setRestActive(false)
+    Animated.spring(restAnim, { toValue: 0, tension: 60, friction: 10, useNativeDriver: true }).start()
+  }
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => { if (restIntervalRef.current) clearInterval(restIntervalRef.current) }
+  }, [])
+
+  const restTranslateY = restAnim.interpolate({ inputRange: [0, 1], outputRange: [-80, 0] })
 
   const toggleTip = (exId: string) =>
     setExpandedTips(prev => {
@@ -128,6 +166,7 @@ export default function WorkoutScreen() {
   const handleSetDone = (workoutId: string, blockId: string, exerciseId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     completeSet(workoutId, blockId, exerciseId)
+    startRestTimer()
   }
 
   const handleFinishWorkout = (workoutId: string) => {
@@ -160,8 +199,29 @@ export default function WorkoutScreen() {
       ])
   }
 
+  const restMins = Math.floor(restSecondsLeft / 60)
+  const restSecs = restSecondsLeft % 60
+  const restLabel = `${restMins}:${String(restSecs).padStart(2, '0')}`
+
   return (
-    <>
+    <View style={{ flex: 1 }}>
+    {/* ── Rest timer banner (absolute, below status bar) ── */}
+    <Animated.View
+      style={[s.restBanner, { top: insets.top + 8, transform: [{ translateY: restTranslateY }] }]}
+      pointerEvents={restActive ? 'auto' : 'none'}
+    >
+      <View style={s.restInner}>
+        <Text style={s.restEmoji}>⏱</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={s.restTitle}>Descanse</Text>
+          <Text style={s.restTime}>{restLabel}</Text>
+        </View>
+        <TouchableOpacity style={s.restSkip} onPress={dismissRestTimer}>
+          <Text style={s.restSkipText}>Pular</Text>
+        </TouchableOpacity>
+      </View>
+    </Animated.View>
+
     <ExerciseVideoModal
       visible={videoModal !== null}
       exerciseName={videoModal?.name ?? ''}
@@ -370,7 +430,7 @@ export default function WorkoutScreen() {
       )}
 
     </ScrollView>
-    </>
+    </View>
   )
 }
 
@@ -449,6 +509,15 @@ const s = StyleSheet.create({
   // Dica
   tipBox:           { marginLeft: 44, backgroundColor: Colors.accent + '10', borderRadius: 9, padding: 10, borderLeftWidth: 2, borderLeftColor: Colors.accent },
   tipText:          { fontSize: 12, color: Colors.text2, lineHeight: 18 },
+
+  // Rest timer
+  restBanner:       { position: 'absolute', left: 0, right: 0, zIndex: 999, paddingHorizontal: 16 },
+  restInner:        { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.purple, borderRadius: 14, padding: 14, shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 8 },
+  restEmoji:        { fontSize: 22 },
+  restTitle:        { fontSize: 11, fontWeight: '600', color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', letterSpacing: 0.5 },
+  restTime:         { fontSize: 26, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
+  restSkip:         { backgroundColor: 'rgba(255,255,255,.2)', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
+  restSkipText:     { fontSize: 12, fontWeight: '700', color: '#fff' },
 
   // Séries
   setRow:           { flexDirection: 'row', gap: 4, flexShrink: 0 },
