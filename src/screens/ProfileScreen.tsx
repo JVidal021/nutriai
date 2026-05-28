@@ -13,54 +13,53 @@ import { useUserStore, useProgressStore } from '@store/index'
 import { auth, db, supabase } from '@services/supabase'
 import { calcBMI, getBMICategory } from '@utils/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useT, changeLanguage, getCurrentLanguage } from '@/i18n/useT'
+import type { AppLanguage } from '@/i18n/index'
 import type { Goal, ActivityLevel, FitnessLevel } from '@types/index'
 
-// ─── Labels ──────────────────────────────────────────────────────────────────
-const GOAL_OPTS: Array<{ id: Goal; emoji: string; title: string; sub: string }> = [
-  { id: 'lose_weight',  emoji: '📉', title: 'Perder peso',         sub: 'Déficit calórico inteligente'   },
-  { id: 'gain_muscle',  emoji: '💪', title: 'Ganhar massa',         sub: 'Superávit + treino de força'    },
-  { id: 'maintain',     emoji: '❤️', title: 'Manter saúde',         sub: 'Equilíbrio e bem-estar'         },
-  { id: 'performance',  emoji: '🏃', title: 'Melhorar performance',  sub: 'Foco em esporte e resistência' },
+// ─── Option arrays (use translation keys for display) ────────────────────────
+const GOAL_OPTS: Array<{ id: Goal; emoji: string; titleKey: string; subKey: string }> = [
+  { id: 'lose_weight', emoji: '📉', titleKey: 'profile.goal_lose',            subKey: 'profile.goal_lose_sub'            },
+  { id: 'gain_muscle', emoji: '💪', titleKey: 'profile.goal_gain',            subKey: 'profile.goal_gain_sub'            },
+  { id: 'maintain',    emoji: '❤️', titleKey: 'profile.goal_maintain',        subKey: 'profile.goal_maintain_sub'        },
+  { id: 'performance', emoji: '🏃', titleKey: 'profile.goal_performance_label', subKey: 'profile.goal_performance_sub'  },
 ]
 
-const ACTIVITY_OPTS: Array<{ id: ActivityLevel; emoji: string; title: string }> = [
-  { id: 'sedentary', emoji: '🛋️', title: 'Sedentário'           },
-  { id: 'light',     emoji: '🚶', title: 'Levemente ativo'      },
-  { id: 'moderate',  emoji: '🚴', title: 'Moderadamente ativo'  },
-  { id: 'active',    emoji: '🏋️', title: 'Muito ativo'          },
+const ACTIVITY_OPTS: Array<{ id: ActivityLevel; emoji: string; titleKey: string }> = [
+  { id: 'sedentary', emoji: '🛋️', titleKey: 'profile.activity_sedentary'       },
+  { id: 'light',     emoji: '🚶', titleKey: 'profile.activity_light'            },
+  { id: 'moderate',  emoji: '🚴', titleKey: 'profile.activity_moderate_label'   },
+  { id: 'active',    emoji: '🏋️', titleKey: 'profile.activity_active'           },
 ]
 
-const FITNESS_OPTS: Array<{ id: FitnessLevel; emoji: string; title: string; sub: string }> = [
-  { id: 'beginner',     emoji: '🌱', title: 'Iniciante',     sub: 'Menos de 6 meses de treino regular'          },
-  { id: 'intermediate', emoji: '💪', title: 'Intermediário', sub: 'Entre 6 meses e 2 anos'                      },
-  { id: 'advanced',     emoji: '🏆', title: 'Avançado',      sub: 'Mais de 2 anos, treino consistente'          },
+const FITNESS_OPTS: Array<{ id: FitnessLevel; emoji: string; titleKey: string; subKey: string }> = [
+  { id: 'beginner',     emoji: '🌱', titleKey: 'profile.fitness_beginner_label',     subKey: 'profile.fitness_beginner_sub'     },
+  { id: 'intermediate', emoji: '💪', titleKey: 'profile.fitness_intermediate_label', subKey: 'profile.fitness_intermediate_sub' },
+  { id: 'advanced',     emoji: '🏆', titleKey: 'profile.fitness_advanced_label',     subKey: 'profile.fitness_advanced_sub'     },
 ]
 
-const BUDGET_OPTS = [
-  { id: 'economico', emoji: '💰', title: 'Econômico',     sub: 'Arroz, feijão, frango, ovos — simples e acessível'    },
-  { id: 'moderado',  emoji: '🛒', title: 'Moderado',      sub: 'Boa variedade sem exageros'                           },
-  { id: 'premium',   emoji: '💎', title: 'Sem restrição', sub: 'Qualquer ingrediente, incluindo carnes nobres'         },
+const BUDGET_OPTS: Array<{ id: string; emoji: string; titleKey: string; subKey: string }> = [
+  { id: 'economico', emoji: '💰', titleKey: 'profile.budget_economico_label', subKey: 'profile.budget_economico_sub' },
+  { id: 'moderado',  emoji: '🛒', titleKey: 'profile.budget_moderado_label',  subKey: 'profile.budget_moderado_sub'  },
+  { id: 'premium',   emoji: '💎', titleKey: 'profile.budget_premium_label',   subKey: 'profile.budget_premium_sub'   },
 ]
 
-const COOKING_OPTS = [
-  { id: 'rapido',    emoji: '⏱️', title: 'Rápido (< 20 min)', sub: 'Receitas simples e práticas'    },
-  { id: 'moderado',  emoji: '🍳', title: 'Normal (20–40 min)', sub: 'Equilíbrio entre praticidade e sabor' },
-  { id: 'elaborado', emoji: '👨‍🍳', title: 'Gosto de cozinhar',  sub: 'Receitas elaboradas são bem-vindas'  },
+const COOKING_OPTS: Array<{ id: string; emoji: string; titleKey: string; subKey: string }> = [
+  { id: 'rapido',    emoji: '⏱️', titleKey: 'profile.cooking_rapido_title',    subKey: 'profile.cooking_rapido_sub'    },
+  { id: 'moderado',  emoji: '🍳', titleKey: 'profile.cooking_moderado_title',  subKey: 'profile.cooking_moderado_sub'  },
+  { id: 'elaborado', emoji: '👨‍🍳', titleKey: 'profile.cooking_elaborado_title', subKey: 'profile.cooking_elaborado_sub' },
 ]
 
+// Internal restriction values — stay in PT because they're stored in the DB and sent to the AI
 const RESTRICTIONS = ['Vegetariano','Vegano','Sem glúten','Sem lactose','Low carb','Diabético','Hipertensão','Nenhuma']
-
-const GOAL_LABEL: Record<string, string>     = { lose_weight: 'Perder peso 📉', gain_muscle: 'Ganhar massa 💪', maintain: 'Manter saúde ❤️', performance: 'Performance 🏃' }
-const ACTIVITY_LABEL: Record<string, string> = { sedentary: 'Sedentário', light: 'Levemente ativo', moderate: 'Moderado', active: 'Muito ativo' }
-const FITNESS_LABEL: Record<string, string>  = { beginner: 'Iniciante 🌱', intermediate: 'Intermediário 💪', advanced: 'Avançado 🏆' }
-const BUDGET_LABEL: Record<string, string>   = { economico: 'Econômico 💰', moderado: 'Moderado 🛒', premium: 'Sem restrição 💎' }
-const COOKING_LABEL: Record<string, string>  = { rapido: 'Rápido ⏱️', moderado: 'Normal 🍳', elaborado: 'Gourmet 👨‍🍳' }
 
 const DAYS_SHORT = ['S','T','Q','Q','S','S','D']
 type EditModal = 'goal' | 'fitness' | 'food' | 'restrictions' | 'promo' | null
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets()
+  const { t } = useT()
+  const [language, setLanguage] = useState<AppLanguage>(getCurrentLanguage())
   const [notificationsOn, setNotificationsOn] = useState(true)
   const [weightModal, setWeightModal]         = useState(false)
   const [newWeight, setNewWeight]             = useState('')
@@ -83,6 +82,48 @@ export default function ProfileScreen() {
   const { progress }                    = useProgressStore()
 
   if (isLoading || !user) return null
+
+  // ── Label helpers (use t() for proper language switching) ──────────────────
+  const getGoalLabel = (goal: string) => {
+    const map: Record<string, string> = {
+      lose_weight: t('profile.goal_lose') + ' 📉',
+      gain_muscle: t('profile.goal_gain') + ' 💪',
+      maintain:    t('profile.goal_maintain') + ' ❤️',
+      performance: t('profile.goal_performance_label') + ' 🏃',
+    }
+    return map[goal] ?? goal
+  }
+  const getActivityLabel = (a: string) => ({
+    sedentary: t('profile.activity_sedentary'),
+    light:     t('profile.activity_light'),
+    moderate:  t('profile.activity_moderate_label'),
+    active:    t('profile.activity_active'),
+  } as Record<string, string>)[a] ?? a
+
+  const getFitnessLabel = (f: string) => ({
+    beginner:     t('profile.fitness_beginner_label')     + ' 🌱',
+    intermediate: t('profile.fitness_intermediate_label') + ' 💪',
+    advanced:     t('profile.fitness_advanced_label')     + ' 🏆',
+  } as Record<string, string>)[f] ?? f
+
+  const getBudgetLabel = (b: string) => ({
+    economico: t('profile.budget_economico_label') + ' 💰',
+    moderado:  t('profile.budget_moderado_label')  + ' 🛒',
+    premium:   t('profile.budget_premium_label')   + ' 💎',
+  } as Record<string, string>)[b] ?? b
+
+  const getCookingLabel = (c: string) => ({
+    rapido:    t('profile.cooking_rapido_short'),
+    moderado:  t('profile.cooking_moderado_short'),
+    elaborado: t('profile.cooking_elaborado_short'),
+  } as Record<string, string>)[c] ?? c
+
+  const translateBmiCat = (cat: string): string => ({
+    'Abaixo do peso': t('profile.bmi_underweight'),
+    'Peso normal':    t('profile.bmi_normal'),
+    'Sobrepeso':      t('profile.bmi_overweight'),
+    'Obesidade':      t('profile.bmi_obese'),
+  } as Record<string, string>)[cat] ?? cat
 
   const bmi     = calcBMI(user.weight, user.height)
   const bmiCat  = getBMICategory(bmi)
@@ -156,9 +197,9 @@ export default function ProfileScreen() {
       updateUser(storeFields)
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
       setEditModal(null)
-      Alert.alert('✓ Perfil atualizado', 'As alterações serão usadas no próximo plano gerado.')
+      Alert.alert(t('profile.profile_updated'), t('profile.profile_updated_msg'))
     } catch {
-      Alert.alert('Erro', 'Não foi possível salvar. Tente novamente.')
+      Alert.alert(t('common.error'), t('common.retry'))
     } finally {
       setSaving(false)
     }
@@ -167,7 +208,7 @@ export default function ProfileScreen() {
   const handleSaveWeight = async () => {
     const parsed = parseFloat(newWeight.replace(',', '.'))
     if (isNaN(parsed) || parsed < 30 || parsed > 300) {
-      Alert.alert('Peso inválido', 'Informe entre 30 e 300 kg.')
+      Alert.alert(t('profile.invalid_weight'), t('profile.weight_range_msg'))
       return
     }
     setSaving(true)
@@ -178,14 +219,14 @@ export default function ProfileScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
       setWeightModal(false)
       setNewWeight('')
-      Alert.alert('✓ Peso atualizado', `${parsed} kg registrado.`)
-    } catch { Alert.alert('Erro', 'Tente novamente.') }
+      Alert.alert(t('profile.weight_saved'), t('profile.weight_saved_msg', { weight: parsed }))
+    } catch { Alert.alert(t('common.error'), t('common.retry')) }
     finally { setSaving(false) }
   }
 
   const handleRedeemPromo = async () => {
     if (!promoInput.trim()) {
-      Alert.alert('Ops', 'Digite um código de convite.')
+      Alert.alert(t('common.error'), t('profile.enter_promo'))
       return
     }
     setRedeeming(true)
@@ -205,21 +246,21 @@ export default function ProfileScreen() {
         setEditModal(null)
         setPromoInput('')
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-        Alert.alert('🎁 Trial ativado!', `Seu Premium de ${result.trial_days} dias começou. Aproveite! 🚀`)
+        Alert.alert(t('profile.trial_activated'), t('profile.trial_msg', { days: result.trial_days }))
       } else {
-        Alert.alert('Código inválido', result?.error ?? 'Código não reconhecido ou já esgotado.')
+        Alert.alert(t('profile.promo_invalid'), result?.error ?? t('profile.promo_error_invalid'))
       }
     } catch {
-      Alert.alert('Erro', 'Não foi possível validar o código. Tente novamente.')
+      Alert.alert(t('common.error'), t('common.retry'))
     } finally {
       setRedeeming(false)
     }
   }
 
   const handleSignOut = () => {
-    Alert.alert('Sair da conta', 'Tem certeza?', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Sair', style: 'destructive', onPress: async () => {
+    Alert.alert(t('profile.logout_confirm'), t('profile.logout_confirm_msg'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('profile.logout_btn'), style: 'destructive', onPress: async () => {
           await auth.signOut(); clearUser(); router.replace('/onboarding')
         }
       },
@@ -244,7 +285,7 @@ export default function ProfileScreen() {
         </LinearGradient>
         <View style={{ flex: 1 }}>
           <Text style={s.name}>{user.name}</Text>
-          <Text style={s.email}>{user.email || 'sem e-mail'}</Text>
+          <Text style={s.email}>{user.email || t('profile.no_email')}</Text>
           <View style={s.badgeRow}>
             <View style={[s.rankBadge, { backgroundColor: 'rgba(0,0,0,0.3)' }]}>
               <Text style={s.rankBadgeText}>{rank.emoji} {rank.label}</Text>
@@ -256,18 +297,18 @@ export default function ProfileScreen() {
             )}
           </View>
         </View>
-        <Text style={s.totalXp}>{(progress.totalXp ?? 0).toLocaleString('pt-BR')}{'\n'}XP</Text>
+        <Text style={s.totalXp}>{(progress.totalXp ?? 0).toLocaleString()}{'\n'}XP</Text>
       </LinearGradient>
 
       {/* Stats */}
       <View style={[s.card, SHADOWS.sm]}>
-        <Text style={s.cardTitle}>Progresso geral</Text>
+        <Text style={s.cardTitle}>{t('profile.general_progress')}</Text>
         <View style={s.statsGrid}>
           {[
-            { label: 'kg perdidos',  val: `${(progress.weightLost ?? 0).toFixed(1)}`,     color: Colors.teal   },
-            { label: 'dias ativos',  val: String(progress.activeDays ?? 0),                color: Colors.accent  },
-            { label: 'aderência',    val: `${progress.adherencePercent ?? 0}%`,            color: Colors.purple  },
-            { label: 'treinos',      val: String(progress.workoutsCompleted ?? 0),         color: Colors.orange  },
+            { label: t('profile.stat_kg_lost'),     val: `${(progress.weightLost ?? 0).toFixed(1)}`,     color: Colors.teal   },
+            { label: t('profile.stat_active_days'), val: String(progress.activeDays ?? 0),                color: Colors.accent  },
+            { label: t('profile.stat_adherence'),   val: `${progress.adherencePercent ?? 0}%`,            color: Colors.purple  },
+            { label: t('profile.stat_workouts'),    val: String(progress.workoutsCompleted ?? 0),         color: Colors.orange  },
           ].map(stat => (
             <View key={stat.label} style={s.statBox}>
               <Text style={[s.statVal, { color: stat.color }]}>{stat.val}</Text>
@@ -279,7 +320,7 @@ export default function ProfileScreen() {
 
       {/* Streak semanal */}
       <View style={[s.card, SHADOWS.sm]}>
-        <Text style={s.cardTitle}>Sequência semanal</Text>
+        <Text style={s.cardTitle}>{t('profile.weekly_streak')}</Text>
         <View style={s.streakRow}>
           {streakDates.map((date, i) => {
             const isToday = date === today.toISOString().split('T')[0]
@@ -309,19 +350,19 @@ export default function ProfileScreen() {
       {/* Dados físicos */}
       <View style={[s.card, SHADOWS.sm]}>
         <View style={s.cardRowBetween}>
-          <Text style={s.cardTitle}>Dados físicos</Text>
+          <Text style={s.cardTitle}>{t('profile.physical_data')}</Text>
           <TouchableOpacity
             style={s.updateWeightBtn}
             onPress={() => { setNewWeight(String(user.weight)); setWeightModal(true) }}
           >
-            <Text style={s.updateWeightText}>⚖️ Atualizar peso</Text>
+            <Text style={s.updateWeightText}>{t('profile.update_weight')}</Text>
           </TouchableOpacity>
         </View>
         {[
-          { label: 'Peso atual',  val: `${user.weight} kg` },
-          { label: 'Peso meta',   val: `${user.targetWeight} kg` },
-          { label: 'Altura',      val: `${user.height} cm` },
-          { label: 'IMC',         val: `${bmi} · ${bmiCat}`, color: bmi < 25 ? Colors.teal : Colors.orange },
+          { label: t('profile.weight'),        val: `${user.weight} kg` },
+          { label: t('profile.target_weight'),  val: `${user.targetWeight} kg` },
+          { label: t('profile.height'),         val: `${user.height} cm` },
+          { label: t('profile.bmi'),            val: `${bmi} · ${translateBmiCat(bmiCat)}`, color: bmi < 25 ? Colors.teal : Colors.orange },
         ].map(item => (
           <View key={item.label} style={s.dataRow}>
             <Text style={s.dataLabel}>{item.label}</Text>
@@ -332,32 +373,32 @@ export default function ProfileScreen() {
 
       {/* ── Meu Plano (editável) ─────────────────────────────────────────── */}
       <View style={[s.card, SHADOWS.sm]}>
-        <Text style={s.cardTitle}>Meu plano</Text>
-        <Text style={s.cardSub}>Toque em "Editar" para atualizar — reflete no próximo plano gerado pela IA.</Text>
+        <Text style={s.cardTitle}>{t('profile.my_plan')}</Text>
+        <Text style={s.cardSub}>{t('profile.my_plan_sub')}</Text>
 
         {[
           {
             icon: '🎯',
-            label: 'Objetivo',
-            val: `${GOAL_LABEL[user.goal] ?? user.goal} · ${ACTIVITY_LABEL[user.activityLevel] ?? user.activityLevel}`,
+            label: t('profile.goal'),
+            val: `${getGoalLabel(user.goal)} · ${getActivityLabel(user.activityLevel)}`,
             modal: 'goal' as EditModal,
           },
           {
             icon: '🏋️',
-            label: 'Nível na academia',
-            val: FITNESS_LABEL[user.fitnessLevel] ?? user.fitnessLevel,
+            label: t('profile.gym_level'),
+            val: getFitnessLabel(user.fitnessLevel),
             modal: 'fitness' as EditModal,
           },
           {
             icon: '🍽️',
-            label: 'Preferências alimentares',
-            val: `${BUDGET_LABEL[user.foodBudget ?? 'moderado']} · ${COOKING_LABEL[user.cookingTime ?? 'moderado']}`,
+            label: t('profile.food_prefs'),
+            val: `${getBudgetLabel(user.foodBudget ?? 'moderado')} · ${getCookingLabel(user.cookingTime ?? 'moderado')}`,
             modal: 'food' as EditModal,
           },
           {
             icon: '🚫',
-            label: 'Restrições',
-            val: user.restrictions?.filter(r => r !== 'Nenhuma').join(', ') || 'Nenhuma',
+            label: t('profile.restrictions'),
+            val: user.restrictions?.filter(r => r !== 'Nenhuma').join(', ') || t('profile.no_restrictions'),
             modal: 'restrictions' as EditModal,
             last: true,
           },
@@ -369,7 +410,7 @@ export default function ProfileScreen() {
               <Text style={s.planVal} numberOfLines={2}>{item.val}</Text>
             </View>
             <TouchableOpacity style={s.editBtn} onPress={() => openEditModal(item.modal)}>
-              <Text style={s.editBtnText}>Editar</Text>
+              <Text style={s.editBtnText}>{t('common.edit')}</Text>
             </TouchableOpacity>
           </View>
         ))}
@@ -377,36 +418,58 @@ export default function ProfileScreen() {
 
       {/* Configurações */}
       <View style={[s.card, SHADOWS.sm]}>
-        <Text style={s.cardTitle}>Configurações</Text>
+        <Text style={s.cardTitle}>{t('settings.title')}</Text>
+
+        {/* Seletor de idioma */}
         <View style={s.settingRow}>
-          <Text style={s.settingLabel}>🔔 Notificações</Text>
+          <Text style={s.settingLabel}>🌐 {t('profile.language')}</Text>
+          <View style={s.langRow}>
+            {(['pt', 'en'] as AppLanguage[]).map(lang => (
+              <TouchableOpacity
+                key={lang}
+                style={[s.langBtn, language === lang && s.langBtnActive]}
+                onPress={async () => {
+                  setLanguage(lang)
+                  await changeLanguage(lang)
+                }}
+              >
+                <Text style={[s.langBtnText, language === lang && s.langBtnTextActive]}>
+                  {lang === 'pt' ? '🇧🇷 PT' : '🇺🇸 EN'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <View style={s.settingRow}>
+          <Text style={s.settingLabel}>🔔 {t('profile.notifications')}</Text>
           <Switch value={notificationsOn} onValueChange={setNotificationsOn}
             trackColor={{ false: Colors.border2, true: Colors.accent }} thumbColor={Colors.bg} />
         </View>
         {[
-          { icon: '📊', label: 'Relatório semanal',  route: '/(tabs)/report'        },
-          { icon: '👑', label: 'Minha assinatura',   route: '/(tabs)/subscription'  },
-          { icon: '🤝', label: 'Modo Co-op',         route: '/(tabs)/coop'          },
+          { icon: '📊', labelKey: 'profile.report_btn',   route: '/(tabs)/report'        },
+          { icon: '👑', labelKey: 'profile.subscription', route: '/(tabs)/subscription'  },
+          { icon: '🤝', labelKey: 'profile.coop_mode',    route: '/(tabs)/coop'          },
         ].map(item => (
-          <TouchableOpacity key={item.label} style={s.settingRow} onPress={() => router.push(item.route as any)}>
-            <Text style={s.settingLabel}>{item.icon} {item.label}</Text>
+          <TouchableOpacity key={item.labelKey} style={s.settingRow} onPress={() => router.push(item.route as any)}>
+            <Text style={s.settingLabel}>{item.icon} {t(item.labelKey as any)}</Text>
             <Text style={s.settingArrow}>›</Text>
           </TouchableOpacity>
         ))}
         {!user.isPremium && !user.promoCodeUsed && (
           <TouchableOpacity style={s.settingRow} onPress={() => { setPromoInput(''); setEditModal('promo') }}>
-            <Text style={s.settingLabel}>🎁 Resgatar código de convite</Text>
+            <Text style={s.settingLabel}>🎁 {t('profile.redeem_code')}</Text>
             <Text style={s.settingArrow}>›</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity style={[s.settingRow, { borderBottomWidth: 0 }]} onPress={() => router.push('/profile/delete-account')}>
-          <Text style={[s.settingLabel, { color: Colors.red }]}>🗑️ Excluir conta</Text>
+          <Text style={[s.settingLabel, { color: Colors.red }]}>🗑️ {t('profile.delete_account')}</Text>
           <Text style={[s.settingArrow, { color: Colors.red }]}>›</Text>
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity style={s.signOutBtn} onPress={handleSignOut}>
-        <Text style={s.signOutText}>Sair da conta</Text>
+        <Text style={s.signOutText}>{t('profile.sign_out')}</Text>
       </TouchableOpacity>
       <Text style={s.version}>NutriAI v1.0.0 · suporte.nutriai@outlook.com</Text>
 
@@ -417,35 +480,35 @@ export default function ProfileScreen() {
         <View style={s.modalOverlay}>
           <View style={s.modalSheet}>
             <View style={s.modalHandle} />
-            <Text style={s.modalTitle}>🎯 Objetivo e Atividade</Text>
+            <Text style={s.modalTitle}>{t('profile.modal_goal_title')}</Text>
 
             <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 460 }}>
-              <Text style={s.modalSection}>Qual é seu objetivo?</Text>
+              <Text style={s.modalSection}>{t('profile.modal_goal_section')}</Text>
               {GOAL_OPTS.map(g => (
                 <TouchableOpacity key={g.id} style={[s.optCard, editGoal === g.id && s.optCardSel]} onPress={() => setEditGoal(g.id)}>
                   <Text style={s.optEmoji}>{g.emoji}</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={s.optTitle}>{g.title}</Text>
-                    <Text style={s.optSub}>{g.sub}</Text>
+                    <Text style={s.optTitle}>{t(g.titleKey as any)}</Text>
+                    <Text style={s.optSub}>{t(g.subKey as any)}</Text>
                   </View>
                 </TouchableOpacity>
               ))}
 
-              <Text style={[s.modalSection, { marginTop: 16 }]}>Nível de atividade física</Text>
+              <Text style={[s.modalSection, { marginTop: 16 }]}>{t('profile.modal_activity_section')}</Text>
               {ACTIVITY_OPTS.map(a => (
                 <TouchableOpacity key={a.id} style={[s.optCard, editActivity === a.id && s.optCardSel]} onPress={() => setEditActivity(a.id)}>
                   <Text style={s.optEmoji}>{a.emoji}</Text>
-                  <Text style={[s.optTitle, { flex: 1 }]}>{a.title}</Text>
+                  <Text style={[s.optTitle, { flex: 1 }]}>{t(a.titleKey as any)}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
 
             <View style={s.modalBtns}>
               <TouchableOpacity style={s.modalBtnCancel} onPress={() => setEditModal(null)}>
-                <Text style={s.modalBtnCancelText}>Cancelar</Text>
+                <Text style={s.modalBtnCancelText}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[s.modalBtnSave, saving && { opacity: 0.6 }]} onPress={handleSaveEdit} disabled={saving}>
-                {saving ? <ActivityIndicator size="small" color={Colors.bg} /> : <Text style={s.modalBtnSaveText}>Salvar</Text>}
+                {saving ? <ActivityIndicator size="small" color={Colors.bg} /> : <Text style={s.modalBtnSaveText}>{t('common.save')}</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -459,25 +522,25 @@ export default function ProfileScreen() {
         <View style={s.modalOverlay}>
           <View style={s.modalSheet}>
             <View style={s.modalHandle} />
-            <Text style={s.modalTitle}>🏋️ Nível na academia</Text>
-            <Text style={s.modalSubtitle}>Isso define o volume e intensidade dos seus treinos.</Text>
+            <Text style={s.modalTitle}>{t('profile.modal_fitness_title')}</Text>
+            <Text style={s.modalSubtitle}>{t('profile.modal_fitness_sub')}</Text>
 
             {FITNESS_OPTS.map(f => (
               <TouchableOpacity key={f.id} style={[s.optCard, editFitness === f.id && s.optCardSel]} onPress={() => setEditFitness(f.id)}>
                 <Text style={s.optEmoji}>{f.emoji}</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={s.optTitle}>{f.title}</Text>
-                  <Text style={s.optSub}>{f.sub}</Text>
+                  <Text style={s.optTitle}>{t(f.titleKey as any)}</Text>
+                  <Text style={s.optSub}>{t(f.subKey as any)}</Text>
                 </View>
               </TouchableOpacity>
             ))}
 
             <View style={s.modalBtns}>
               <TouchableOpacity style={s.modalBtnCancel} onPress={() => setEditModal(null)}>
-                <Text style={s.modalBtnCancelText}>Cancelar</Text>
+                <Text style={s.modalBtnCancelText}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[s.modalBtnSave, saving && { opacity: 0.6 }]} onPress={handleSaveEdit} disabled={saving}>
-                {saving ? <ActivityIndicator size="small" color={Colors.bg} /> : <Text style={s.modalBtnSaveText}>Salvar</Text>}
+                {saving ? <ActivityIndicator size="small" color={Colors.bg} /> : <Text style={s.modalBtnSaveText}>{t('common.save')}</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -491,48 +554,48 @@ export default function ProfileScreen() {
         <KeyboardAvoidingView style={s.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={[s.modalSheet, { maxHeight: '90%' }]}>
             <View style={s.modalHandle} />
-            <Text style={s.modalTitle}>🍽️ Preferências alimentares</Text>
+            <Text style={s.modalTitle}>{t('profile.modal_food_title')}</Text>
 
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-              <Text style={s.modalSection}>Orçamento para alimentação</Text>
+              <Text style={s.modalSection}>{t('profile.modal_budget_section')}</Text>
               {BUDGET_OPTS.map(b => (
                 <TouchableOpacity key={b.id} style={[s.optCard, editBudget === b.id && s.optCardSel]} onPress={() => setEditBudget(b.id)}>
                   <Text style={s.optEmoji}>{b.emoji}</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={s.optTitle}>{b.title}</Text>
-                    <Text style={s.optSub}>{b.sub}</Text>
+                    <Text style={s.optTitle}>{t(b.titleKey as any)}</Text>
+                    <Text style={s.optSub}>{t(b.subKey as any)}</Text>
                   </View>
                 </TouchableOpacity>
               ))}
 
-              <Text style={[s.modalSection, { marginTop: 16 }]}>Tempo para cozinhar</Text>
+              <Text style={[s.modalSection, { marginTop: 16 }]}>{t('profile.modal_cooking_section')}</Text>
               {COOKING_OPTS.map(c => (
                 <TouchableOpacity key={c.id} style={[s.optCard, editCooking === c.id && s.optCardSel]} onPress={() => setEditCooking(c.id)}>
                   <Text style={s.optEmoji}>{c.emoji}</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={s.optTitle}>{c.title}</Text>
-                    <Text style={s.optSub}>{c.sub}</Text>
+                    <Text style={s.optTitle}>{t(c.titleKey as any)}</Text>
+                    <Text style={s.optSub}>{t(c.subKey as any)}</Text>
                   </View>
                 </TouchableOpacity>
               ))}
 
-              <Text style={[s.modalSection, { marginTop: 16 }]}>😋 O que você gosta de comer?</Text>
+              <Text style={[s.modalSection, { marginTop: 16 }]}>{t('profile.edit_food_prefs')}</Text>
               <TextInput
                 style={[s.modalInput, { height: 72, textAlignVertical: 'top' }]}
                 value={editLikes}
                 onChangeText={setEditLikes}
-                placeholder="Ex: frango grelhado, arroz, omelete, banana..."
+                placeholder={t('profile.food_likes_placeholder')}
                 placeholderTextColor={Colors.text3}
                 multiline
                 maxLength={300}
               />
 
-              <Text style={[s.modalSection, { marginTop: 8 }]}>🚫 O que evita ou não gosta?</Text>
+              <Text style={[s.modalSection, { marginTop: 8 }]}>{t('profile.edit_food_dislikes')}</Text>
               <TextInput
                 style={[s.modalInput, { height: 72, textAlignVertical: 'top', marginBottom: 16 }]}
                 value={editDislikes}
                 onChangeText={setEditDislikes}
-                placeholder="Ex: fígado, chuchu, peixe, comida muito temperada..."
+                placeholder={t('profile.food_dislikes_placeholder')}
                 placeholderTextColor={Colors.text3}
                 multiline
                 maxLength={300}
@@ -541,10 +604,10 @@ export default function ProfileScreen() {
 
             <View style={s.modalBtns}>
               <TouchableOpacity style={s.modalBtnCancel} onPress={() => setEditModal(null)}>
-                <Text style={s.modalBtnCancelText}>Cancelar</Text>
+                <Text style={s.modalBtnCancelText}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[s.modalBtnSave, saving && { opacity: 0.6 }]} onPress={handleSaveEdit} disabled={saving}>
-                {saving ? <ActivityIndicator size="small" color={Colors.bg} /> : <Text style={s.modalBtnSaveText}>Salvar</Text>}
+                {saving ? <ActivityIndicator size="small" color={Colors.bg} /> : <Text style={s.modalBtnSaveText}>{t('common.save')}</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -558,8 +621,8 @@ export default function ProfileScreen() {
         <View style={s.modalOverlay}>
           <View style={s.modalSheet}>
             <View style={s.modalHandle} />
-            <Text style={s.modalTitle}>🚫 Restrições alimentares</Text>
-            <Text style={s.modalSubtitle}>A IA nunca incluirá esses alimentos no seu plano.</Text>
+            <Text style={s.modalTitle}>{t('profile.modal_restrictions_title')}</Text>
+            <Text style={s.modalSubtitle}>{t('profile.modal_restrictions_sub')}</Text>
 
             <View style={s.tagsWrap}>
               {RESTRICTIONS.map(r => (
@@ -575,10 +638,10 @@ export default function ProfileScreen() {
 
             <View style={[s.modalBtns, { marginTop: 16 }]}>
               <TouchableOpacity style={s.modalBtnCancel} onPress={() => setEditModal(null)}>
-                <Text style={s.modalBtnCancelText}>Cancelar</Text>
+                <Text style={s.modalBtnCancelText}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[s.modalBtnSave, saving && { opacity: 0.6 }]} onPress={handleSaveEdit} disabled={saving}>
-                {saving ? <ActivityIndicator size="small" color={Colors.bg} /> : <Text style={s.modalBtnSaveText}>Salvar</Text>}
+                {saving ? <ActivityIndicator size="small" color={Colors.bg} /> : <Text style={s.modalBtnSaveText}>{t('common.save')}</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -592,13 +655,13 @@ export default function ProfileScreen() {
         <KeyboardAvoidingView style={s.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={s.modalSheet}>
             <View style={s.modalHandle} />
-            <Text style={s.modalTitle}>🎁 Código de convite</Text>
-            <Text style={s.modalSubtitle}>Digite o código para ativar 15 dias de Premium gratuito.</Text>
+            <Text style={s.modalTitle}>{t('profile.promo_title')}</Text>
+            <Text style={s.modalSubtitle}>{t('profile.promo_sub')}</Text>
             <TextInput
               style={[s.modalInput, { fontSize: 20, fontWeight: '700', color: Colors.accent, textAlign: 'center', letterSpacing: 2 }]}
               value={promoInput}
-              onChangeText={(t) => setPromoInput(t.toUpperCase())}
-              placeholder="EX: PIONEIRO"
+              onChangeText={(v) => setPromoInput(v.toUpperCase())}
+              placeholder={t('profile.promo_placeholder')}
               placeholderTextColor={Colors.text3}
               autoCapitalize="characters"
               autoCorrect={false}
@@ -606,10 +669,10 @@ export default function ProfileScreen() {
             />
             <View style={s.modalBtns}>
               <TouchableOpacity style={s.modalBtnCancel} onPress={() => { setEditModal(null); setPromoInput('') }}>
-                <Text style={s.modalBtnCancelText}>Cancelar</Text>
+                <Text style={s.modalBtnCancelText}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[s.modalBtnSave, redeeming && { opacity: 0.6 }]} onPress={handleRedeemPromo} disabled={redeeming}>
-                {redeeming ? <ActivityIndicator size="small" color={Colors.bg} /> : <Text style={s.modalBtnSaveText}>Resgatar</Text>}
+                {redeeming ? <ActivityIndicator size="small" color={Colors.bg} /> : <Text style={s.modalBtnSaveText}>{t('profile.promo_redeem')}</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -621,8 +684,8 @@ export default function ProfileScreen() {
         <KeyboardAvoidingView style={s.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={s.modalSheet}>
             <View style={s.modalHandle} />
-            <Text style={s.modalTitle}>⚖️ Novo peso</Text>
-            <Text style={s.modalSubtitle}>Atual: {user.weight} kg</Text>
+            <Text style={s.modalTitle}>{t('profile.new_weight')}</Text>
+            <Text style={s.modalSubtitle}>{t('profile.current_weight')} {user.weight} kg</Text>
             <TextInput
               style={[s.modalInput, { fontSize: 28, fontWeight: '700', color: Colors.accent, textAlign: 'center' }]}
               value={newWeight}
@@ -634,10 +697,10 @@ export default function ProfileScreen() {
             />
             <View style={s.modalBtns}>
               <TouchableOpacity style={s.modalBtnCancel} onPress={() => { setWeightModal(false); setNewWeight('') }}>
-                <Text style={s.modalBtnCancelText}>Cancelar</Text>
+                <Text style={s.modalBtnCancelText}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[s.modalBtnSave, saving && { opacity: 0.6 }]} onPress={handleSaveWeight} disabled={saving}>
-                {saving ? <ActivityIndicator size="small" color={Colors.bg} /> : <Text style={s.modalBtnSaveText}>Salvar</Text>}
+                {saving ? <ActivityIndicator size="small" color={Colors.bg} /> : <Text style={s.modalBtnSaveText}>{t('common.save')}</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -689,6 +752,11 @@ const s = StyleSheet.create({
   settingRow:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: Colors.border },
   settingLabel:      { fontSize: 14, color: Colors.text },
   settingArrow:      { fontSize: 18, color: Colors.text3 },
+  langRow:           { flexDirection: 'row', gap: 6 },
+  langBtn:           { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: Colors.border },
+  langBtnActive:     { backgroundColor: Colors.accent, borderColor: Colors.accent },
+  langBtnText:       { fontSize: 12, fontWeight: '600', color: Colors.text3 },
+  langBtnTextActive: { color: Colors.bg },
   signOutBtn:        { borderWidth: 1, borderColor: Colors.border2, borderRadius: Radius.md, padding: 14, alignItems: 'center', marginBottom: 12 },
   signOutText:       { fontSize: 14, fontWeight: '600', color: Colors.text2 },
   version:           { fontSize: 11, color: Colors.text3, textAlign: 'center', marginBottom: 8 },

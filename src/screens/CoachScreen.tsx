@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useCoachStore, useUserStore, useNutritionStore, useProgressStore, useWorkoutStore } from '@store/index'
 import { sendCoachMessage, swapPlanItem } from '@services/ai'
 import type { ChatMessage, PlannedMeal, WorkoutSession } from '@types/index'
+import { useT } from '@/i18n/useT'
 
 // ─── Intent detection ────────────────────────────────────────────────────────
 type NavIntent = 'diet' | 'workout' | null
@@ -37,24 +38,22 @@ function detectWorkoutGenIntent(text: string): boolean {
   return WORKOUT_GEN_KEYWORDS.some(k => t.includes(k))
 }
 
-const QUICK_MSGS = [
-  'Quais alimentos têm mais proteína?',
-  'Como melhorar meu sono?',
-  'Devo tomar suplemento?',
-  'Analise meu progresso desta semana',
-]
+const QUICK_MSG_KEYS = [
+  'coach.quick_1', 'coach.quick_2', 'coach.quick_3', 'coach.quick_4',
+] as const
 
 type SupportType = 'quit' | 'cheat' | 'routine' | 'food'
 
-const SUPPORT_CHIPS: { type: SupportType; emoji: string; label: string }[] = [
-  { type: 'quit',    emoji: '😔', label: 'Tô querendo desistir'  },
-  { type: 'cheat',   emoji: '🍕', label: 'Escapei da dieta hoje' },
-  { type: 'routine', emoji: '😩', label: 'Não consigo criar rotina' },
-  { type: 'food',    emoji: '🍽️', label: 'Não sei o que comer'   },
+const SUPPORT_CHIP_DEFS: { type: SupportType; emoji: string; labelKey: string }[] = [
+  { type: 'quit',    emoji: '😔', labelKey: 'coach.support_quit'    },
+  { type: 'cheat',   emoji: '🍕', labelKey: 'coach.support_cheat'   },
+  { type: 'routine', emoji: '😩', labelKey: 'coach.support_routine' },
+  { type: 'food',    emoji: '🍽️', labelKey: 'coach.support_food'   },
 ]
 
 export default function CoachScreen() {
   const insets = useSafeAreaInsets()
+  const { t } = useT()
   const [input, setInput]           = useState('')
   const [loading, setLoading]       = useState(false)
   const [applyingSwap, setApplying] = useState(false)
@@ -134,7 +133,7 @@ export default function CoachScreen() {
       addMessage({
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Desculpe, não consegui processar sua mensagem. Verifique sua conexão e tente novamente. 🌿',
+        content: t('coach.conn_error'),
         timestamp: new Date().toISOString(),
       })
     } finally {
@@ -215,20 +214,18 @@ export default function CoachScreen() {
       setPlanContext(null)
       const isWorkout = planContext.type !== 'diet'
       Alert.alert(
-        '✅ Plano atualizado!',
-        isWorkout
-          ? 'A sugestão do Coach foi aplicada ao treino. Quer conferir agora?'
-          : 'A sugestão do Coach foi aplicada à dieta. Quer conferir agora?',
+        t('coach.plan_updated'),
+        isWorkout ? t('coach.plan_updated_workout') : t('coach.plan_updated_diet'),
         [
-          { text: 'Fechar', style: 'cancel' },
+          { text: t('common.close'), style: 'cancel' },
           {
-            text: isWorkout ? 'Ver Treino →' : 'Ver Dieta →',
+            text: isWorkout ? t('coach.see_workout') : t('coach.see_diet'),
             onPress: () => router.push(isWorkout ? '/(tabs)/workout' : '/(tabs)/diet'),
           },
         ],
       )
     } catch (err) {
-      Alert.alert('Erro', err instanceof Error ? err.message : 'Tente novamente.')
+      Alert.alert(t('common.error'), err instanceof Error ? err.message : t('common.retry'))
     } finally {
       setApplying(false)
     }
@@ -248,15 +245,15 @@ export default function CoachScreen() {
       swapWorkoutDay(todayStr, newWorkout as unknown as WorkoutSession)
       setPendingGenMsg(null)
       Alert.alert(
-        '✅ Treino atualizado!',
-        'O Coach gerou e aplicou um novo treino para hoje.',
+        t('coach.workout_updated'),
+        t('coach.workout_updated_msg'),
         [
-          { text: 'Fechar', style: 'cancel' },
-          { text: 'Ver Treino →', onPress: () => router.push('/(tabs)/workout') },
+          { text: t('common.close'), style: 'cancel' },
+          { text: t('coach.see_workout'), onPress: () => router.push('/(tabs)/workout') },
         ],
       )
     } catch (err) {
-      Alert.alert('Erro', err instanceof Error ? err.message : 'Tente novamente.')
+      Alert.alert(t('common.error'), err instanceof Error ? err.message : t('common.retry'))
     } finally {
       setApplying(false)
     }
@@ -275,10 +272,10 @@ export default function CoachScreen() {
         <View style={s.headerLeft}>
           <View style={s.avatarAI}><Text style={{ fontSize: 18 }}>🌿</Text></View>
           <View>
-            <Text style={s.headerTitle}>Coach NutriAI</Text>
+            <Text style={s.headerTitle}>{t('coach.title')}</Text>
             <View style={s.onlineRow}>
               <View style={s.onlineDot} />
-              <Text style={s.onlineText}>Online agora</Text>
+              <Text style={s.onlineText}>{t('coach.online')}</Text>
             </View>
           </View>
         </View>
@@ -312,7 +309,7 @@ export default function CoachScreen() {
                 style={[s.bubble, msg.role === 'user' ? s.bubbleUser : s.bubbleAI]}
                 onLongPress={() => {
                   Clipboard.setString(msg.content)
-                  Alert.alert('Copiado!', 'Mensagem copiada para a área de transferência.')
+                  Alert.alert(t('common.copied'), t('common.copiedMsg'))
                 }}
                 activeOpacity={0.8}
               >
@@ -331,7 +328,7 @@ export default function CoachScreen() {
               >
                 {applyingSwap
                   ? <ActivityIndicator size="small" color={Colors.bg} />
-                  : <Text style={s.applyBtnText}>✅ Aplicar sugestão ao plano →</Text>
+                  : <Text style={s.applyBtnText}>{t('coach.apply_btn')}</Text>
                 }
               </TouchableOpacity>
             )}
@@ -353,9 +350,9 @@ export default function CoachScreen() {
           horizontal showsHorizontalScrollIndicator={false}
           style={s.quickScroll} contentContainerStyle={s.quickRow}
         >
-          {QUICK_MSGS.map(q => (
-            <TouchableOpacity key={q} style={s.quickBtn} onPress={() => handleSend(q)}>
-              <Text style={s.quickText}>{q}</Text>
+          {QUICK_MSG_KEYS.map(key => (
+            <TouchableOpacity key={key} style={s.quickBtn} onPress={() => handleSend(t(key as any))}>
+              <Text style={s.quickText}>{t(key as any)}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -363,9 +360,9 @@ export default function CoachScreen() {
 
       {messages.length <= 4 && (
         <View style={s.supportSection}>
-          <Text style={s.supportLabel}>💙 Precisa de apoio?</Text>
+          <Text style={s.supportLabel}>{t('coach.support_title')}</Text>
           <View style={s.supportRow}>
-            {SUPPORT_CHIPS.map(chip => (
+            {SUPPORT_CHIP_DEFS.map(chip => (
               <TouchableOpacity
                 key={chip.type}
                 style={s.supportChip}
@@ -373,7 +370,7 @@ export default function CoachScreen() {
                 disabled={loading}
               >
                 <Text style={s.supportChipEmoji}>{chip.emoji}</Text>
-                <Text style={s.supportChipText}>{chip.label}</Text>
+                <Text style={s.supportChipText}>{t(chip.labelKey as any)}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -384,7 +381,7 @@ export default function CoachScreen() {
       {pendingGenMsg && !loading && (
         <View style={s.navSuggest}>
           <Text style={s.navSuggestText}>
-            💪 Quer que o Coach aplique o treino ao seu plano de hoje?
+            {t('coach.gen_workout_prompt')}
           </Text>
           <View style={s.navSuggestBtns}>
             <TouchableOpacity
@@ -394,7 +391,7 @@ export default function CoachScreen() {
             >
               {applyingSwap
                 ? <ActivityIndicator size="small" color={Colors.bg} />
-                : <Text style={s.navSuggestGoText}>Aplicar ao treino →</Text>
+                : <Text style={s.navSuggestGoText}>{t('coach.apply_workout')}</Text>
               }
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setPendingGenMsg(null)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -408,9 +405,7 @@ export default function CoachScreen() {
       {navSuggestion && (
         <View style={s.navSuggest}>
           <Text style={s.navSuggestText}>
-            {navSuggestion === 'diet'
-              ? '🥗 Quer ver seu plano alimentar de hoje?'
-              : '💪 Quer ver o treino de hoje?'}
+            {navSuggestion === 'diet' ? t('coach.nav_diet') : t('coach.nav_workout')}
           </Text>
           <View style={s.navSuggestBtns}>
             <TouchableOpacity
@@ -421,7 +416,7 @@ export default function CoachScreen() {
               }}
             >
               <Text style={s.navSuggestGoText}>
-                {navSuggestion === 'diet' ? 'Ver Dieta →' : 'Ver Treino →'}
+                {navSuggestion === 'diet' ? t('coach.see_diet') : t('coach.see_workout')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setNavSuggestion(null)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -436,7 +431,7 @@ export default function CoachScreen() {
           style={s.input}
           value={input}
           onChangeText={setInput}
-          placeholder="Escreva uma mensagem..."
+          placeholder={t('coach.placeholder')}
           placeholderTextColor={Colors.text3}
           multiline
           maxLength={1000}

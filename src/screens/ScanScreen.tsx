@@ -13,6 +13,7 @@ import { db } from '@services/supabase'
 import { useUserStore, useNutritionStore, useProgressStore } from '@store/index'
 import type { ScanResult, Meal } from '@types/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useT } from '@/i18n/useT'
 
 // BUG 5 FIX: determinar tipo da refeição pelo horário do dia
 function getMealTypeFromTime(): Meal['type'] {
@@ -37,6 +38,7 @@ const TEXT_EXAMPLES = [
 
 export default function ScanScreen() {
   const insets = useSafeAreaInsets()
+  const { t } = useT()
   const [permission, requestPermission] = useCameraPermissions()
   const [mode, setMode]           = useState<ScanMode>('photo')
   const [scanState, setScanState] = useState<ScanState>('idle')
@@ -59,7 +61,7 @@ export default function ScanScreen() {
     if (!permission?.granted) {
       const { granted } = await requestPermission()
       if (!granted) {
-        Alert.alert('Câmera necessária', 'O NutriAI precisa da câmera para analisar seu prato.')
+        Alert.alert(t('scan.permission_camera'), t('scan.permission_camera_msg'))
         return
       }
     }
@@ -93,7 +95,7 @@ export default function ScanScreen() {
       setScanState('result')
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
     } catch (err) {
-      Alert.alert('Erro na análise', err instanceof Error ? err.message : 'Tente novamente.')
+      Alert.alert(t('scan.error_analysis'), err instanceof Error ? err.message : t('common.retry'))
       reset()
     }
   }
@@ -102,7 +104,7 @@ export default function ScanScreen() {
   const analyzeText = async () => {
     const text = textInput.trim()
     if (text.length < 3) {
-      Alert.alert('Descrição muito curta', 'Descreva o prato com pelo menos 3 caracteres.')
+      Alert.alert(t('scan.short_desc'), t('scan.short_desc_msg'))
       return
     }
     setScanState('analyzing')
@@ -112,7 +114,7 @@ export default function ScanScreen() {
       setScanState('result')
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
     } catch (err) {
-      Alert.alert('Erro na análise', err instanceof Error ? err.message : 'Tente novamente.')
+      Alert.alert(t('scan.error_analysis'), err instanceof Error ? err.message : t('common.retry'))
       setScanState('idle')
     }
   }
@@ -165,7 +167,7 @@ export default function ScanScreen() {
     addXp('MEAL_LOGGED')
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
     reset()
-    Alert.alert('✓ Adicionado!', `+${XP_VALUES.MEAL_LOGGED} XP ganhos`)
+    Alert.alert(t('scan.added'), t('scan.added_xp', { xp: XP_VALUES.MEAL_LOGGED }))
   }
 
   const reset = () => {
@@ -181,7 +183,7 @@ export default function ScanScreen() {
       <CameraView ref={cameraRef} style={s.camera} facing="back">
         <View style={s.cameraOverlay}>
           <View style={s.cameraFrame} />
-          <Text style={s.cameraHint}>Enquadre o prato inteiro</Text>
+          <Text style={s.cameraHint}>{t('scan.camera_hint')}</Text>
         </View>
         <View style={s.cameraControls}>
           <TouchableOpacity style={s.cameraCancelBtn} onPress={reset}>
@@ -202,15 +204,15 @@ export default function ScanScreen() {
   if (scanState === 'analyzing') return (
     <View style={s.analyzingWrap}>
       <ActivityIndicator size="large" color={Colors.accent} />
-      <Text style={s.analyzingTitle}>Analisando{mode === 'text' ? ' descrição' : ' foto'}...</Text>
-      <Text style={s.analyzingSub}>A IA está identificando os alimentos</Text>
+      <Text style={s.analyzingTitle}>{mode === 'text' ? t('scan.analyzing_text') : t('scan.analyzing_photo')}</Text>
+      <Text style={s.analyzingSub}>{t('scan.ai_identifying')}</Text>
     </View>
   )
 
   // ─── RESULTADO ────────────────────────────────────────────────────────
   if (scanState === 'result' && result) return (
     <ScrollView style={s.root} contentContainerStyle={[s.content, { paddingTop: insets.top + 20 }]}>
-      <Text style={s.title}>✅ Análise concluída</Text>
+      <Text style={s.title}>{t('scan.result_done')}</Text>
 
       {photoUri && (
         <Image source={{ uri: photoUri }} style={s.resultPhoto} />
@@ -218,13 +220,13 @@ export default function ScanScreen() {
 
       {/* Totais */}
       <View style={s.totalsCard}>
-        <Text style={s.totalsTitle}>Total da refeição</Text>
+        <Text style={s.totalsTitle}>{t('scan.meal_total')}</Text>
         <View style={s.macrosGrid}>
           {[
-            { label: 'Calorias', val: result.total.calories, unit: 'kcal', color: Colors.accent  },
-            { label: 'Proteína', val: result.total.protein,  unit: 'g',    color: Colors.purple  },
-            { label: 'Carboidr.', val: result.total.carbs,   unit: 'g',    color: Colors.teal    },
-            { label: 'Gordura',  val: result.total.fat,      unit: 'g',    color: Colors.orange  },
+            { label: t('scan.macro_calories'), val: result.total.calories, unit: 'kcal', color: Colors.accent  },
+            { label: t('scan.macro_protein'),  val: result.total.protein,  unit: 'g',    color: Colors.purple  },
+            { label: t('scan.macro_carbs'),    val: result.total.carbs,    unit: 'g',    color: Colors.teal    },
+            { label: t('scan.macro_fat'),      val: result.total.fat,      unit: 'g',    color: Colors.orange  },
           ].map(m => (
             <View key={m.label} style={s.macroBox}>
               <Text style={[s.macroVal, { color: m.color }]}>{Math.round(m.val)}</Text>
@@ -235,7 +237,7 @@ export default function ScanScreen() {
         </View>
         <View style={s.confidenceRow}>
           <Text style={s.confidenceText}>
-            Confiança da IA: {result.confidence}%
+            {t('scan.confidence')} {result.confidence}%
           </Text>
           <View style={[s.confidenceBar, { width: `${result.confidence}%` }]} />
         </View>
@@ -246,7 +248,7 @@ export default function ScanScreen() {
 
       {/* Lista de alimentos */}
       <View style={s.foodsCard}>
-        <Text style={s.foodsTitle}>Alimentos identificados</Text>
+        <Text style={s.foodsTitle}>{t('scan.identified_foods')}</Text>
         {result.foods.map((food, i) => (
           <View key={i} style={s.foodRow}>
             <View style={{ flex: 1 }}>
@@ -265,10 +267,10 @@ export default function ScanScreen() {
 
       {/* Ações */}
       <TouchableOpacity style={s.addBtn} onPress={addToLog}>
-        <Text style={s.addBtnText}>+ Adicionar ao diário  •  +{XP_VALUES.MEAL_LOGGED} XP</Text>
+        <Text style={s.addBtnText}>{t('scan.add_diary', { xp: XP_VALUES.MEAL_LOGGED })}</Text>
       </TouchableOpacity>
       <TouchableOpacity style={s.retryBtn} onPress={reset}>
-        <Text style={s.retryBtnText}>Analisar outra refeição</Text>
+        <Text style={s.retryBtnText}>{t('scan.analyze_another')}</Text>
       </TouchableOpacity>
     </ScrollView>
   )
@@ -281,8 +283,8 @@ export default function ScanScreen() {
     >
       <ScrollView style={s.root} contentContainerStyle={[s.content, { paddingTop: insets.top + 20 }]} keyboardShouldPersistTaps="handled">
 
-        <Text style={s.title}>🍽️ Registrar refeição</Text>
-        <Text style={s.sub}>Fotografe ou descreva o que você comeu</Text>
+        <Text style={s.title}>{t('scan.title')}</Text>
+        <Text style={s.sub}>{t('scan.sub')}</Text>
 
         {/* Toggle de modo */}
         <View style={s.modeToggle}>
@@ -292,7 +294,7 @@ export default function ScanScreen() {
           >
             <Text style={s.modeBtnEmoji}>📷</Text>
             <Text style={[s.modeBtnText, mode === 'photo' && s.modeBtnTextActive]}>
-              Foto
+              {t('scan.photo_tab')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -301,7 +303,7 @@ export default function ScanScreen() {
           >
             <Text style={s.modeBtnEmoji}>✏️</Text>
             <Text style={[s.modeBtnText, mode === 'text' && s.modeBtnTextActive]}>
-              Descrever
+              {t('scan.text_tab')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -311,16 +313,16 @@ export default function ScanScreen() {
           <>
             <TouchableOpacity style={s.cameraZone} onPress={openCamera}>
               <Text style={s.cameraZoneIcon}>📷</Text>
-              <Text style={s.cameraZoneText}>Toque para fotografar</Text>
-              <Text style={s.cameraZoneSub}>Melhor resultado com boa iluminação</Text>
+              <Text style={s.cameraZoneText}>{t('scan.tap_to_photo')}</Text>
+              <Text style={s.cameraZoneSub}>{t('scan.better_light')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={s.galleryZone} onPress={pickFromGallery}>
-              <Text style={s.galleryZoneText}>🖼️  Escolher da galeria</Text>
+              <Text style={s.galleryZoneText}>{t('scan.gallery_label')}</Text>
             </TouchableOpacity>
 
             <View style={s.tipsCard}>
-              <Text style={s.tipsTitle}>Dicas para melhor resultado</Text>
+              <Text style={s.tipsTitle}>{t('scan.tips_title')}</Text>
               {[
                 '📐 Fotografe de cima (visão aérea)',
                 '💡 Boa iluminação — evite sombras',
@@ -337,16 +339,13 @@ export default function ScanScreen() {
         {mode === 'text' && (
           <>
             <View style={s.textCard}>
-              <Text style={s.textCardTitle}>Descreva o que você comeu</Text>
-              <Text style={s.textCardSub}>
-                Pode ser o nome do prato, os ingredientes ou a quantidade.
-                Quanto mais detalhes, mais precisa é a análise.
-              </Text>
+              <Text style={s.textCardTitle}>{t('scan.describe_title')}</Text>
+              <Text style={s.textCardSub}>{t('scan.describe_sub')}</Text>
               <TextInput
                 style={s.textInput}
                 value={textInput}
                 onChangeText={setTextInput}
-                placeholder={placeholder}
+                placeholder={t('scan.text_placeholder')}
                 placeholderTextColor={Colors.text3}
                 multiline
                 numberOfLines={4}
@@ -358,7 +357,7 @@ export default function ScanScreen() {
             </View>
 
             {/* Sugestões rápidas */}
-            <Text style={s.suggestTitle}>Sugestões rápidas</Text>
+            <Text style={s.suggestTitle}>{t('scan.suggest_title')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.suggestScroll}>
               {[
                 'Arroz, feijão e frango',
@@ -385,11 +384,11 @@ export default function ScanScreen() {
               onPress={analyzeText}
               disabled={textInput.trim().length < 3}
             >
-              <Text style={s.analyzeTextBtnText}>✨ Analisar calorias</Text>
+              <Text style={s.analyzeTextBtnText}>{t('scan.analyze_text_btn')}</Text>
             </TouchableOpacity>
 
             <View style={s.tipsCard}>
-              <Text style={s.tipsTitle}>Exemplos de descrição</Text>
+              <Text style={s.tipsTitle}>{t('scan.examples_title')}</Text>
               {[
                 '"2 ovos mexidos com queijo + 2 fatias de pão integral"',
                 '"Prato de feijoada completa com arroz e couve"',

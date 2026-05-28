@@ -18,6 +18,7 @@ import { getGreeting, getMoodAdaptationMessage, gText } from '@utils/index'
 import { HomeSkeleton } from '@components/ui/Skeleton'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { MoodType, WorkoutSession } from '@/types/index'
+import { useT } from '@/i18n/useT'
 
 // ─── Ring progress card ──────────────────────────────────────────────────────
 const RING_R = 26
@@ -63,8 +64,8 @@ function RingCard({ label, value, percent, color, icon, centerText, hint, onPres
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-// Mon=0…Sun=6 (semana começa na segunda, padrão BR)
-const WEEK_LABELS_MON = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
+// Chaves de tradução dos dias: Mon=0…Sun=6
+const WEEK_DAY_KEYS = ['days_short.mon','days_short.tue','days_short.wed','days_short.thu','days_short.fri','days_short.sat','days_short.sun']
 
 function buildCurrentWeek(streak: number, checkedInToday: boolean) {
   const today = new Date()
@@ -85,7 +86,7 @@ function buildCurrentWeek(streak: number, checkedInToday: boolean) {
     const done = isToday
       ? checkedInToday
       : !isFuture && daysAgo > 0 && daysAgo <= streak
-    return { label: WEEK_LABELS_MON[i], done, isToday, isFuture }
+    return { labelKey: WEEK_DAY_KEYS[i], done, isToday, isFuture }
   })
 }
 
@@ -128,6 +129,7 @@ function buildInsight(streak: number, calPercent: number, workoutDone: boolean):
 // ─── Screen ──────────────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const insets = useSafeAreaInsets()
+  const { t } = useT()
   const { user, isLoading }           = useUserStore()
   const { getTodayTotals, weekPlan }  = useNutritionStore()
   const { progress, getRankProgress, logCheckin, getTodayCheckin, addXp } = useProgressStore()
@@ -195,7 +197,7 @@ export default function HomeScreen() {
         <Text style={s.heroName}>{user.name} 👋</Text>
         <View style={s.heroInsightBox}>
           <Text style={s.heroInsightText}>
-            <Text style={s.heroInsightLabel}>💡 Insight do dia: </Text>
+            <Text style={s.heroInsightLabel}>{t('home.insight_label')} </Text>
             {aiInsight}
           </Text>
         </View>
@@ -204,26 +206,26 @@ export default function HomeScreen() {
       {/* ── RINGS ─────────────────────────────────────────── */}
       <View style={s.ringsRow}>
         <RingCard
-          label="Calorias"
-          value={`${totals.calories.toLocaleString('pt-BR')} kcal`}
+          label={t('home.calories')}
+          value={`${totals.calories.toLocaleString()} kcal`}
           percent={calPercent}
           color={Colors.accent}
           icon="🔥"
           centerText={`${Math.round(calPercent)}%`}
         />
         <RingCard
-          label="Hidratação"
+          label={t('home.hydration')}
           value={`${hydrationL} / 2.5L`}
           percent={hydPercent}
           color={Colors.teal}
           icon="💧"
           centerText={`${Math.round(hydPercent)}%`}
-          hint="Toque +200ml"
+          hint={t('home.hydration_hint')}
           onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); addHydration(200) }}
         />
         <RingCard
-          label="Treino"
-          value={workoutDone ? 'Feito!' : 'Pendente'}
+          label={t('home.workout_ring')}
+          value={workoutDone ? t('home.workout_done') : t('home.workout_pending')}
           percent={workoutDone ? 100 : 0}
           color={Colors.purple}
           icon="💪"
@@ -235,7 +237,7 @@ export default function HomeScreen() {
       {todayWorkout && (
         <View style={[s.card, SHADOWS.sm]}>
           <View style={s.cardRowBetween}>
-            <Text style={s.cardTitle}>💪 Treino de Hoje</Text>
+            <Text style={s.cardTitle}>{t('home.workout_today')}</Text>
             <View style={s.badge}>
               <Text style={s.badgeText}>{todayWorkout.estimatedDuration} min</Text>
             </View>
@@ -253,7 +255,7 @@ export default function HomeScreen() {
           )}
 
           <Text style={s.workoutMeta}>
-            {totalExercises} exercício{totalExercises !== 1 ? 's' : ''} · ~{todayWorkout.estimatedDuration} min
+            {t(totalExercises === 1 ? 'home.exercises_count_one' : 'home.exercises_count_other', { count: totalExercises })} · ~{todayWorkout.estimatedDuration} {t('common.min')}
           </Text>
 
           <TouchableOpacity
@@ -261,7 +263,7 @@ export default function HomeScreen() {
             onPress={() => router.push('/(tabs)/workout')}
           >
             <Text style={[s.startBtnFullText, workoutDone && s.startBtnDoneText]}>
-              {workoutDone ? '✓ Treino Concluído' : '▶ Iniciar Treino'}
+              {workoutDone ? t('home.workout_completed') : t('home.start_workout')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -271,14 +273,14 @@ export default function HomeScreen() {
       <View style={[s.card, SHADOWS.sm]}>
         <View style={s.streakTop}>
           <View>
-            <Text style={s.cardTitle}>🔥 Sequência</Text>
+            <Text style={s.cardTitle}>{t('home.streak_title')}</Text>
             <View style={s.streakNumRow}>
               <Text style={s.streakNum}>{streak}</Text>
-              <Text style={s.streakUnit}> dias</Text>
+              <Text style={s.streakUnit}> {t('home.streak_unit')}</Text>
             </View>
           </View>
           <Text style={s.streakRecord}>
-            Recorde: <Text style={s.streakRecordVal}>{(progress as any).bestStreak ?? streak} dias</Text>
+            {t('home.streak_record')} <Text style={s.streakRecordVal}>{(progress as any).bestStreak ?? streak} {t('home.streak_unit')}</Text>
           </Text>
         </View>
         <View style={s.daysRow}>
@@ -296,7 +298,7 @@ export default function HomeScreen() {
                 !day.isToday && !day.done && !day.isFuture && s.dayLblMissed,
                 day.isFuture && s.dayLblFuture,
               ]}>
-                {day.label}
+                {t(day.labelKey as any)}
               </Text>
               <View style={[s.dayDot, day.isToday && s.dayDotToday, day.done && !day.isToday && s.dayDotDone]} />
             </View>
@@ -312,12 +314,12 @@ export default function HomeScreen() {
             <Text style={s.rankLabel}>{rank.label}</Text>
             <Text style={s.rankXp}>
               {(progress.totalXp ?? 0).toLocaleString('pt-BR')} XP
-              {next ? ` · +${(next.minXp - (progress.totalXp ?? 0)).toLocaleString('pt-BR')} para ${next.label}` : ''}
+              {next ? ` · +${(next.minXp - (progress.totalXp ?? 0)).toLocaleString()} para ${next.label}` : ''}
             </Text>
             <View style={s.xpTrack}>
               <Animated.View style={[s.xpFill, { width: xpBarWidth }]} />
             </View>
-            {next && <Text style={s.rankNext}>🏆 próximo: {next.label}</Text>}
+            {next && <Text style={s.rankNext}>{t('home.rank_next')} {next.label}</Text>}
           </View>
           <Text style={s.rankArrow}>›</Text>
         </LinearGradient>
@@ -326,9 +328,9 @@ export default function HomeScreen() {
       {/* ── REFEIÇÕES ─────────────────────────────────────── */}
       <View style={[s.card, SHADOWS.sm]}>
         <View style={s.cardRowBetween}>
-          <Text style={s.cardTitle}>🥗 Refeições de Hoje</Text>
+          <Text style={s.cardTitle}>{t('home.meals_today')}</Text>
           <TouchableOpacity onPress={() => router.push('/(tabs)/diet')}>
-            <Text style={s.linkText}>Ver plano →</Text>
+            <Text style={s.linkText}>{t('home.see_plan')}</Text>
           </TouchableOpacity>
         </View>
         {todayPlan?.meals.map(meal => (
@@ -338,7 +340,7 @@ export default function HomeScreen() {
             </Text>
             <View style={{ flex: 1 }}>
               <Text style={s.mealName}>
-                {meal.type === 'breakfast' ? 'Café da manhã' : meal.type === 'lunch' ? 'Almoço' : meal.type === 'dinner' ? 'Jantar' : 'Lanche'}
+                {t(`meals.${meal.type}` as any)}
               </Text>
               <Text style={s.mealSub}>{meal.foods.slice(0, 2).map(f => f.name).join(', ')}</Text>
             </View>
@@ -353,7 +355,7 @@ export default function HomeScreen() {
           </View>
         ))}
         {(!todayPlan || todayPlan.meals.length === 0) && (
-          <Text style={s.emptyText}>Plano não gerado. Acesse Dieta para criar.</Text>
+          <Text style={s.emptyText}>{t('home.no_plan')}</Text>
         )}
       </View>
 
@@ -364,8 +366,8 @@ export default function HomeScreen() {
             <Text style={s.coachIconEmoji}>🧠</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={s.coachTitle}>Coach de IA</Text>
-            <Text style={s.coachSub}>Tire dúvidas sobre nutrição, treinos e saúde</Text>
+            <Text style={s.coachTitle}>{t('home.coach_title')}</Text>
+            <Text style={s.coachSub}>{t('home.coach_sub')}</Text>
           </View>
           <Text style={s.coachArrow}>›</Text>
         </LinearGradient>
@@ -374,13 +376,13 @@ export default function HomeScreen() {
       {/* ── CHECK-IN EMOCIONAL ────────────────────────────── */}
       <View style={[s.card, SHADOWS.sm]}>
         <View style={s.cardRowBetween}>
-          <Text style={s.cardTitle}>Check-in emocional</Text>
+          <Text style={s.cardTitle}>{t('home.checkin_title')}</Text>
           {checkin
-            ? <View style={s.checkinBadgeDone}><Text style={s.checkinBadgeDoneText}>{checkin.moodEmoji} feito</Text></View>
-            : <View style={s.checkinBadgePending}><Text style={s.checkinBadgePendingText}>Pendente</Text></View>}
+            ? <View style={s.checkinBadgeDone}><Text style={s.checkinBadgeDoneText}>{checkin.moodEmoji} {t('home.checkin_done')}</Text></View>
+            : <View style={s.checkinBadgePending}><Text style={s.checkinBadgePendingText}>{t('home.checkin_pending')}</Text></View>}
         </View>
         <Text style={s.checkinSub}>
-          Como {gText(user.gender, { masc: 'você está', fem: 'você está', neu: 'você está' })} agora?
+          {t('home.checkin_question')}
         </Text>
         <View style={s.moodRow}>
           {MOODS.map(m => {
@@ -411,8 +413,8 @@ export default function HomeScreen() {
         <LinearGradient colors={['#0A1020', '#0A0A0A']} style={[s.card, s.reportCard]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
           <Text style={s.reportIcon}>📊</Text>
           <View style={{ flex: 1 }}>
-            <Text style={s.reportTitle}>Relatório semanal</Text>
-            <Text style={s.reportSub}>Veja sua evolução detalhada desta semana</Text>
+            <Text style={s.reportTitle}>{t('home.report_title')}</Text>
+            <Text style={s.reportSub}>{t('home.report_sub')}</Text>
           </View>
           <Text style={s.reportArrow}>›</Text>
         </LinearGradient>

@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { StyleSheet } from 'react-native'
+import { I18nextProvider } from 'react-i18next'
 import { useUserStore } from '@store/index'
 import { supabase } from '@services/supabase'
 import { dbUserToUser } from '@utils/index'
@@ -24,6 +25,7 @@ import {
   DMSans_400Regular,
   DMSans_500Medium,
 } from '@expo-google-fonts/dm-sans'
+import i18n, { initI18n } from '@/i18n/index'
 
 // Mantém o splash screen enquanto as fontes carregam
 SplashScreen.preventAutoHideAsync()
@@ -31,6 +33,7 @@ SplashScreen.preventAutoHideAsync()
 export default function RootLayout() {
   const { setUser, clearUser, setLoading, updateUser } = useUserStore()
   const [showTrialExpired, setShowTrialExpired] = useState(false)
+  const [i18nReady, setI18nReady] = useState(false)
 
   const [fontsLoaded, fontError] = useFonts({
     Syne_600SemiBold,
@@ -40,12 +43,17 @@ export default function RootLayout() {
     DMSans_500Medium,
   })
 
-  // Esconde o splash assim que as fontes estiverem prontas (ou falharem)
+  // Inicializa i18n na primeira montagem
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    initI18n().then(() => setI18nReady(true))
+  }, [])
+
+  // Esconde o splash assim que as fontes e i18n estiverem prontos
+  useEffect(() => {
+    if ((fontsLoaded || fontError) && i18nReady) {
       SplashScreen.hideAsync()
     }
-  }, [fontsLoaded, fontError])
+  }, [fontsLoaded, fontError, i18nReady])
 
   useEffect(() => {
     let settled = false
@@ -107,7 +115,10 @@ export default function RootLayout() {
     }
   }, [])
 
+  if (!i18nReady) return null
+
   return (
+    <I18nextProvider i18n={i18n}>
     <SafeAreaProvider>
     <GestureHandlerRootView style={s.root}>
       <StatusBar style="light" />
@@ -138,6 +149,7 @@ export default function RootLayout() {
       </Stack>
     </GestureHandlerRootView>
     </SafeAreaProvider>
+    </I18nextProvider>
   )
 }
 

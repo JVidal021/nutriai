@@ -12,20 +12,16 @@ import { ptBR } from 'date-fns/locale'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import SwapItemModal from '@components/ui/SwapItemModal'
 import type { PlannedMeal } from '@/types/index'
+import { useT } from '@/i18n/useT'
 
-const DAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
-const MEAL_LABELS: Record<string, string> = {
-  breakfast: 'Café da manhã',
-  lunch: 'Almoço',
-  dinner: 'Jantar',
-  snack: 'Lanche',
-}
+const DAYS_KEYS = ['days_short.mon','days_short.tue','days_short.wed','days_short.thu','days_short.fri','days_short.sat','days_short.sun']
 const MEAL_EMOJI: Record<string, string> = {
   breakfast: '☕', lunch: '🍗', dinner: '🐟', snack: '🍎',
 }
 
 export default function DietScreen() {
   const insets = useSafeAreaInsets()
+  const { t } = useT()
   const today = new Date().toISOString().split('T')[0]
   const [selectedDay, setSelectedDay] = useState(today)
   const [generating,   setGenerating]   = useState(false)
@@ -56,11 +52,11 @@ export default function DietScreen() {
   const handleGenerate = () => {
     if (!user?.isPremium) {
       Alert.alert(
-        'Funcionalidade Premium',
-        'A geração de plano alimentar por IA está disponível no plano Premium.',
+        t('diet.premium_alert_title'),
+        t('diet.premium_alert_msg'),
         [
-          { text: 'Cancelar', style: 'cancel' },
-          { text: 'Ver Premium', onPress: () => router.push('/(tabs)/subscription') },
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('common.upgrade'), onPress: () => router.push('/(tabs)/subscription') },
         ]
       )
       return
@@ -81,9 +77,9 @@ export default function DietScreen() {
       )
       swapMeal(swapModal.date, swapModal.meal.type, newMeal as unknown as PlannedMeal)
       setSwapModal(null)
-      Alert.alert('✅ Refeição trocada!', 'A IA gerou uma opção personalizada com base no seu motivo.')
+      Alert.alert(t('diet.swap_success'), t('diet.swap_success_msg'))
     } catch (err) {
-      Alert.alert('Erro', err instanceof Error ? err.message : 'Tente novamente.')
+      Alert.alert(t('common.error'), err instanceof Error ? err.message : t('common.retry'))
     } finally {
       setSwapping(false)
     }
@@ -92,7 +88,7 @@ export default function DietScreen() {
   // Abre o Coach com contexto da refeição
   const handleAskCoach = (meal: PlannedMeal, date: string) => {
     const dayName = format(new Date(date + 'T12:00:00'), 'EEEE', { locale: ptBR })
-    const mealLabel: Record<string, string> = { breakfast: 'Café da manhã', lunch: 'Almoço', dinner: 'Jantar', snack: 'Lanche' }
+    const mealLabel: Record<string, string> = { breakfast: t('meals.breakfast'), lunch: t('meals.lunch'), dinner: t('meals.dinner'), snack: t('meals.snack') }
     setPlanContext({
       type:     'diet',
       label:    `${mealLabel[meal.type] ?? meal.type} - ${dayName}`,
@@ -128,9 +124,9 @@ export default function DietScreen() {
           swapMeal(today, meal.type, newMeal as unknown as PlannedMeal)
         })
       )
-      Alert.alert('✅ Alimentação adaptada!', 'As refeições pendentes foram ajustadas para o seu humor de hoje.')
+      Alert.alert(t('diet.mood_adapt_success'), t('diet.mood_adapt_success_msg'))
     } catch (err) {
-      Alert.alert('Erro', err instanceof Error ? err.message : 'Tente novamente.')
+      Alert.alert(t('common.error'), err instanceof Error ? err.message : t('common.retry'))
     } finally {
       setAdaptingMood(false)
     }
@@ -141,7 +137,7 @@ export default function DietScreen() {
     <SwapItemModal
       visible={swapModal !== null}
       type="meal"
-      title={swapModal ? `Trocar ${swapModal.meal.type === 'breakfast' ? 'Café da Manhã' : swapModal.meal.type === 'lunch' ? 'Almoço' : swapModal.meal.type === 'dinner' ? 'Jantar' : 'Lanche'}` : ''}
+      title={swapModal ? `${t('diet.swap_title')}: ${t(`meals.${swapModal.meal.type}` as any)}` : ''}
       loading={swapping}
       onClose={() => setSwapModal(null)}
       onSwap={handleSwap}
@@ -151,8 +147,8 @@ export default function DietScreen() {
       {/* Header */}
       <View style={s.header}>
         <View>
-          <Text style={s.title}>🥗 Plano alimentar</Text>
-          <Text style={s.sub}>Semana atual · Gerado por IA</Text>
+          <Text style={s.title}>{t('diet.title')}</Text>
+          <Text style={s.sub}>{t('diet.subtitle')}</Text>
         </View>
         <TouchableOpacity
           style={[s.genBtn, generating && { opacity: 0.6 }]}
@@ -161,7 +157,7 @@ export default function DietScreen() {
         >
           {generating
             ? <ActivityIndicator size="small" color={Colors.bg} />
-            : <Text style={s.genBtnText}>✨ Gerar</Text>}
+            : <Text style={s.genBtnText}>{t('diet.generate_btn')}</Text>}
         </TouchableOpacity>
       </View>
 
@@ -180,7 +176,7 @@ export default function DietScreen() {
               style={[s.dayPill, isSelected && s.dayPillSel]}
               onPress={() => setSelectedDay(date)}
             >
-              <Text style={[s.dayLabel, isSelected && s.dayLabelSel]}>{DAYS[i]}</Text>
+              <Text style={[s.dayLabel, isSelected && s.dayLabelSel]}>{t(DAYS_KEYS[i] as any)}</Text>
               {isToday && <View style={s.todayDot} />}
               {hasPlan && !isToday && <View style={[s.todayDot, { backgroundColor: Colors.teal }]} />}
             </TouchableOpacity>
@@ -192,18 +188,18 @@ export default function DietScreen() {
       {!selectedPlan ? (
         <View style={s.emptyCard}>
           <Text style={s.emptyEmoji}>🥗</Text>
-          <Text style={s.emptyTitle}>Nenhum plano para este dia</Text>
+          <Text style={s.emptyTitle}>{t('diet.no_plan_title')}</Text>
           <Text style={s.emptySub}>
             {user?.isPremium
-              ? 'Toque em "Gerar" para criar um plano semanal personalizado por IA.'
-              : 'Faça upgrade para Premium e deixe a IA montar sua dieta da semana.'}
+              ? t('diet.no_plan_sub_premium')
+              : t('diet.no_plan_sub_free')}
           </Text>
           <TouchableOpacity
             style={s.emptyBtn}
             onPress={user?.isPremium ? handleGenerate : () => router.push('/(tabs)/subscription')}
           >
             <Text style={s.emptyBtnText}>
-              {user?.isPremium ? '✨ Gerar plano agora' : '👑 Ver Premium'}
+              {user?.isPremium ? t('diet.generate_plan_now') : t('diet.see_premium')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -212,17 +208,17 @@ export default function DietScreen() {
           {/* Daily targets */}
           <View style={s.card}>
             <View style={s.cardRow}>
-              <Text style={s.cardTitle}>Meta do dia</Text>
+              <Text style={s.cardTitle}>{t('diet.day_target')}</Text>
               <Text style={s.calTarget}>
-                {(selectedPlan.targetMacros.calories + (isMoodActive ? moodCalAdj : 0)).toLocaleString('pt-BR')} kcal
+                {(selectedPlan.targetMacros.calories + (isMoodActive ? moodCalAdj : 0)).toLocaleString()} kcal
               </Text>
             </View>
             <View style={s.macroRow}>
               {[
-                { label: 'Proteína', val: selectedPlan.targetMacros.protein, color: Colors.purple, unit: 'g' },
-                { label: 'Carboidrato', val: selectedPlan.targetMacros.carbs, color: Colors.teal, unit: 'g' },
-                { label: 'Gordura', val: selectedPlan.targetMacros.fat, color: Colors.orange, unit: 'g' },
-                { label: 'Fibra', val: selectedPlan.targetMacros.fiber ?? 28, color: Colors.text2, unit: 'g' },
+                { label: t('diet.protein'), val: selectedPlan.targetMacros.protein, color: Colors.purple, unit: 'g' },
+                { label: t('diet.carbs_full'), val: selectedPlan.targetMacros.carbs, color: Colors.teal, unit: 'g' },
+                { label: t('diet.fat'), val: selectedPlan.targetMacros.fat, color: Colors.orange, unit: 'g' },
+                { label: t('diet.fiber'), val: selectedPlan.targetMacros.fiber ?? 28, color: Colors.text2, unit: 'g' },
               ].map(m => (
                 <View key={m.label} style={s.macroPill}>
                   <Text style={[s.macroVal, { color: m.color }]}>{m.val}{m.unit}</Text>
@@ -234,10 +230,12 @@ export default function DietScreen() {
             {isMoodActive && (
               <View style={s.moodBanner}>
                 <Text style={s.moodBannerTitle}>
-                  {checkin!.moodEmoji} Você está {checkin!.mood === 'exhausted' ? 'exausto' : 'cansado'} hoje
+                  {checkin!.mood === 'exhausted'
+                    ? t('diet.mood_you_are_exhausted', { emoji: checkin!.moodEmoji })
+                    : t('diet.mood_you_are_tired',     { emoji: checkin!.moodEmoji })}
                 </Text>
                 <Text style={s.moodBannerText}>
-                  Meta reduzida em {Math.abs(moodCalAdj)} kcal. A IA pode adaptar as refeições pendentes para algo mais leve.
+                  {t('diet.mood_cal_reduced', { adj: Math.abs(moodCalAdj) })}
                 </Text>
                 <TouchableOpacity
                   style={[s.moodAdaptBtn, adaptingMood && { opacity: 0.6 }]}
@@ -246,7 +244,7 @@ export default function DietScreen() {
                 >
                   {adaptingMood
                     ? <ActivityIndicator size="small" color={Colors.bg} />
-                    : <Text style={s.moodAdaptBtnText}>↺ Adaptar refeições ao meu humor</Text>
+                    : <Text style={s.moodAdaptBtnText}>{t('diet.mood_adapt_btn')}</Text>
                   }
                 </TouchableOpacity>
               </View>
@@ -255,7 +253,7 @@ export default function DietScreen() {
             {selectedPlan.adjustedCalories && !isMoodActive && (
               <View style={s.adjustBanner}>
                 <Text style={s.adjustText}>
-                  ⚡ Meta ajustada pela IA: {selectedPlan.adjustedCalories} kcal
+                  {t('diet.ai_adj_label')} {selectedPlan.adjustedCalories} kcal
                   {selectedPlan.adjustmentReason ? ` · ${selectedPlan.adjustmentReason}` : ''}
                 </Text>
               </View>
@@ -267,7 +265,7 @@ export default function DietScreen() {
             <View key={meal.type} style={s.card}>
               <View style={s.cardRow}>
                 <Text style={s.cardTitle}>
-                  {MEAL_EMOJI[meal.type]} {MEAL_LABELS[meal.type] ?? meal.type}
+                  {MEAL_EMOJI[meal.type]} {t(`meals.${meal.type}` as any)}
                 </Text>
                 <Text style={s.mealCal}>~{meal.totalMacros.calories} kcal</Text>
               </View>
@@ -280,31 +278,31 @@ export default function DietScreen() {
                       {food.quantity}{food.unit ?? 'g'} · {food.macros.calories} kcal
                     </Text>
                   </View>
-                  <Text style={s.foodProt}>{food.macros.protein}g prot</Text>
+                  <Text style={s.foodProt}>{food.macros.protein}g {t('diet.prot_short')}</Text>
                 </View>
               ))}
 
               <View style={s.mealActions}>
                 {meal.completed ? (
                   <View style={s.completedBadge}>
-                    <Text style={s.completedText}>✓ Registrado</Text>
+                    <Text style={s.completedText}>{t('diet.registered')}</Text>
                   </View>
                 ) : (
                   <>
                     <View style={s.mealBtns}>
                       <TouchableOpacity style={s.photoBtn} onPress={() => router.push('/(tabs)/scan')}>
-                        <Text style={s.photoBtnText}>📸 Foto</Text>
+                        <Text style={s.photoBtnText}>{t('diet.photo_btn')}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity style={s.doneBtn} onPress={() => handleMarkMeal(meal.type, meal.completed)}>
-                        <Text style={s.doneBtnText}>✓ Comi</Text>
+                        <Text style={s.doneBtnText}>{t('diet.ate_btn')}</Text>
                       </TouchableOpacity>
                     </View>
                     <View style={s.aiRow}>
                       <TouchableOpacity style={s.swapBtn} onPress={() => setSwapModal({ meal, date: selectedDay })}>
-                        <Text style={s.swapBtnText}>↺ Trocar</Text>
+                        <Text style={s.swapBtnText}>{t('diet.swap_btn_short')}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity style={s.coachBtn} onPress={() => handleAskCoach(meal, selectedDay)}>
-                        <Text style={s.coachBtnText}>💬 Pedir ao Coach</Text>
+                        <Text style={s.coachBtnText}>{t('diet.coach_btn')}</Text>
                       </TouchableOpacity>
                     </View>
                   </>

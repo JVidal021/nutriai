@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { Platform, TouchableOpacity, StyleSheet, Text } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useT } from '@/i18n/useT'
 
 const LIME = '#C8F060', GRAY = '#444440', BG = '#111111', BORDER = '#2A2A2A'
 type IconName = React.ComponentProps<typeof Ionicons>['name']
@@ -10,10 +11,10 @@ type IconName = React.ComponentProps<typeof Ionicons>['name']
 // ─── Botão central de câmera ─────────────────────────────────────────────
 function ScanTabButton({ onPress, accessibilityState, style }: any) {
   const focused = accessibilityState?.selected
+  const { t } = useT()
   return (
     <TouchableOpacity
       onPress={onPress}
-      // style recebe as propriedades do React Navigation + nosso estilo com flex: 1
       style={[style, styles.scanBtnWrap]}
       activeOpacity={0.85}
     >
@@ -25,27 +26,30 @@ function ScanTabButton({ onPress, accessibilityState, style }: any) {
       >
         <Ionicons name="camera" size={26} color="#0A0A0A" />
       </LinearGradient>
-      <Text style={[styles.scanLabel, focused && { color: LIME }]}>Câmera</Text>
+      <Text style={[styles.scanLabel, focused && { color: LIME }]}>{t('tabs.camera')}</Text>
     </TouchableOpacity>
   )
 }
 
-const VISIBLE_TABS: Array<{
-  name: string; title: string
+type TabDef = {
+  name: string; titleKey: string
   icon: IconName; iconFocused: IconName
   isCenter?: boolean
-}> = [
-  { name: 'home',    title: 'Home',   icon: 'home-outline',       iconFocused: 'home'       },
-  { name: 'diet',    title: 'Dieta',  icon: 'nutrition-outline',  iconFocused: 'nutrition'  },
-  { name: 'scan',    title: 'Câmera', icon: 'camera-outline',     iconFocused: 'camera',     isCenter: true },
-  { name: 'workout', title: 'Treino', icon: 'barbell-outline',    iconFocused: 'barbell'    },
-  { name: 'profile', title: 'Perfil', icon: 'person-outline',     iconFocused: 'person'     },
+}
+
+const TAB_DEFS: TabDef[] = [
+  { name: 'home',    titleKey: 'tabs.home',    icon: 'home-outline',       iconFocused: 'home'       },
+  { name: 'diet',    titleKey: 'tabs.diet',    icon: 'nutrition-outline',  iconFocused: 'nutrition'  },
+  { name: 'scan',    titleKey: 'tabs.camera',  icon: 'camera-outline',     iconFocused: 'camera',     isCenter: true },
+  { name: 'workout', titleKey: 'tabs.workout', icon: 'barbell-outline',    iconFocused: 'barbell'    },
+  { name: 'profile', titleKey: 'tabs.profile', icon: 'person-outline',     iconFocused: 'person'     },
 ]
 
 const HIDDEN = ['ranks','coach','coop','optimize','routine','subscription','report','feedback']
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets()
+  const { t } = useT()
   // paddingBottom dinâmico: respeita a barra de navegação do Android (soft buttons)
   const tabBarPaddingBottom = Platform.OS === 'ios' ? 24 : Math.max(insets.bottom, 8)
   const tabBarHeight = Platform.OS === 'ios' ? 88 : 56 + tabBarPaddingBottom
@@ -67,12 +71,12 @@ export default function TabsLayout() {
         tabBarLabelStyle: { fontSize: 9, fontWeight: '600', marginTop: 1 },
       }}
     >
-      {VISIBLE_TABS.map(tab => (
+      {TAB_DEFS.map(tab => (
         <Tabs.Screen
           key={tab.name}
           name={tab.name}
           options={{
-            title: tab.title,
+            title: t(tab.titleKey),
             tabBarButton: tab.isCenter
               ? (props) => <ScanTabButton {...props} />
               : undefined,

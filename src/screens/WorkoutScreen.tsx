@@ -15,20 +15,25 @@ import { ptBR } from 'date-fns/locale'
 import SwapItemModal from '@components/ui/SwapItemModal'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { WorkoutSession } from '@/types/index'
+import { useT } from '@/i18n/useT'
 
-const DAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
-const BLOCK_LABELS: Record<string, string> = {
-  warmup: 'Aquecimento', main: 'Principal', cardio: 'Cardio', cooldown: 'Resfriamento',
+const DAYS_KEYS = ['days_short.mon','days_short.tue','days_short.wed','days_short.thu','days_short.fri','days_short.sat','days_short.sun']
+const BLOCK_LABEL_KEYS: Record<string, string> = {
+  warmup: 'workout.block_warmup', main: 'workout.block_main', cardio: 'workout.block_cardio', cooldown: 'workout.block_cooldown',
 }
-const BLOCK_STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-  fixed:   { label: 'Fixo',     color: Colors.teal,   bg: Colors.teal   + '18' },
-  adapted: { label: 'Adaptado', color: Colors.accent,  bg: Colors.accent + '18' },
+const BLOCK_STATUS_KEYS: Record<string, { labelKey: string; color: string; bg: string }> = {
+  fixed:   { labelKey: 'workout.status_fixed',   color: Colors.teal,   bg: Colors.teal   + '18' },
+  adapted: { labelKey: 'workout.status_adapted', color: Colors.accent,  bg: Colors.accent + '18' },
+  ai_added:{ labelKey: 'workout.status_ai_added',color: Colors.orange,  bg: Colors.orange + '18' },
+  locked:  { labelKey: 'workout.status_locked',  color: Colors.text3,   bg: Colors.bg3 },
+}
   ai_added:{ label: 'IA',       color: Colors.orange,  bg: Colors.orange + '18' },
   locked:  { label: 'Bloqueado',color: Colors.text3,   bg: Colors.bg3 },
 }
 
 export default function WorkoutScreen() {
   const insets = useSafeAreaInsets()
+  const { t } = useT()
   const today = new Date().toISOString().split('T')[0]
   const [selectedDay, setSelectedDay] = useState(today)
   const [generating,   setGenerating]   = useState(false)
@@ -99,7 +104,7 @@ export default function WorkoutScreen() {
     try {
       const newWorkout = await swapPlanItem('workout', workout as unknown as Record<string, unknown>, today, reason)
       swapWorkoutDay(today, newWorkout as unknown as WorkoutSession)
-      Alert.alert('✅ Treino adaptado!', 'A IA gerou uma versão mais leve para o seu humor de hoje.')
+      Alert.alert(t('workout.mood_adapt_success'), t('workout.mood_adapt_success_msg'))
     } catch (err) {
       Alert.alert('Erro', err instanceof Error ? err.message : 'Tente novamente.')
     } finally {
@@ -118,8 +123,8 @@ export default function WorkoutScreen() {
   // Navega para feedback se já existe plano
   const handleGenerate = () => {
     if (!user?.isPremium) {
-      Alert.alert('Premium', 'Geração de treinos requer plano Premium.',
-        [{ text: 'Cancelar', style: 'cancel' }, { text: 'Ver Premium', onPress: () => router.push('/(tabs)/subscription') }])
+      Alert.alert(t('workout.premium_alert_title'), t('workout.premium_alert_msg'),
+        [{ text: t('common.cancel'), style: 'cancel' }, { text: t('common.upgrade'), onPress: () => router.push('/(tabs)/subscription') }])
       return
     }
     router.push('/(tabs)/feedback?type=workout')
@@ -138,7 +143,7 @@ export default function WorkoutScreen() {
       )
       swapWorkoutDay(swapModal.date, newWorkout as unknown as WorkoutSession)
       setSwapModal(null)
-      Alert.alert('✅ Treino trocado!', 'A IA adaptou o treino de hoje com base no seu motivo.')
+      Alert.alert(t('workout.swap_success'), t('workout.swap_success_msg'))
     } catch (err) {
       Alert.alert('Erro', err instanceof Error ? err.message : 'Tente novamente.')
     } finally {
@@ -165,11 +170,11 @@ export default function WorkoutScreen() {
   }
 
   const handleFinishWorkout = (workoutId: string) => {
-    Alert.alert('Finalizar treino?', 'Parabéns! Você vai ganhar +40 XP.',
+    Alert.alert(t('workout.finish_confirm_title'), t('workout.finish_confirm_msg'),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Finalizar 💪',
+          text: t('workout.finish_confirm_btn'),
           onPress: () => {
             const workout = weekWorkouts.find(w => w.id === workoutId)
             completeWorkout(workoutId)
@@ -214,11 +219,11 @@ export default function WorkoutScreen() {
 
       <View style={s.header}>
         <View>
-          <Text style={s.title}>💪 Treinos</Text>
-          <Text style={s.sub}>Semana atual · Gerado por IA</Text>
+          <Text style={s.title}>{t('workout.title')}</Text>
+          <Text style={s.sub}>{t('workout.subtitle')}</Text>
         </View>
         <TouchableOpacity style={[s.genBtn, generating && { opacity: 0.6 }]} onPress={handleGenerate} disabled={generating}>
-          {generating ? <ActivityIndicator size="small" color={Colors.bg} /> : <Text style={s.genBtnText}>✨ Gerar</Text>}
+          {generating ? <ActivityIndicator size="small" color={Colors.bg} /> : <Text style={s.genBtnText}>{t('workout.generate_btn')}</Text>}
         </TouchableOpacity>
       </View>
 
@@ -230,7 +235,7 @@ export default function WorkoutScreen() {
           const isToday    = date === today
           return (
             <TouchableOpacity key={date} style={[s.dayPill, isSelected && s.dayPillSel, w?.completed && s.dayPillDone]} onPress={() => setSelectedDay(date)}>
-              <Text style={[s.dayLabel, isSelected && s.dayLabelSel, w?.completed && s.dayLabelDone]}>{DAYS[i]}</Text>
+              <Text style={[s.dayLabel, isSelected && s.dayLabelSel, w?.completed && s.dayLabelDone]}>{t(DAYS_KEYS[i] as any)}</Text>
               {isToday && !w?.completed && <View style={s.dot} />}
               {w?.completed && <Text style={s.doneCheck}>✓</Text>}
             </TouchableOpacity>
@@ -242,10 +247,10 @@ export default function WorkoutScreen() {
       {!todayWorkout ? (
         <View style={s.emptyCard}>
           <Text style={s.emptyEmoji}>🏋️</Text>
-          <Text style={s.emptyTitle}>Nenhum treino para este dia</Text>
-          <Text style={s.emptySub}>{user?.isPremium ? 'Gere seu plano semanal de treinos.' : 'Plano de treinos disponível no Premium.'}</Text>
+          <Text style={s.emptyTitle}>{t('workout.no_workout_title')}</Text>
+          <Text style={s.emptySub}>{user?.isPremium ? t('workout.no_workout_sub_premium') : t('workout.no_workout_sub_free')}</Text>
           <TouchableOpacity style={s.emptyBtn} onPress={user?.isPremium ? handleGenerate : () => router.push('/(tabs)/subscription')}>
-            <Text style={s.emptyBtnText}>{user?.isPremium ? '✨ Gerar treinos' : '👑 Ver Premium'}</Text>
+            <Text style={s.emptyBtnText}>{user?.isPremium ? t('workout.generate_workouts') : t('workout.see_premium')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -254,10 +259,10 @@ export default function WorkoutScreen() {
           {isMoodReduced && checkin && !todayWorkout?.completed && (
             <View style={s.moodBanner}>
               <Text style={s.moodBannerTitle}>
-                {checkin.moodEmoji} Você está {checkin.mood === 'exhausted' ? 'exausto' : 'cansado'} hoje
+                {checkin.moodEmoji} {checkin.mood === 'exhausted' ? t('workout.mood_banner_exhausted') : t('workout.mood_banner_tired')}
               </Text>
               <Text style={s.moodBannerSub}>
-                A IA pode gerar uma versão mais leve do treino de hoje, adaptada para {Math.round(moodIntensity * 100)}% da intensidade normal.
+                {t('workout.mood_banner_sub', { percent: Math.round(moodIntensity * 100) })}
               </Text>
               <TouchableOpacity
                 style={[s.moodAdaptBtn, adaptingMood && { opacity: 0.6 }]}
@@ -266,7 +271,7 @@ export default function WorkoutScreen() {
               >
                 {adaptingMood
                   ? <ActivityIndicator size="small" color={Colors.bg} />
-                  : <Text style={s.moodAdaptBtnText}>↺ Adaptar treino ao meu humor</Text>
+                  : <Text style={s.moodAdaptBtnText}>{t('workout.mood_adapt_btn')}</Text>
                 }
               </TouchableOpacity>
             </View>
@@ -277,9 +282,9 @@ export default function WorkoutScreen() {
             <Text style={s.overviewTitle}>{todayWorkout.title}</Text>
             <View style={s.overviewStats}>
               {[
-                { label: 'Exercícios', val: todayWorkout.blocks.reduce((a, b) => a + (b.exercises?.length ?? 0), 0) },
-                { label: 'Minutos', val: `~${todayWorkout.estimatedDuration}` },
-                { label: 'kcal est.', val: todayWorkout.estimatedCalories },
+                { label: t('workout.exercises'), val: todayWorkout.blocks.reduce((a, b) => a + (b.exercises?.length ?? 0), 0) },
+                { label: t('workout.minutes'), val: `~${todayWorkout.estimatedDuration}` },
+                { label: t('workout.calories_est'), val: todayWorkout.estimatedCalories },
               ].map(stat => (
                 <View key={stat.label} style={s.overviewStat}>
                   <Text style={s.overviewVal}>{stat.val}</Text>
@@ -290,40 +295,40 @@ export default function WorkoutScreen() {
             {!todayWorkout.completed && (
               <>
                 <TouchableOpacity style={s.finishBtn} onPress={() => handleFinishWorkout(todayWorkout.id)}>
-                  <Text style={s.finishBtnText}>🏁 Finalizar treino · +40 XP</Text>
+                  <Text style={s.finishBtnText}>{t('workout.finish_btn')}</Text>
                 </TouchableOpacity>
                 <View style={s.aiRow}>
                   <TouchableOpacity style={s.swapBtn} onPress={() => setSwapModal(todayWorkout)}>
-                    <Text style={s.swapBtnText}>↺ Trocar treino</Text>
+                    <Text style={s.swapBtnText}>{t('workout.swap_btn')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={s.coachBtn} onPress={() => handleAskCoach(todayWorkout)}>
-                    <Text style={s.coachBtnText}>💬 Pedir ao Coach</Text>
+                    <Text style={s.coachBtnText}>{t('workout.coach_btn')}</Text>
                   </TouchableOpacity>
                 </View>
               </>
             )}
             {todayWorkout.completed && (
               <View style={s.completedBanner}>
-                <Text style={s.completedText}>✓ Treino finalizado! +40 XP ganhos</Text>
+                <Text style={s.completedText}>{t('workout.completed_banner')}</Text>
               </View>
             )}
           </View>
 
           {/* Blocks */}
           {todayWorkout.blocks.map(block => {
-            const statusStyle = BLOCK_STATUS_LABELS[block.status] ?? BLOCK_STATUS_LABELS.fixed
+            const statusStyle = BLOCK_STATUS_KEYS[block.status] ?? BLOCK_STATUS_KEYS.fixed
             return (
               <View key={block.id} style={[s.blockCard, block.status === 'adapted' && s.blockAdapted]}>
                 <View style={s.blockHeader}>
                   <View style={{ flex: 1 }}>
                     <Text style={s.blockTitle}>{block.title}</Text>
-                    <Text style={s.blockSub}>{BLOCK_LABELS[block.type]} · {block.durationMin} min</Text>
+                    <Text style={s.blockSub}>{t(BLOCK_LABEL_KEYS[block.type] as any)} · {block.durationMin} {t('common.min')}</Text>
                     {block.originalTitle && (
                       <Text style={s.blockOriginal}>Original: {block.originalTitle}</Text>
                     )}
                   </View>
                   <View style={[s.statusBadge, { backgroundColor: statusStyle.bg }]}>
-                    <Text style={[s.statusText, { color: statusStyle.color }]}>{statusStyle.label}</Text>
+                    <Text style={[s.statusText, { color: statusStyle.color }]}>{t(statusStyle.labelKey as any)}</Text>
                   </View>
                 </View>
 
@@ -350,7 +355,7 @@ export default function WorkoutScreen() {
                             {(() => {
                               const isTimeBased = /\d+\s*(s|seg|min)/i.test(String(ex.reps))
                               const repsText = isTimeBased ? String(ex.reps) : `${ex.reps} reps`
-                              return `${ex.sets} séries · ${repsText}${ex.weight ? ` · ${ex.weight} kg` : ''} · pausa ${REST_SECONDS}s`
+                              return `${ex.sets} ${t('common.series')} · ${repsText}${ex.weight ? ` · ${ex.weight} ${t('common.kg')}` : ''} · ${t('common.rest')} ${REST_SECONDS}s`
                             })()}
                           </Text>
                         </View>
@@ -378,7 +383,7 @@ export default function WorkoutScreen() {
                             <View style={[s.restFill, { width: `${restProgress * 100}%` as any }]} />
                           </View>
                           <TouchableOpacity onPress={skipRest} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                            <Text style={s.restSkip}>Pular</Text>
+                            <Text style={s.restSkip}>{t('workout.skip_rest')}</Text>
                           </TouchableOpacity>
                         </View>
                       )}
@@ -402,7 +407,7 @@ export default function WorkoutScreen() {
                             >
                               <Text style={s.chipTipIcon}>{tipVisible ? '✕' : '💡'}</Text>
                               <Text style={[s.chipTipText, tipVisible && { color: Colors.accent }]}>
-                                {tipVisible ? 'Fechar dica' : 'Dica de execução'}
+                                {tipVisible ? t('common.seeLess') : t('workout.tip_label')}
                               </Text>
                             </TouchableOpacity>
                           )}
