@@ -191,7 +191,20 @@ export default function CoachScreen() {
       }
 
       setPlanContext(null)
-      Alert.alert('✅ Plano atualizado!', 'A sugestão do Coach foi aplicada ao seu plano.')
+      const isWorkout = planContext.type !== 'diet'
+      Alert.alert(
+        '✅ Plano atualizado!',
+        isWorkout
+          ? 'A sugestão do Coach foi aplicada ao treino. Quer conferir agora?'
+          : 'A sugestão do Coach foi aplicada à dieta. Quer conferir agora?',
+        [
+          { text: 'Fechar', style: 'cancel' },
+          {
+            text: isWorkout ? 'Ver Treino →' : 'Ver Dieta →',
+            onPress: () => router.push(isWorkout ? '/(tabs)/workout' : '/(tabs)/diet'),
+          },
+        ],
+      )
     } catch (err) {
       Alert.alert('Erro', err instanceof Error ? err.message : 'Tente novamente.')
     } finally {

@@ -61,17 +61,29 @@ function RingCard({ label, value, percent, color, icon, centerText, onPress }: R
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-const DAY_LABELS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
+// Mon=0…Sun=6 (semana começa na segunda, padrão BR)
+const WEEK_LABELS_MON = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
 
-function buildLast7Days(streak: number, checkedInToday: boolean) {
+function buildCurrentWeek(streak: number, checkedInToday: boolean) {
   const today = new Date()
+  const todayStr = today.toISOString().split('T')[0]
+  // Offset para chegar na segunda-feira da semana atual
+  const dow = today.getDay() // 0=Dom…6=Sáb
+  const mondayOffset = dow === 0 ? 6 : dow - 1
+  const monday = new Date(today)
+  monday.setDate(today.getDate() - mondayOffset)
+
   return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(today)
-    d.setDate(today.getDate() - (6 - i))
-    const isToday = i === 6
-    const daysAgo = 6 - i
-    const done = isToday ? checkedInToday : daysAgo < streak
-    return { label: DAY_LABELS[d.getDay()], done, isToday }
+    const d = new Date(monday)
+    d.setDate(monday.getDate() + i)
+    const dStr = d.toISOString().split('T')[0]
+    const isToday = dStr === todayStr
+    const isFuture = dStr > todayStr
+    const daysAgo = Math.round((today.getTime() - d.getTime()) / 86400000)
+    const done = isToday
+      ? checkedInToday
+      : !isFuture && daysAgo > 0 && daysAgo <= streak
+    return { label: WEEK_LABELS_MON[i], done, isToday, isFuture }
   })
 }
 
@@ -125,7 +137,7 @@ export default function HomeScreen() {
   const { current: rank, next, percent: xpPercent } = getRankProgress()
 
   const muscleChips = useMemo(() => getMuscleChips(todayWorkout), [todayWorkout])
-  const last7Days   = useMemo(() => buildLast7Days(streak, !!checkin), [streak, checkin])
+  const last7Days   = useMemo(() => buildCurrentWeek(streak, !!checkin), [streak, checkin])
   const aiInsight   = useMemo(() => buildInsight(streak, calPercent, workoutDone), [streak, calPercent, workoutDone])
 
   useEffect(() => {
@@ -258,10 +270,15 @@ export default function HomeScreen() {
               key={i}
               style={[
                 s.dayBox,
-                day.isToday ? s.dayToday : day.done ? s.dayDone : s.dayMissed,
+                day.isToday ? s.dayToday : day.done ? s.dayDone : day.isFuture ? s.dayFuture : s.dayMissed,
               ]}
             >
-              <Text style={[s.dayLbl, day.isToday && s.dayLblToday, !day.isToday && !day.done && s.dayLblMissed]}>
+              <Text style={[
+                s.dayLbl,
+                day.isToday && s.dayLblToday,
+                !day.isToday && !day.done && !day.isFuture && s.dayLblMissed,
+                day.isFuture && s.dayLblFuture,
+              ]}>
                 {day.label}
               </Text>
               <View style={[s.dayDot, day.isToday && s.dayDotToday, day.done && !day.isToday && s.dayDotDone]} />
@@ -442,9 +459,11 @@ const s = StyleSheet.create({
   dayDone:         { backgroundColor: 'rgba(200,240,96,.2)', borderWidth: 1, borderColor: 'rgba(200,240,96,.4)' },
   dayToday:        { backgroundColor: Colors.accent },
   dayMissed:       { backgroundColor: Colors.bg3, borderWidth: 1, borderColor: Colors.border },
+  dayFuture:       { backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.border, opacity: 0.4 },
   dayLbl:          { fontSize: 9, fontWeight: '700', color: Colors.accent },
   dayLblToday:     { color: Colors.bg },
   dayLblMissed:    { color: Colors.text3 },
+  dayLblFuture:    { color: Colors.text3 },
   dayDot:          { width: 5, height: 5, borderRadius: 3, backgroundColor: 'transparent' },
   dayDotDone:      { backgroundColor: Colors.accent },
   dayDotToday:     { backgroundColor: Colors.bg },
