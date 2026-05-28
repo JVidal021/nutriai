@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import {
   View, Text, StyleSheet, ScrollView, TextInput,
   TouchableOpacity, KeyboardAvoidingView, Platform,
-  ActivityIndicator, Alert,
+  ActivityIndicator, Alert, Clipboard,
 } from 'react-native'
 import { Colors, Spacing, Radius } from '@constants/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -221,11 +221,18 @@ export default function CoachScreen() {
               {msg.role === 'assistant' && (
                 <View style={s.aiAvatar}><Text style={{ fontSize: 14 }}>🌿</Text></View>
               )}
-              <View style={[s.bubble, msg.role === 'user' ? s.bubbleUser : s.bubbleAI]}>
+              <TouchableOpacity
+                style={[s.bubble, msg.role === 'user' ? s.bubbleUser : s.bubbleAI]}
+                onLongPress={() => {
+                  Clipboard.setString(msg.content)
+                  Alert.alert('Copiado!', 'Mensagem copiada para a área de transferência.')
+                }}
+                activeOpacity={0.8}
+              >
                 <Text style={[s.bubbleText, msg.role === 'user' && s.bubbleTextUser]}>
                   {msg.content}
                 </Text>
-              </View>
+              </TouchableOpacity>
             </View>
 
             {/* "Apply to plan" button — shown below the last AI message when planContext is set */}

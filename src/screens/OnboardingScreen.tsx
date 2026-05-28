@@ -489,16 +489,25 @@ export default function OnboardingScreen() {
               { label: 'Idade', value: age, setter: setAge, min: 12, max: 100 },
             ].map((field) => (
               <View key={field.label} style={s.sliderWrap}>
-                <View style={s.sliderHeader}>
-                  <Text style={s.sliderLabel}>{field.label}</Text>
-                  <Text style={s.sliderValue}>{field.value}</Text>
-                </View>
-                <View style={s.sliderBtns}>
-                  <TouchableOpacity style={s.sliderBtn} onPress={() => field.setter((v) => Math.max(field.min, v - 1))}>
-                    <Text style={s.sliderBtnText}>−</Text>
+                <Text style={s.sliderLabel}>{field.label}</Text>
+                <View style={s.numericRow}>
+                  <TouchableOpacity style={s.numericBtn} onPress={() => field.setter((v) => Math.max(field.min, v - 1))}>
+                    <Text style={s.numericBtnText}>−</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={s.sliderBtn} onPress={() => field.setter((v) => Math.min(field.max, v + 1))}>
-                    <Text style={s.sliderBtnText}>+</Text>
+                  <TextInput
+                    style={s.numericInput}
+                    value={String(field.value)}
+                    onChangeText={(t) => {
+                      const n = parseInt(t.replace(/[^0-9]/g, ''), 10)
+                      if (!isNaN(n)) field.setter(Math.min(field.max, Math.max(field.min, n)))
+                    }}
+                    keyboardType="number-pad"
+                    maxLength={3}
+                    selectTextOnFocus
+                    returnKeyType="done"
+                  />
+                  <TouchableOpacity style={s.numericBtn} onPress={() => field.setter((v) => Math.min(field.max, v + 1))}>
+                    <Text style={s.numericBtnText}>+</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -653,13 +662,12 @@ const s = StyleSheet.create({
   optText:        { flex: 1 },
   optTitle:       { fontSize: 14, fontWeight: '600', color: Colors.text },
   optSub:         { fontSize: 12, color: Colors.text2, marginTop: 1 },
-  sliderWrap:     { marginBottom: Spacing[2] },
-  sliderHeader:   { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  sliderLabel:    { fontSize: 13, color: Colors.text2 },
-  sliderValue:    { fontSize: 16, fontWeight: '700', color: Colors.accent },
-  sliderBtns:     { flexDirection: 'row', gap: 8 },
-  sliderBtn:      { flex: 1, backgroundColor: Colors.bg3, borderRadius: 8, padding: 8, alignItems: 'center', borderWidth: 1, borderColor: Colors.border },
-  sliderBtnText:  { fontSize: 18, color: Colors.text, fontWeight: '600' },
+  sliderWrap:     { marginBottom: Spacing[3] },
+  sliderLabel:    { fontSize: 13, color: Colors.text2, marginBottom: 8 },
+  numericRow:     { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  numericBtn:     { width: 48, height: 52, backgroundColor: Colors.bg3, borderRadius: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: Colors.border },
+  numericBtnText: { fontSize: 22, color: Colors.text, fontWeight: '500', lineHeight: 26 },
+  numericInput:   { flex: 1, height: 52, backgroundColor: Colors.bg3, borderRadius: 10, borderWidth: 1, borderColor: Colors.accent, textAlign: 'center', fontSize: 24, fontWeight: '700', color: Colors.accent },
   tagsWrap:       { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tag:            { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: Colors.border2 },
   tagSel:         { backgroundColor: Colors.accent, borderColor: Colors.accent },
