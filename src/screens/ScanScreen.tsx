@@ -277,7 +277,7 @@ export default function ScanScreen() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView style={s.root} contentContainerStyle={[s.content, { paddingTop: insets.top + 20 }]} keyboardShouldPersistTaps="handled">
 

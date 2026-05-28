@@ -89,10 +89,24 @@ function buildCurrentWeek(streak: number, checkedInToday: boolean) {
   })
 }
 
+const MUSCLE_PT: Record<string, string> = {
+  chest:     'Peito',
+  back:      'Costas',
+  shoulders: 'Ombros',
+  biceps:    'Bíceps',
+  triceps:   'Tríceps',
+  legs:      'Pernas',
+  glutes:    'Glúteos',
+  core:      'Core',
+  cardio:    'Cardio',
+  mobility:  'Mobilidade',
+  arms:      'Braços',
+}
+
 function getMuscleChips(workout: WorkoutSession | undefined): string[] {
   if (!workout) return []
-  // muscleGroups is the typed field on WorkoutSession
-  if (workout.muscleGroups?.length) return workout.muscleGroups.slice(0, 4)
+  if (workout.muscleGroups?.length)
+    return workout.muscleGroups.slice(0, 4).map(g => MUSCLE_PT[g] ?? g)
   // fallback: collect from block titles
   return [...new Set(workout.blocks.map(b => b.title).filter(Boolean))].slice(0, 4)
 }

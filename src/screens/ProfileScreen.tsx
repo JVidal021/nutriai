@@ -488,7 +488,7 @@ export default function ProfileScreen() {
           MODAL: Preferências alimentares
       ════════════════════════════════════════════════════════════════════════ */}
       <Modal visible={editModal === 'food'} transparent animationType="slide">
-        <KeyboardAvoidingView style={s.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <KeyboardAvoidingView style={s.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={[s.modalSheet, { maxHeight: '90%' }]}>
             <View style={s.modalHandle} />
             <Text style={s.modalTitle}>🍽️ Preferências alimentares</Text>
@@ -589,7 +589,7 @@ export default function ProfileScreen() {
           MODAL: Código de convite
       ════════════════════════════════════════════════════════════════════════ */}
       <Modal visible={editModal === 'promo'} transparent animationType="slide">
-        <KeyboardAvoidingView style={s.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <KeyboardAvoidingView style={s.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={s.modalSheet}>
             <View style={s.modalHandle} />
             <Text style={s.modalTitle}>🎁 Código de convite</Text>
@@ -618,7 +618,7 @@ export default function ProfileScreen() {
 
       {/* Modal de peso */}
       <Modal visible={weightModal} transparent animationType="slide">
-        <KeyboardAvoidingView style={s.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <KeyboardAvoidingView style={s.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={s.modalSheet}>
             <View style={s.modalHandle} />
             <Text style={s.modalTitle}>⚖️ Novo peso</Text>

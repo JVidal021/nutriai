@@ -166,15 +166,15 @@ function buildDietPrompt(p: Record<string, unknown>, moodAdjust: number, dates: 
   }
 
   const budgetMap: Record<string, string> = {
-    economico: 'ECONÔMICO — use apenas ingredientes baratos e acessíveis: arroz, feijão, frango, ovos, macarrão, batata, cebola, tomate. NUNCA sugira carnes nobres, salmão, atum fresco, quinoa, berries, suplementos ou ingredientes importados.',
-    moderado:  'MODERADO — ingredientes do dia a dia com boa variedade: frango, carne moída, atum enlatado, ovos, legumes variados, frutas comuns. Evite ingredientes muito caros.',
-    premium:   'SEM RESTRIÇÃO — pode usar qualquer ingrediente: carnes nobres, salmão, atum fresco, quinoa, frutas importadas, suplementos proteicos, ingredientes gourmet.',
+    economico: 'ECONÔMICO — use APENAS ingredientes simples e baratos do dia a dia brasileiro: arroz branco, feijão carioca/preto, frango (peito ou coxa), ovos, macarrão, batata inglesa, mandioca, cebola, tomate, alface, repolho, cenoura, abobrinha, banana, laranja, mamão. NUNCA use: carnes nobres, salmão, atum fresco, quinoa, berries, castanhas, granola importada, pão de centeio, alimentos gourmet ou importados.',
+    moderado:  'MODERADO — ingredientes comuns do supermercado brasileiro: frango grelhado, bife acebolado, carne moída, atum enlatado, ovos mexidos, arroz, feijão, batata doce, cenoura, brócolis, abobrinha, tomate, alface, banana, maçã, laranja, iogurte natural. EVITE ingredientes incomuns, exóticos ou difíceis de encontrar como quinoa, pão de centeio, sementes especiais ou frutas importadas.',
+    premium:   'SEM RESTRIÇÃO — pode usar ingredientes nobres: picanha, filé mignon, salmão grelhado, atum fresco, camarão, quinoa, frutas importadas, castanha-do-pará, azeite extra virgem, whey protein, suplementos, ingredientes gourmet.',
   }
 
   const cookingMap: Record<string, string> = {
-    rapido:    'RÁPIDO (menos de 20 min) — priorize receitas simples: ovos mexidos, frango na frigideira, saladas, vitaminas, iogurte com fruta, receitas de air fryer. EVITE preparações longas.',
-    moderado:  'NORMAL (20–40 min) — receitas práticas mas com variedade: frango assado, arroz com legumes, sopas simples, massas.',
-    elaborado: 'GOSTA DE COZINHAR — pode incluir receitas elaboradas: marmitas completas, pratos com marinada, preparações que exigem mais tempo.',
+    rapido:    'RÁPIDO (menos de 20 min) — priorize preparo simples: omelete, ovos mexidos, frango na chapa, salada com frango desfiado, iogurte com fruta, tapioca, vitamina de banana, pão francês com ovo. EVITE marinadas, assados demorados ou receitas elaboradas.',
+    moderado:  'NORMAL (20–40 min) — receitas práticas do cotidiano: frango assado no forno, arroz com cenoura, feijão com macarrão, bife grelhado com batata, sopa de legumes, macarrão com molho.',
+    elaborado: 'GOSTA DE COZINHAR — pode incluir receitas elaboradas: marmita completa, frango marinado, strogonoff de frango, escondidinho de carne moída, pratos que exigem mais preparo.',
   }
 
   const budget   = budgetMap[(p.food_budget as string) ?? 'moderado'] ?? budgetMap.moderado
@@ -182,7 +182,7 @@ function buildDietPrompt(p: Record<string, unknown>, moodAdjust: number, dates: 
   const likes    = (p.food_likes    as string)?.trim()
   const dislikes = (p.food_dislikes as string)?.trim()
 
-  return `Você é nutricionista especializado em alimentação brasileira. Gere um plano alimentar para 7 dias.
+  return `Você é nutricionista especializado em alimentação brasileira do dia a dia. Gere um plano alimentar para 7 dias.
 
 Perfil:
 - Gênero: ${genderMap[p.gender as string] ?? 'pessoa'}
@@ -197,7 +197,14 @@ REALIDADE ALIMENTAR DO USUÁRIO (SEGUIR OBRIGATORIAMENTE):
 - Orçamento: ${budget}
 - Tempo para cozinhar: ${cooking}
 ${likes    ? `- Alimentos que GOSTA e costuma comer: ${likes}` : ''}
-${dislikes ? `- Alimentos que EVITA ou NÃO GOSTA: ${dislikes} — NÃO inclua esses alimentos em nenhum dia` : ''}
+${dislikes ? `- Alimentos que EVITA ou NÃO GOSTA: ${dislikes} — NÃO inclua esses alimentos em NENHUM dia da semana` : ''}
+
+REGRAS OBRIGATÓRIAS PARA NOMES DE ALIMENTOS:
+- Use nomes ESPECÍFICOS e do dia a dia brasileiro. NUNCA use termos genéricos como "legumes mistos", "vegetais variados", "carne de boi", "proteína magra", "carboidrato complexo".
+- Em vez de "carne de boi" → use: bife grelhado, bife acebolado, carne moída, patinho refogado, acém cozido.
+- Em vez de "legumes mistos" → liste os legumes individuais: cenoura, abobrinha, brócolis, chuchu, vagem.
+- Em vez de "vegetais" → especifique: alface, rúcula, tomate, pepino, repolho.
+- Nomes devem ser reconhecíveis por qualquer brasileiro: "Frango grelhado" ✅, "Lean protein" ❌.
 
 Use EXATAMENTE estas datas para os 7 dias, nesta ordem: ${dates.join(', ')}
 
@@ -211,9 +218,9 @@ Retorne um objeto JSON com a chave "days" contendo array de exatamente 7 objetos
         {
           "type": "breakfast",
           "foods": [
-            {"id": "f1", "name": "Aveia com banana", "quantity": 80, "unit": "g", "macros": {"calories": 320, "protein": 10, "carbs": 55, "fat": 6}}
+            {"id": "f1", "name": "Omelete de queijo com pão francês", "quantity": 2, "unit": "unid", "macros": {"calories": 320, "protein": 18, "carbs": 30, "fat": 12}}
           ],
-          "totalMacros": {"calories": 320, "protein": 10, "carbs": 55, "fat": 6},
+          "totalMacros": {"calories": 320, "protein": 18, "carbs": 30, "fat": 12},
           "completed": false
         }
       ]
@@ -221,7 +228,7 @@ Retorne um objeto JSON com a chave "days" contendo array de exatamente 7 objetos
   ]
 }
 
-Inclua breakfast, lunch, dinner e snack em cada dia. Priorize alimentos brasileiros. Varie os pratos ao longo da semana.${feedback ? `\n\nFeedback do usuário sobre a semana anterior:\n"${feedback}"` : ''}`
+Inclua breakfast, lunch, dinner e snack em cada dia. Varie os pratos ao longo da semana. Prato principal do almoço e jantar deve ter nome descritivo (ex: "Frango grelhado com arroz e feijão").${feedback ? `\n\nFeedback do usuário sobre a semana anterior:\n"${feedback}"` : ''}`
 }
 
 function buildWorkoutPrompt(p: Record<string, unknown>, moodAdjust: number, dates: string[], feedback: string) {
