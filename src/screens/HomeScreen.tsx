@@ -17,7 +17,7 @@ import { useDailyStore } from '@store/dailyStore'
 import { getGreeting, getMoodAdaptationMessage, gText } from '@utils/index'
 import { HomeSkeleton } from '@components/ui/Skeleton'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import type { MoodType } from '@/types/index'
+import type { MoodType, WorkoutSession } from '@/types/index'
 
 // ─── Ring progress card ──────────────────────────────────────────────────────
 const RING_R = 26
@@ -75,14 +75,12 @@ function buildLast7Days(streak: number, checkedInToday: boolean) {
   })
 }
 
-function getMuscleChips(workout: ReturnType<ReturnType<typeof useWorkoutStore>['getTodayWorkout']>) {
+function getMuscleChips(workout: WorkoutSession | undefined): string[] {
   if (!workout) return []
-  const chips: string[] = []
-  for (const block of workout.blocks) {
-    const name: string = (block as any).muscleGroup ?? (block as any).name ?? ''
-    if (name) chips.push(name)
-  }
-  return [...new Set(chips)].slice(0, 4)
+  // muscleGroups is the typed field on WorkoutSession
+  if (workout.muscleGroups?.length) return workout.muscleGroups.slice(0, 4)
+  // fallback: collect from block titles
+  return [...new Set(workout.blocks.map(b => b.title).filter(Boolean))].slice(0, 4)
 }
 
 function buildInsight(streak: number, calPercent: number, workoutDone: boolean): string {
@@ -105,22 +103,24 @@ export default function HomeScreen() {
   const { user, isLoading }           = useUserStore()
   const { getTodayTotals, weekPlan }  = useNutritionStore()
   const { progress, getRankProgress, logCheckin, getTodayCheckin, addXp } = useProgressStore()
-  const { getTodayWorkout }           = useWorkoutStore()
+  const { weekWorkouts }              = useWorkoutStore()
   const { hydrationMl, addHydration, resetIfNewDay } = useDailyStore()
 
   const xpAnim  = useRef(new Animated.Value(0)).current
   const calAnim = useRef(new Animated.Value(0)).current
 
+  const todayStr      = new Date().toISOString().split('T')[0]
   const totals        = getTodayTotals()
-  const todayWorkout  = getTodayWorkout()
-  const todayPlan     = weekPlan.find(d => d.date === new Date().toISOString().split('T')[0])
+  // Use weekWorkouts directly so we see completed workouts too
+  const todayWorkout  = weekWorkouts.find(w => w.date === todayStr) as WorkoutSession | undefined
+  const todayPlan     = weekPlan.find(d => d.date === todayStr)
   const checkin       = getTodayCheckin()
   const moodCalAdj    = checkin?.adaptations?.caloriesAdjusted ?? 0
   const targetCal     = (todayPlan?.targetMacros?.calories ?? 1650) + moodCalAdj
   const calPercent    = Math.min((totals.calories / targetCal) * 100, 100)
   const hydPercent    = Math.min((hydrationMl / 2500) * 100, 100)
   const hydrationL    = (hydrationMl / 1000).toFixed(1)
-  const workoutDone   = !!(todayWorkout as any)?.completed
+  const workoutDone   = !!(todayWorkout?.completed)
   const streak        = progress.streak ?? 0
   const { current: rank, next, percent: xpPercent } = getRankProgress()
 
@@ -227,8 +227,13 @@ export default function HomeScreen() {
             {totalExercises} exercício{totalExercises !== 1 ? 's' : ''} · ~{todayWorkout.estimatedDuration} min
           </Text>
 
-          <TouchableOpacity style={s.startBtnFull} onPress={() => router.push('/(tabs)/workout')}>
-            <Text style={s.startBtnFullText}>▶ Iniciar Treino</Text>
+          <TouchableOpacity
+            style={[s.startBtnFull, workoutDone && s.startBtnDone]}
+            onPress={() => router.push('/(tabs)/workout')}
+          >
+            <Text style={[s.startBtnFullText, workoutDone && s.startBtnDoneText]}>
+              {workoutDone ? '✓ Treino Concluído' : '▶ Iniciar Treino'}
+            </Text>
           </TouchableOpacity>
         </View>
       )}
@@ -420,8 +425,10 @@ const s = StyleSheet.create({
   chip:           { backgroundColor: 'rgba(200,240,96,.1)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: 'rgba(200,240,96,.25)' },
   chipText:       { fontSize: 11, fontWeight: '700', color: Colors.accent },
   workoutMeta:    { fontSize: 11, color: Colors.text3, marginBottom: 12 },
-  startBtnFull:   { backgroundColor: Colors.accent, borderRadius: 12, padding: 13, alignItems: 'center' },
+  startBtnFull:     { backgroundColor: Colors.accent, borderRadius: 12, padding: 13, alignItems: 'center' },
   startBtnFullText: { fontSize: 14, fontWeight: '800', color: Colors.bg, letterSpacing: 0.3 },
+  startBtnDone:     { backgroundColor: 'rgba(45,212,170,.15)', borderWidth: 1, borderColor: Colors.teal },
+  startBtnDoneText: { color: Colors.teal },
 
   // Streak
   streakTop:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
