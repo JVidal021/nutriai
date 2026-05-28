@@ -30,10 +30,11 @@ interface RingCardProps {
   color: string
   icon: string
   centerText: string
+  hint?: string
   onPress?: () => void
 }
 
-function RingCard({ label, value, percent, color, icon, centerText, onPress }: RingCardProps) {
+function RingCard({ label, value, percent, color, icon, centerText, hint, onPress }: RingCardProps) {
   const offset = RING_C * (1 - Math.min(percent, 100) / 100)
   return (
     <TouchableOpacity style={s.ringCard} onPress={onPress} activeOpacity={onPress ? 0.75 : 1}>
@@ -56,6 +57,7 @@ function RingCard({ label, value, percent, color, icon, centerText, onPress }: R
       </View>
       <Text style={s.ringLabel}>{label}</Text>
       <Text style={s.ringValue}>{value}</Text>
+      {hint ? <Text style={s.ringHint}>{hint}</Text> : null}
     </TouchableOpacity>
   )
 }
@@ -202,6 +204,7 @@ export default function HomeScreen() {
           color={Colors.teal}
           icon="💧"
           centerText={`${Math.round(hydPercent)}%`}
+          hint="Toque +200ml"
           onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); addHydration(200) }}
         />
         <RingCard
@@ -428,6 +431,7 @@ const s = StyleSheet.create({
   ringIcon:  { fontSize: 10, lineHeight: 12 },
   ringLabel: { fontSize: 10, color: Colors.text2, fontWeight: '600' },
   ringValue: { fontSize: 11, fontWeight: '700', color: Colors.text, textAlign: 'center' },
+  ringHint:  { fontSize: 9, color: Colors.teal, textAlign: 'center', marginTop: 2, opacity: 0.8 },
 
   // Card base
   card:            { backgroundColor: Colors.bg2, borderRadius: Radius.lg, padding: 14, borderWidth: 1, borderColor: Colors.border, marginBottom: 10 },

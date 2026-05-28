@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from 'react'
 import {
   View, Text, StyleSheet, ScrollView, TextInput,
   TouchableOpacity, KeyboardAvoidingView, Platform,
-  ActivityIndicator, Alert, Clipboard,
+  ActivityIndicator, Alert, Clipboard, Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native'
 import { router } from 'expo-router'
 import { Colors, Spacing, Radius } from '@constants/index'
@@ -17,11 +18,23 @@ type NavIntent = 'diet' | 'workout' | null
 const DIET_KEYWORDS    = ['dieta','caloria','alimenta','refeição','refeicao','comer','macros','proteína','proteina','carbo','gordura','plano alimentar','café da manhã','almoço','jantar','lanche']
 const WORKOUT_KEYWORDS = ['treino','exercício','exercicio','série','serie','musculação','musculacao','academia','malhar','peito','costas','perna','ombro','bíceps','biceps','tríceps','triceps']
 
+// Palavras que indicam intenção de GERAR/MUDAR treino (não apenas conversar sobre ele)
+const WORKOUT_GEN_KEYWORDS = [
+  'gera','cria','monta','faz um treino','novo treino','treino novo','refaz','troca o treino',
+  'mude o treino','muda o treino','altere','modifica','substitui','me passa um treino',
+  'quero um treino','me dá um treino','adapta o treino','atualiza o treino',
+]
+
 function detectIntent(text: string): NavIntent {
   const t = text.toLowerCase()
   if (WORKOUT_KEYWORDS.some(k => t.includes(k))) return 'workout'
   if (DIET_KEYWORDS.some(k => t.includes(k)))    return 'diet'
   return null
+}
+
+function detectWorkoutGenIntent(text: string): boolean {
+  const t = text.toLowerCase()
+  return WORKOUT_GEN_KEYWORDS.some(k => t.includes(k))
 }
 
 const QUICK_MSGS = [
@@ -46,6 +59,8 @@ export default function CoachScreen() {
   const [loading, setLoading]       = useState(false)
   const [applyingSwap, setApplying] = useState(false)
   const [navSuggestion, setNavSuggestion] = useState<NavIntent>(null)
+  // Armazena a mensagem do usuário que pediu geração de treino (para aplicar após a IA responder)
+  const [pendingGenMsg, setPendingGenMsg] = useState<string | null>(null)
   const scrollRef = useRef<ScrollView>(null)
 
   const { user, isLoading }                                            = useUserStore()
@@ -74,10 +89,12 @@ export default function CoachScreen() {
 
     setInput('')
     setLoading(true)
-    setNavSuggestion(null) // reset previous suggestion
+    setNavSuggestion(null)
+    setPendingGenMsg(null)
 
-    // Detect intent to suggest tab navigation
-    const intent = detectIntent(msg)
+    // Detecta intenção de navegação e de geração de treino
+    const intent    = detectIntent(msg)
+    const isGenReq  = !planContext && detectWorkoutGenIntent(msg) && !!todayWorkout
 
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
@@ -106,8 +123,13 @@ export default function CoachScreen() {
         content: response,
         timestamp: new Date().toISOString(),
       })
-      // Show navigation suggestion after AI responds
-      if (intent) setNavSuggestion(intent)
+
+      if (isGenReq) {
+        // Aplica automaticamente o treino sugerido pela IA ao plano
+        setPendingGenMsg(msg)
+      } else if (intent) {
+        setNavSuggestion(intent)
+      }
     } catch {
       addMessage({
         id: (Date.now() + 1).toString(),
@@ -212,12 +234,42 @@ export default function CoachScreen() {
     }
   }
 
+  // Aplica treino gerado pelo coach via chat livre (sem planContext)
+  const handleApplyGenerated = async () => {
+    if (!pendingGenMsg || !todayWorkout) return
+    setApplying(true)
+    try {
+      const newWorkout = await swapPlanItem(
+        'workout',
+        todayWorkout as unknown as Record<string, unknown>,
+        todayStr,
+        pendingGenMsg,
+      )
+      swapWorkoutDay(todayStr, newWorkout as unknown as WorkoutSession)
+      setPendingGenMsg(null)
+      Alert.alert(
+        '✅ Treino atualizado!',
+        'O Coach gerou e aplicou um novo treino para hoje.',
+        [
+          { text: 'Fechar', style: 'cancel' },
+          { text: 'Ver Treino →', onPress: () => router.push('/(tabs)/workout') },
+        ],
+      )
+    } catch (err) {
+      Alert.alert('Erro', err instanceof Error ? err.message : 'Tente novamente.')
+    } finally {
+      setApplying(false)
+    }
+  }
+
   return (
     <KeyboardAvoidingView
       style={s.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={90}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? insets.bottom + 60 : 0}
     >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={{ flex: 1 }}>
       {/* Header */}
       <View style={[s.header, { paddingTop: insets.top + 12 }]}>
         <View style={s.headerLeft}>
@@ -328,6 +380,30 @@ export default function CoachScreen() {
         </View>
       )}
 
+      {/* ── Aplicar treino gerado pelo coach (chat livre) ── */}
+      {pendingGenMsg && !loading && (
+        <View style={s.navSuggest}>
+          <Text style={s.navSuggestText}>
+            💪 Quer que o Coach aplique o treino ao seu plano de hoje?
+          </Text>
+          <View style={s.navSuggestBtns}>
+            <TouchableOpacity
+              style={[s.navSuggestGo, applyingSwap && { opacity: 0.5 }]}
+              onPress={handleApplyGenerated}
+              disabled={applyingSwap}
+            >
+              {applyingSwap
+                ? <ActivityIndicator size="small" color={Colors.bg} />
+                : <Text style={s.navSuggestGoText}>Aplicar ao treino →</Text>
+              }
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setPendingGenMsg(null)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Text style={s.navSuggestDismiss}>✕</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
       {/* ── Tab navigation suggestion ────────────────────── */}
       {navSuggestion && (
         <View style={s.navSuggest}>
@@ -375,6 +451,8 @@ export default function CoachScreen() {
             : <Text style={s.sendIcon}>↑</Text>}
         </TouchableOpacity>
       </View>
+      </View>
+      </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   )
 }
