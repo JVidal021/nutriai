@@ -5,15 +5,16 @@ import { Colors, Spacing, Radius } from '@constants/index'
 import { useProgressStore, useUserStore } from '@store/index'
 import { calcTMB, calcTDEE, calcTargetCalories } from '@utils/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useT } from '@/i18n/useT'
 
 export default function RoutineScreen() {
   const insets  = useSafeAreaInsets()
+  const { t } = useT()
   const { user } = useUserStore()
   const { getTodayCheckin } = useProgressStore()
   const checkin = getTodayCheckin()
   const isTired = checkin?.mood === 'tired' || checkin?.mood === 'exhausted'
 
-  // Meta calórica calculada a partir do perfil real do usuário
   const baseCalories = user
     ? calcTargetCalories(
         calcTDEE(
@@ -27,72 +28,74 @@ export default function RoutineScreen() {
   const blocks = [
     {
       emoji: '🔥',
-      title: 'Aquecimento',
-      sub: '10 min · obrigatório',
-      statusLabel: 'Fixo',
+      titleKey: 'routine.block_warmup_title',
+      subKey:   'routine.block_warmup_sub',
+      statusKey:'routine.block_warmup_status',
       statusColor: Colors.teal,
       statusBg: Colors.teal + '18',
       adapted: false,
     },
     {
       emoji: isTired ? '🧘' : '💪',
-      title: isTired ? 'Mobilidade + Alongamento' : 'Peito + Tríceps',
-      sub: isTired ? '25 min · adaptado automaticamente' : '50 min · treino principal',
-      statusLabel: isTired ? 'Adaptado' : 'Principal',
+      titleKey: isTired ? 'routine.block_tired_title'  : 'routine.block_main_title',
+      subKey:   isTired ? 'routine.block_tired_sub'    : 'routine.block_main_sub',
+      statusKey:isTired ? 'routine.block_tired_status' : 'routine.block_main_status',
       statusColor: isTired ? Colors.accent : Colors.purple,
       statusBg: isTired ? Colors.accent + '18' : Colors.purple + '18',
       adapted: isTired,
     },
     {
       emoji: isTired ? '🚶' : '🏃',
-      title: isTired ? 'Caminhada leve' : 'Cardio moderado',
-      sub: `${isTired ? 20 : 15} min · ${isTired ? 'adicionado pela IA' : 'finalização'}`,
-      statusLabel: 'IA',
+      titleKey: isTired ? 'routine.block_tired_cardio_title' : 'routine.block_cardio_title',
+      subKey:   isTired ? 'routine.block_tired_cardio_sub'   : 'routine.block_cardio_sub',
+      statusKey:'routine.block_cardio_status',
       statusColor: Colors.orange,
       statusBg: Colors.orange + '18',
       adapted: false,
     },
     {
       emoji: '❄️',
-      title: 'Resfriamento',
-      sub: '5 min · sempre ao final',
-      statusLabel: 'Fixo',
+      titleKey: 'routine.block_cooldown_title',
+      subKey:   'routine.block_cooldown_sub',
+      statusKey:'routine.block_cooldown_status',
       statusColor: Colors.teal,
       statusBg: Colors.teal + '18',
       adapted: false,
     },
   ]
 
+  const RULES = [
+    { emoji: '😔', titleKey: 'routine.rule1_title', descKey: 'routine.rule1_desc' },
+    { emoji: '📅', titleKey: 'routine.rule2_title', descKey: 'routine.rule2_desc' },
+    { emoji: '🔥', titleKey: 'routine.rule3_title', descKey: 'routine.rule3_desc' },
+  ]
+
   const handleStart = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-    Alert.alert('Rotina iniciada!', 'Boa sorte no treino de hoje 💪')
+    Alert.alert(t('routine.started_title' as any), t('routine.started_msg' as any))
   }
 
   return (
     <ScrollView style={s.root} contentContainerStyle={[s.content, { paddingTop: insets.top + 20 }]} showsVerticalScrollIndicator={false}>
-      <Text style={s.title}>⚡ Rotina Modular</Text>
-      <Text style={s.sub}>Adaptada em tempo real com base no seu check-in</Text>
+      <Text style={s.title}>{t('routine.title' as any)}</Text>
+      <Text style={s.sub}>{t('routine.sub' as any)}</Text>
 
       {isTired && checkin?.adaptations && (
         <View style={s.adaptBanner}>
           <Text style={s.adaptText}>
-            🧠 Rotina recalculada — check-in: {checkin.moodEmoji} {checkin.adaptations.message}
+            🧠 {checkin.moodEmoji} {checkin.adaptations.message}
           </Text>
         </View>
       )}
 
       <View style={s.card}>
-        <Text style={s.cardTitle}>Como a IA cuida de você</Text>
-        {[
-          { emoji: '😔', title: 'Quando você está cansado', desc: 'O treino do dia fica mais leve e o jantar é ajustado para o menor gasto calórico.' },
-          { emoji: '📅', title: 'Quando um treino foi pulado', desc: 'A IA inclui uma sessão de reposição equilibrada no dia seguinte.' },
-          { emoji: '🔥', title: 'Com 7+ dias de sequência', desc: 'Treinos mais desafiadores são desbloqueados e uma semana de recuperação é sugerida.' },
-        ].map(rule => (
-          <View key={rule.title} style={s.ruleRow}>
+        <Text style={s.cardTitle}>{t('routine.ai_care_title' as any)}</Text>
+        {RULES.map(rule => (
+          <View key={rule.titleKey} style={s.ruleRow}>
             <Text style={s.ruleEmoji}>{rule.emoji}</Text>
             <View style={{ flex: 1 }}>
-              <Text style={s.ruleTitle}>{rule.title}</Text>
-              <Text style={s.ruleDesc}>{rule.desc}</Text>
+              <Text style={s.ruleTitle}>{t(rule.titleKey as any)}</Text>
+              <Text style={s.ruleDesc}>{t(rule.descKey as any)}</Text>
             </View>
           </View>
         ))}
@@ -100,47 +103,47 @@ export default function RoutineScreen() {
 
       {isTired && checkin?.adaptations && (
         <View style={s.card}>
-          <Text style={s.cardTitle}>Ajuste calórico de hoje</Text>
+          <Text style={s.cardTitle}>{t('routine.cal_adjust_title' as any)}</Text>
           <View style={s.adjustRow}>
-            <Text style={s.adjustLabel}>Meta original</Text>
+            <Text style={s.adjustLabel}>{t('routine.cal_original' as any)}</Text>
             <Text style={[s.adjustVal, { textDecorationLine: 'line-through', color: Colors.text3 }]}>
-              {baseCalories.toLocaleString('pt-BR')} kcal
+              {baseCalories.toLocaleString()} kcal
             </Text>
           </View>
           <View style={s.adjustRow}>
-            <Text style={s.adjustLabel}>Ajuste (treino leve)</Text>
+            <Text style={s.adjustLabel}>{t('routine.cal_adjust' as any)}</Text>
             <Text style={[s.adjustVal, { color: Colors.orange }]}>{checkin.adaptations.caloriesAdjusted} kcal</Text>
           </View>
           <View style={[s.adjustRow, { borderBottomWidth: 0 }]}>
-            <Text style={[s.adjustLabel, { fontWeight: '700', color: Colors.text }]}>Nova meta</Text>
+            <Text style={[s.adjustLabel, { fontWeight: '700', color: Colors.text }]}>{t('routine.cal_new' as any)}</Text>
             <Text style={[s.adjustVal, { color: Colors.accent, fontSize: 18 }]}>
-              {(baseCalories + (checkin.adaptations.caloriesAdjusted ?? 0)).toLocaleString('pt-BR')} kcal
+              {(baseCalories + (checkin.adaptations.caloriesAdjusted ?? 0)).toLocaleString()} kcal
             </Text>
           </View>
         </View>
       )}
 
-      <Text style={[s.cardTitle, { marginBottom: 8 }]}>Blocos de hoje</Text>
+      <Text style={[s.cardTitle, { marginBottom: 8 }]}>{t('routine.blocks_today' as any)}</Text>
       {blocks.map((block, i) => (
         <View key={i} style={[s.blockCard, block.adapted && s.blockAdapted]}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
             <Text style={{ fontSize: 22 }}>{block.emoji}</Text>
             <View style={{ flex: 1 }}>
-              <Text style={s.blockTitle}>{block.title}</Text>
-              <Text style={s.blockSub}>{block.sub}</Text>
+              <Text style={s.blockTitle}>{t(block.titleKey as any)}</Text>
+              <Text style={s.blockSub}>{t(block.subKey as any)}</Text>
               {block.adapted && (
-                <Text style={s.blockOriginal}>Original: Peito + Tríceps · substituído pelo check-in</Text>
+                <Text style={s.blockOriginal}>{t('routine.block_original_text' as any)}</Text>
               )}
             </View>
             <View style={[s.blockBadge, { backgroundColor: block.statusBg }]}>
-              <Text style={[s.blockBadgeText, { color: block.statusColor }]}>{block.statusLabel}</Text>
+              <Text style={[s.blockBadgeText, { color: block.statusColor }]}>{t(block.statusKey as any)}</Text>
             </View>
           </View>
         </View>
       ))}
 
       <TouchableOpacity style={s.startBtn} onPress={handleStart}>
-        <Text style={s.startBtnText}>▶ Iniciar rotina adaptada</Text>
+        <Text style={s.startBtnText}>{t('routine.start_btn' as any)}</Text>
       </TouchableOpacity>
     </ScrollView>
   )

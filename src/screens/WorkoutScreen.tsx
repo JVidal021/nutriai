@@ -11,7 +11,6 @@ import { useWorkoutStore, useUserStore, useProgressStore, useCoachStore } from '
 import { swapPlanItem } from '@services/ai'
 import { db } from '@services/supabase'
 import { format, addDays, startOfWeek } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
 import SwapItemModal from '@components/ui/SwapItemModal'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { WorkoutSession } from '@/types/index'
@@ -26,9 +25,6 @@ const BLOCK_STATUS_KEYS: Record<string, { labelKey: string; color: string; bg: s
   adapted: { labelKey: 'workout.status_adapted', color: Colors.accent,  bg: Colors.accent + '18' },
   ai_added:{ labelKey: 'workout.status_ai_added',color: Colors.orange,  bg: Colors.orange + '18' },
   locked:  { labelKey: 'workout.status_locked',  color: Colors.text3,   bg: Colors.bg3 },
-}
-  ai_added:{ label: 'IA',       color: Colors.orange,  bg: Colors.orange + '18' },
-  locked:  { label: 'Bloqueado',color: Colors.text3,   bg: Colors.bg3 },
 }
 
 export default function WorkoutScreen() {
@@ -106,7 +102,7 @@ export default function WorkoutScreen() {
       swapWorkoutDay(today, newWorkout as unknown as WorkoutSession)
       Alert.alert(t('workout.mood_adapt_success'), t('workout.mood_adapt_success_msg'))
     } catch (err) {
-      Alert.alert('Erro', err instanceof Error ? err.message : 'Tente novamente.')
+      Alert.alert(t('common.error' as any), err instanceof Error ? err.message : t('common.retry' as any))
     } finally {
       setAdaptingMood(false)
     }
@@ -145,7 +141,7 @@ export default function WorkoutScreen() {
       setSwapModal(null)
       Alert.alert(t('workout.swap_success'), t('workout.swap_success_msg'))
     } catch (err) {
-      Alert.alert('Erro', err instanceof Error ? err.message : 'Tente novamente.')
+      Alert.alert(t('common.error' as any), err instanceof Error ? err.message : t('common.retry' as any))
     } finally {
       setSwapping(false)
     }
@@ -153,10 +149,10 @@ export default function WorkoutScreen() {
 
   // Abre o Coach com contexto do treino
   const handleAskCoach = (workout: WorkoutSession) => {
-    const dayName = format(new Date(workout.date + 'T12:00:00'), 'EEEE', { locale: ptBR })
+    const dayIdx = (new Date(workout.date + 'T12:00:00').getDay() + 6) % 7
     setPlanContext({
       type:  'workout',
-      label: `Treino - ${dayName}`,
+      label: `${t('tabs.workout')} - ${t(DAYS_KEYS[dayIdx] as any)}`,
       date:  workout.date,
       item:  workout,
     })
@@ -210,7 +206,7 @@ export default function WorkoutScreen() {
     <SwapItemModal
       visible={swapModal !== null}
       type="workout"
-      title={swapModal ? `Trocar treino de ${format(new Date(swapModal.date + 'T12:00:00'), 'EEEE', { locale: ptBR })}` : ''}
+      title={swapModal ? `${t('workout.swap_title')} ${t(DAYS_KEYS[(new Date(swapModal.date + 'T12:00:00').getDay() + 6) % 7] as any)}` : ''}
       loading={swapping}
       onClose={() => setSwapModal(null)}
       onSwap={handleSwap}
@@ -324,7 +320,7 @@ export default function WorkoutScreen() {
                     <Text style={s.blockTitle}>{block.title}</Text>
                     <Text style={s.blockSub}>{t(BLOCK_LABEL_KEYS[block.type] as any)} · {block.durationMin} {t('common.min')}</Text>
                     {block.originalTitle && (
-                      <Text style={s.blockOriginal}>Original: {block.originalTitle}</Text>
+                      <Text style={s.blockOriginal}>{t('workout.block_original')} {block.originalTitle}</Text>
                     )}
                   </View>
                   <View style={[s.statusBadge, { backgroundColor: statusStyle.bg }]}>
@@ -397,7 +393,7 @@ export default function WorkoutScreen() {
                               onPress={() => setVideoModal({ name: ex.name, searchName: ex.searchName })}
                             >
                               <Text style={s.chipDemoIcon}>▶</Text>
-                              <Text style={s.chipDemoText}>Ver demonstração</Text>
+                              <Text style={s.chipDemoText}>{t('workout.demo_btn')}</Text>
                             </TouchableOpacity>
                           )}
                           {ex.tip && (

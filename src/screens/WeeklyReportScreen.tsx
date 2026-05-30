@@ -8,10 +8,17 @@ import { Colors, Spacing, Radius } from '@constants/index'
 import { useProgressStore, useNutritionStore, useWorkoutStore, useUserStore } from '@store/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { format, subDays, startOfWeek, endOfWeek } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+import { useT } from '@/i18n/useT'
+
+// Day-of-week index (0=Sun … 6=Sat) → days_short key
+const DOW_KEYS = [
+  'days_short.sun', 'days_short.mon', 'days_short.tue', 'days_short.wed',
+  'days_short.thu', 'days_short.fri', 'days_short.sat',
+]
 
 export default function WeeklyReportScreen() {
   const insets = useSafeAreaInsets()
+  const { t } = useT()
   const { user, isLoading } = useUserStore()
   const { progress, xpHistory, checkins } = useProgressStore()
   const { weekPlan } = useNutritionStore()
@@ -23,7 +30,7 @@ export default function WeeklyReportScreen() {
   const weekStart = startOfWeek(today, { weekStartsOn: 1 })
   const weekEnd   = endOfWeek(today, { weekStartsOn: 1 })
 
-  const weekLabel = `${format(weekStart, 'd MMM', { locale: ptBR })} – ${format(weekEnd, 'd MMM', { locale: ptBR })}`
+  const weekLabel = `${weekStart.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} – ${weekEnd.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`
 
   // ─── Cálculos da semana ────────────────────────────────────────────────
   const stats = useMemo(() => {
@@ -61,13 +68,15 @@ export default function WeeklyReportScreen() {
       ? Math.round((mealsLogged / totalMeals) * 100)
       : 0
 
-    // Melhor dia da semana (mais XP)
+    // XP por dia — store dayKey for i18n
     const xpByDay = Array.from({ length: 7 }, (_, i) => {
-      const d = format(subDays(weekEnd, 6 - i), 'yyyy-MM-dd')
-      const xp = (xpHistory ?? [])
-        .filter(x => x?.date?.startsWith(d))
+      const d       = subDays(weekEnd, 6 - i)
+      const dateStr = format(d, 'yyyy-MM-dd')
+      const xp      = (xpHistory ?? [])
+        .filter(x => x?.date?.startsWith(dateStr))
         .reduce((a, x) => a + (x?.xp ?? 0), 0)
-      return { day: format(subDays(weekEnd, 6 - i), 'EEE', { locale: ptBR }), xp, date: d }
+      const dayKey  = DOW_KEYS[d.getDay()]
+      return { dayKey, xp, date: dateStr }
     })
     const bestDay = xpByDay.reduce((a, b) => b.xp > a.xp ? b : a, xpByDay[0])
 
@@ -81,32 +90,32 @@ export default function WeeklyReportScreen() {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     const medal = stats.adherence >= 80 ? '🏅' : stats.adherence >= 50 ? '📈' : '💪'
     await Share.share({
-      message:
-        `Meu resumo semanal no NutriAI ${medal}\n\n` +
-        `📅 ${weekLabel}\n` +
-        `⚡ ${stats.weekXp} XP ganhos\n` +
-        `💪 ${stats.workoutsDone} treinos completados\n` +
-        `📸 ${stats.mealsLogged} refeições registradas\n` +
-        `✅ ${stats.adherence}% de aderência alimentar\n\n` +
-        `🌿 NutriAI — Nutrição e treinos com IA`,
+      message: t('weekly_report.share_msg' as any, {
+        medal,
+        weekLabel,
+        xp:        stats.weekXp,
+        workouts:  stats.workoutsDone,
+        meals:     stats.mealsLogged,
+        adherence: stats.adherence,
+      }),
     })
   }
 
   // ─── Insight automático ────────────────────────────────────────────────
   const insight = useMemo(() => {
     if (stats.workoutsDone === 0 && stats.mealsLogged === 0) {
-      return { icon: '💡', text: 'Semana desafiadora? Não desanime — amanhã é uma nova oportunidade. Uma refeição registrada já conta!', color: Colors.text2 }
+      return { icon: '💡', textKey: 'weekly_report.insight_empty', params: {}, color: Colors.text2 }
     }
     if (stats.adherence >= 80 && stats.workoutsDone >= 3) {
-      return { icon: '🔥', text: `Semana incrível! ${stats.adherence}% de aderência e ${stats.workoutsDone} treinos — você está no caminho certo.`, color: Colors.teal }
+      return { icon: '🔥', textKey: 'weekly_report.insight_great', params: { adherence: stats.adherence, workouts: stats.workoutsDone }, color: Colors.teal }
     }
     if (stats.workoutsDone >= 3) {
-      return { icon: '💪', text: `${stats.workoutsDone} treinos nesta semana! Foque agora em registrar as refeições para a IA otimizar melhor seu plano.`, color: Colors.accent }
+      return { icon: '💪', textKey: 'weekly_report.insight_workouts', params: { workouts: stats.workoutsDone }, color: Colors.accent }
     }
     if (stats.adherence >= 80) {
-      return { icon: '🥗', text: `${stats.adherence}% de aderência alimentar — ótima consistência! Adicionar mais treinos vai acelerar seus resultados.`, color: Colors.purple }
+      return { icon: '🥗', textKey: 'weekly_report.insight_adherence', params: { adherence: stats.adherence }, color: Colors.purple }
     }
-    return { icon: '📈', text: 'Consistência é o segredo. Pequenas ações diárias criam grandes resultados ao longo do tempo.', color: Colors.orange }
+    return { icon: '📈', textKey: 'weekly_report.insight_default', params: {}, color: Colors.orange }
   }, [stats])
 
   return (
@@ -115,7 +124,7 @@ export default function WeeklyReportScreen() {
       {/* Header */}
       <View style={s.header}>
         <View>
-          <Text style={s.title}>📊 Relatório semanal</Text>
+          <Text style={s.title}>{t('weekly_report.title' as any)}</Text>
           <Text style={s.sub}>{weekLabel}</Text>
         </View>
         <TouchableOpacity style={s.shareBtn} onPress={handleShare}>
@@ -126,30 +135,30 @@ export default function WeeklyReportScreen() {
       {/* Insight da IA */}
       <View style={[s.insightCard, { borderColor: insight.color + '40' }]}>
         <Text style={s.insightIcon}>{insight.icon}</Text>
-        <Text style={[s.insightText, { color: insight.color }]}>{insight.text}</Text>
+        <Text style={[s.insightText, { color: insight.color }]}>{t(insight.textKey as any, insight.params as any) as string}</Text>
       </View>
 
       {/* Cards de stats */}
       <View style={s.statsGrid}>
         {[
-          { emoji: '⚡', label: 'XP ganhos',           val: stats.weekXp.toLocaleString('pt-BR'), color: Colors.accent  },
-          { emoji: '💪', label: 'Treinos feitos',       val: `${stats.workoutsDone}/5`,            color: Colors.purple  },
-          { emoji: '📸', label: 'Refeições registradas',val: String(stats.mealsLogged),             color: Colors.teal   },
-          { emoji: '✅', label: 'Aderência alimentar',   val: `${stats.adherence}%`,                color: Colors.orange  },
-          { emoji: '🌿', label: 'Check-ins feitos',      val: `${stats.checkinsThisWeek}/7`,        color: Colors.purple  },
-          { emoji: '🔥', label: 'Melhor dia',            val: stats.bestDay.xp > 0 ? stats.bestDay.day : '—', color: Colors.red },
+          { emoji: '⚡', labelKey: 'weekly_report.xp_earned',      val: stats.weekXp.toLocaleString(),      color: Colors.accent  },
+          { emoji: '💪', labelKey: 'weekly_report.workouts_done',  val: `${stats.workoutsDone}/5`,           color: Colors.purple  },
+          { emoji: '📸', labelKey: 'weekly_report.meals_logged',   val: String(stats.mealsLogged),           color: Colors.teal    },
+          { emoji: '✅', labelKey: 'weekly_report.adherence',      val: `${stats.adherence}%`,               color: Colors.orange  },
+          { emoji: '🌿', labelKey: 'weekly_report.checkins_done',  val: `${stats.checkinsThisWeek}/7`,       color: Colors.purple  },
+          { emoji: '🔥', labelKey: 'weekly_report.best_day',       val: stats.bestDay.xp > 0 ? t(stats.bestDay.dayKey as any) : '—', color: Colors.red },
         ].map(stat => (
-          <View key={stat.label} style={s.statCard}>
+          <View key={stat.labelKey} style={s.statCard}>
             <Text style={s.statEmoji}>{stat.emoji}</Text>
             <Text style={[s.statVal, { color: stat.color }]}>{stat.val}</Text>
-            <Text style={s.statLabel}>{stat.label}</Text>
+            <Text style={s.statLabel}>{t(stat.labelKey as any)}</Text>
           </View>
         ))}
       </View>
 
       {/* Gráfico de XP por dia */}
       <View style={s.card}>
-        <Text style={s.cardTitle}>XP por dia</Text>
+        <Text style={s.cardTitle}>{t('weekly_report.xp_per_day' as any)}</Text>
         <View style={s.chart}>
           {stats.xpByDay.map(d => {
             const h = maxXp > 0 ? (d.xp / maxXp) * 100 : 0
@@ -165,7 +174,7 @@ export default function WeeklyReportScreen() {
                   ]} />
                 </View>
                 <Text style={[s.chartLabel, isToday && { color: Colors.accent, fontWeight: '700' }]}>
-                  {d.day}
+                  {t(d.dayKey as any)}
                 </Text>
               </View>
             )
@@ -173,17 +182,17 @@ export default function WeeklyReportScreen() {
         </View>
       </View>
 
-      {/* Comparativo de streaks */}
+      {/* Evolução */}
       <View style={s.card}>
-        <Text style={s.cardTitle}>Evolução</Text>
+        <Text style={s.cardTitle}>{t('weekly_report.evolution' as any)}</Text>
         {[
-          { label: 'Sequência atual',   val: `${progress.streak ?? 0} dias`,          bar: Math.min((progress.streak ?? 0) / 30, 1), color: Colors.orange },
-          { label: 'Melhor sequência',  val: `${progress.longestStreak ?? 0} dias`,   bar: Math.min((progress.longestStreak ?? 0) / 30, 1), color: Colors.teal },
-          { label: 'Aderência geral',   val: `${progress.adherencePercent ?? 0}%`,    bar: (progress.adherencePercent ?? 0) / 100, color: Colors.accent },
+          { labelKey: 'weekly_report.current_streak', val: `${progress.streak ?? 0} ${t('weekly_report.days_unit' as any)}`,          bar: Math.min((progress.streak ?? 0) / 30, 1), color: Colors.orange },
+          { labelKey: 'weekly_report.best_streak',    val: `${progress.longestStreak ?? 0} ${t('weekly_report.days_unit' as any)}`,   bar: Math.min((progress.longestStreak ?? 0) / 30, 1), color: Colors.teal },
+          { labelKey: 'weekly_report.general_adherence', val: `${progress.adherencePercent ?? 0}%`, bar: (progress.adherencePercent ?? 0) / 100, color: Colors.accent },
         ].map(item => (
-          <View key={item.label} style={s.progressRow}>
+          <View key={item.labelKey} style={s.progressRow}>
             <View style={s.progressLabelRow}>
-              <Text style={s.progressLabel}>{item.label}</Text>
+              <Text style={s.progressLabel}>{t(item.labelKey as any)}</Text>
               <Text style={[s.progressVal, { color: item.color }]}>{item.val}</Text>
             </View>
             <View style={s.progressTrack}>
@@ -195,26 +204,26 @@ export default function WeeklyReportScreen() {
 
       {/* Próxima semana */}
       <View style={s.card}>
-        <Text style={s.cardTitle}>🎯 Desafio da próxima semana</Text>
+        <Text style={s.cardTitle}>{t('weekly_report.next_week_challenge' as any)}</Text>
         <View style={s.challengeRow}>
           <Text style={s.challengeEmoji}>💪</Text>
           <Text style={s.challengeText}>
             {stats.workoutsDone < 3
-              ? `Complete ${3 - stats.workoutsDone} treinos a mais que esta semana`
-              : 'Mantenha a consistência — você está no ritmo certo!'}
+              ? t('weekly_report.challenge_workout_more' as any, { count: 3 - stats.workoutsDone })
+              : t('weekly_report.challenge_workout_keep' as any)}
           </Text>
         </View>
         <View style={s.challengeRow}>
           <Text style={s.challengeEmoji}>📸</Text>
           <Text style={s.challengeText}>
             {stats.adherence < 80
-              ? 'Registre pelo menos 80% das refeições do plano'
-              : 'Continue registrando as refeições com a câmera'}
+              ? t('weekly_report.challenge_meals_improve' as any)
+              : t('weekly_report.challenge_meals_keep' as any)}
           </Text>
         </View>
         <View style={s.challengeRow}>
           <Text style={s.challengeEmoji}>💧</Text>
-          <Text style={s.challengeText}>Beba 2L de água por dia e registre na Home</Text>
+          <Text style={s.challengeText}>{t('weekly_report.challenge_water' as any)}</Text>
         </View>
       </View>
 

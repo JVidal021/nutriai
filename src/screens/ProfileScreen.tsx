@@ -15,7 +15,7 @@ import { calcBMI, getBMICategory } from '@utils/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useT, changeLanguage, getCurrentLanguage } from '@/i18n/useT'
 import type { AppLanguage } from '@/i18n/index'
-import type { Goal, ActivityLevel, FitnessLevel } from '@types/index'
+import type { Goal, ActivityLevel, FitnessLevel } from '@/types/index'
 
 // ─── Option arrays (use translation keys for display) ────────────────────────
 const GOAL_OPTS: Array<{ id: Goal; emoji: string; titleKey: string; subKey: string }> = [
@@ -79,7 +79,7 @@ export default function ProfileScreen() {
   const [redeeming, setRedeeming]               = useState(false)
 
   const { user, updateUser, clearUser, isLoading } = useUserStore()
-  const { progress }                    = useProgressStore()
+  const { progress, xpHistory }         = useProgressStore()
 
   if (isLoading || !user) return null
 
@@ -139,7 +139,7 @@ export default function ProfileScreen() {
     return d.toISOString().split('T')[0]
   })
   const activeDates = new Set(
-    (progress.xpHistory ?? []).filter(x => x?.date).map(x => x.date.split('T')[0])
+    (xpHistory ?? []).filter(x => x?.date).map(x => x.date.split('T')[0])
   )
 
   // ── Abrir modal com valores atuais do usuário ─────────────────────────────

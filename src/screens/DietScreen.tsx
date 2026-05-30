@@ -8,7 +8,6 @@ import { Colors, Spacing, Radius } from '@constants/index'
 import { useNutritionStore, useUserStore, useProgressStore, useCoachStore } from '@store/index'
 import { swapPlanItem } from '@services/ai'
 import { format, addDays, startOfWeek } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import SwapItemModal from '@components/ui/SwapItemModal'
 import type { PlannedMeal } from '@/types/index'
@@ -87,7 +86,8 @@ export default function DietScreen() {
 
   // Abre o Coach com contexto da refeição
   const handleAskCoach = (meal: PlannedMeal, date: string) => {
-    const dayName = format(new Date(date + 'T12:00:00'), 'EEEE', { locale: ptBR })
+    const dow = (new Date(date + 'T12:00:00').getDay() + 6) % 7
+    const dayName = t(DAYS_KEYS[dow] as any)
     const mealLabel: Record<string, string> = { breakfast: t('meals.breakfast'), lunch: t('meals.lunch'), dinner: t('meals.dinner'), snack: t('meals.snack') }
     setPlanContext({
       type:     'diet',

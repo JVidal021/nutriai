@@ -3,12 +3,14 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'r
 import { router } from 'expo-router'
 import { Colors, Spacing, Radius } from '@constants/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useT } from '@/i18n/useT'
 
 const LAST_UPDATE = '27 de maio de 2025'
 const SUPPORT_EMAIL = 'suporte.nutriai@outlook.com'
 
 export default function PrivacyScreen() {
   const insets = useSafeAreaInsets()
+  const { t } = useT()
   return (
     <ScrollView
       style={s.root}
@@ -16,7 +18,7 @@ export default function PrivacyScreen() {
       showsVerticalScrollIndicator={false}
     >
       <TouchableOpacity style={s.closeBtn} onPress={() => router.back()}>
-        <Text style={s.closeTxt}>✕ Fechar</Text>
+        <Text style={s.closeTxt}>✕ {t('common.close' as any)}</Text>
       </TouchableOpacity>
 
       <Text style={s.title}>Política de Privacidade</Text>

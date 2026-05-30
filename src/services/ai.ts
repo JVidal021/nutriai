@@ -1,7 +1,7 @@
 import * as FileSystem from 'expo-file-system/legacy'
 import * as ImageManipulator from 'expo-image-manipulator'
 import { supabase } from './supabase'
-import type { ScanResult, ChatMessage, DailyDietPlan, WorkoutSession } from '../types'
+import type { ScanResult, ChatMessage, DailyDietPlan, WorkoutSession, PlanContext } from '../types'
 
 // ─── URL das Edge Functions ───────────────────────────────────────────────
 function edgeFunctionUrl(name: string): string {
@@ -47,7 +47,7 @@ export async function analyzeMealPhoto(photoUri: string): Promise<ScanResult> {
 
   // 2. Converter para base64
   const base64 = await FileSystem.readAsStringAsync(compressed.uri, {
-    encoding: FileSystem.EncodingType.Base64 as string,
+    encoding: FileSystem.EncodingType.Base64,
   })
 
   // 3. Verificar tamanho (segurança extra)
@@ -134,13 +134,7 @@ export async function sendCoachMessage(
     workoutDone?:    boolean
     streak?:         number
   },
-  planContext?: {
-    type:      'diet' | 'workout'
-    label:     string
-    date:      string
-    mealType?: string
-    item:      Record<string, unknown>
-  } | null,
+  planContext?: PlanContext | null,
 ): Promise<string> {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) throw new Error('Usuário não autenticado')

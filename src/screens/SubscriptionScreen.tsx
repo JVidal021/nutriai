@@ -9,39 +9,41 @@ import { Colors, Spacing, Radius } from '@constants/index'
 import { useUserStore } from '@store/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '@services/supabase'
+import { useT } from '@/i18n/useT'
 
-const FEATURES_FREE = [
-  { label: '3 análises de foto por dia',    ok: true  },
-  { label: 'Diário de calorias básico',      ok: true  },
-  { label: '5 mensagens Coach IA / dia',     ok: true  },
-  { label: 'Rastreamento de hidratação',     ok: true  },
-  { label: 'Progresso e streaks',            ok: true  },
-  { label: 'Dieta personalizada por IA',     ok: false },
-  { label: 'Treinos gerados por IA',         ok: false },
-  { label: 'Guia de exercícios completo',    ok: false },
-  { label: 'Relatório semanal detalhado',    ok: false },
-  { label: 'Ranks, Co-op e Otimização',      ok: false },
+const FEATURES_FREE: Array<{ labelKey: string; ok: boolean }> = [
+  { labelKey: 'subscription.feat_f1',  ok: true  },
+  { labelKey: 'subscription.feat_f2',  ok: true  },
+  { labelKey: 'subscription.feat_f3',  ok: true  },
+  { labelKey: 'subscription.feat_f4',  ok: true  },
+  { labelKey: 'subscription.feat_f5',  ok: true  },
+  { labelKey: 'subscription.feat_f6',  ok: false },
+  { labelKey: 'subscription.feat_f7',  ok: false },
+  { labelKey: 'subscription.feat_f8',  ok: false },
+  { labelKey: 'subscription.feat_f9',  ok: false },
+  { labelKey: 'subscription.feat_f10', ok: false },
 ]
 
-const FEATURES_PREMIUM = [
-  { label: 'Fotos ilimitadas por dia',        ok: true },
-  { label: 'Dieta personalizada por IA',      ok: true },
-  { label: 'Treinos gerados por IA',          ok: true },
-  { label: 'Guia de exercícios completo',     ok: true },
-  { label: 'Coach IA ilimitado',              ok: true },
-  { label: 'Relatório semanal detalhado',     ok: true },
-  { label: 'Sistema de ranks completo',       ok: true },
-  { label: 'Modo Co-op e desafios',           ok: true },
-  { label: 'Painel de otimização metabólica', ok: true },
+const FEATURES_PREMIUM: Array<{ labelKey: string; ok: boolean }> = [
+  { labelKey: 'subscription.feat_p1', ok: true },
+  { labelKey: 'subscription.feat_p2', ok: true },
+  { labelKey: 'subscription.feat_p3', ok: true },
+  { labelKey: 'subscription.feat_p4', ok: true },
+  { labelKey: 'subscription.feat_p5', ok: true },
+  { labelKey: 'subscription.feat_p6', ok: true },
+  { labelKey: 'subscription.feat_p7', ok: true },
+  { labelKey: 'subscription.feat_p8', ok: true },
+  { labelKey: 'subscription.feat_p9', ok: true },
 ]
 
 function formatDate(iso?: string): string {
   if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+  return new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
 export default function SubscriptionScreen() {
   const insets = useSafeAreaInsets()
+  const { t } = useT()
   const [billing,    setBilling]    = useState<'monthly' | 'annual'>('monthly')
   const [loading,    setLoading]    = useState(false)
   const [cancelling, setCancelling] = useState(false)
@@ -51,9 +53,23 @@ export default function SubscriptionScreen() {
 
   const isTrial      = user.premiumPlan === 'trial'
   const isRecurring  = user.subscriptionType === 'recurring'
-  const planLabel    = isTrial ? 'Trial' : user.premiumPlan === 'annual' ? 'Anual' : user.premiumPlan === 'monthly' ? 'Mensal' : '—'
-  const billingLabel = isTrial ? 'Período de teste gratuito' : isRecurring ? 'Renovação automática mensal' : 'Pagamento único · 12 meses'
-  const expiryLabel  = isTrial ? 'Trial expira em:' : isRecurring ? 'Próxima cobrança:' : 'Válido até:'
+  const planLabel    = isTrial
+    ? 'Trial'
+    : user.premiumPlan === 'annual'
+      ? t('subscription.annual' as any)
+      : user.premiumPlan === 'monthly'
+        ? t('subscription.monthly' as any)
+        : '—'
+  const billingLabel = isTrial
+    ? t('subscription.billing_trial' as any)
+    : isRecurring
+      ? t('subscription.billing_recurring' as any)
+      : t('subscription.billing_annual' as any)
+  const expiryLabel  = isTrial
+    ? t('subscription.expiry_trial' as any)
+    : isRecurring
+      ? t('subscription.expiry_recurring' as any)
+      : t('subscription.expiry_annual' as any)
 
   const trialDaysLeft = isTrial && user.premiumExpiresAt
     ? Math.max(0, Math.ceil((new Date(user.premiumExpiresAt).getTime() - Date.now()) / 86_400_000))
@@ -63,7 +79,10 @@ export default function SubscriptionScreen() {
     setLoading(true)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { Alert.alert('Erro', 'Faça login antes de assinar.'); return }
+      if (!session) {
+        Alert.alert(t('common.error' as any), t('subscription.login_first' as any))
+        return
+      }
 
       const res = await fetch(
         `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/create-payment`,
@@ -74,32 +93,27 @@ export default function SubscriptionScreen() {
         }
       )
       const data = await res.json()
-      if (!data.success || !data.init_point) throw new Error(data.error ?? 'Erro ao criar pagamento')
+      if (!data.success || !data.init_point) throw new Error(data.error ?? t('common.error' as any))
 
-      // Abre o checkout do Mercado Pago em navegador in-app.
-      // Quando o MP redireciona para nutriai://, o navegador fecha automaticamente.
       const result = await WebBrowser.openAuthSessionAsync(
         data.init_point,
         'nutriai://'
       )
 
-      // Verifica o status assim que o usuário volta — seja por redirect ou fechando manualmente
       if (result.type === 'success') {
-        // Redirect detectado → quase certo que pagou, verifica já
         await handleCheckStatus(true)
       } else {
-        // Fechou manualmente → pode ter pago, oferece verificação gentil
         Alert.alert(
-          'Verificar pagamento',
-          'Caso tenha concluído o pagamento, toque em "Verificar status" para ativar o Premium.',
+          t('subscription.check_title' as any),
+          t('subscription.check_msg' as any),
           [
-            { text: 'Agora não', style: 'cancel' },
-            { text: 'Verificar', onPress: () => handleCheckStatus(false) },
+            { text: t('subscription.check_later' as any), style: 'cancel' },
+            { text: t('subscription.check_verify' as any), onPress: () => handleCheckStatus(false) },
           ]
         )
       }
     } catch (err) {
-      Alert.alert('Erro', err instanceof Error ? err.message : 'Tente novamente.')
+      Alert.alert(t('common.error' as any), err instanceof Error ? err.message : t('common.retry' as any))
     } finally {
       setLoading(false)
     }
@@ -107,15 +121,15 @@ export default function SubscriptionScreen() {
 
   const handleCancel = () => {
     const msg = isRecurring
-      ? 'A cobrança automática será cancelada e seu acesso Premium será encerrado imediatamente.'
-      : 'Seu acesso Premium será encerrado imediatamente. O valor já pago não é reembolsável.'
+      ? t('subscription.cancel_recurring_msg' as any)
+      : t('subscription.cancel_annual_msg' as any)
 
     Alert.alert(
-      'Cancelar assinatura Premium',
-      `${msg}\n\nEssa ação não pode ser desfeita. Deseja continuar?`,
+      t('subscription.cancel_title' as any),
+      `${msg}${t('subscription.cancel_irreversible' as any)}`,
       [
-        { text: 'Voltar', style: 'cancel' },
-        { text: 'Cancelar assinatura', style: 'destructive', onPress: confirmCancel },
+        { text: t('subscription.cancel_go_back' as any), style: 'cancel' },
+        { text: t('subscription.cancel_confirm' as any), style: 'destructive', onPress: confirmCancel },
       ]
     )
   }
@@ -124,7 +138,10 @@ export default function SubscriptionScreen() {
     setCancelling(true)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { Alert.alert('Erro', 'Sessão expirada. Faça login novamente.'); return }
+      if (!session) {
+        Alert.alert(t('common.error' as any), t('subscription.session_expired' as any))
+        return
+      }
 
       const res = await fetch(
         `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/cancel-subscription`,
@@ -134,7 +151,7 @@ export default function SubscriptionScreen() {
         }
       )
       const data = await res.json()
-      if (!data.success) throw new Error(data.error ?? 'Erro ao cancelar')
+      if (!data.success) throw new Error(data.error ?? t('common.retry' as any))
 
       updateUser({
         isPremium:        false,
@@ -145,25 +162,23 @@ export default function SubscriptionScreen() {
       })
 
       Alert.alert(
-        '✓ Assinatura cancelada',
-        'Seu acesso Premium foi encerrado. Esperamos te ver de volta em breve!\n\nSe tiver algum problema, contate suporte.nutriai@outlook.com.',
+        t('subscription.cancel_success_title' as any),
+        t('subscription.cancel_success_msg' as any),
         [{ text: 'Ok' }]
       )
     } catch (err) {
       Alert.alert(
-        'Erro ao cancelar',
-        err instanceof Error ? err.message : 'Não foi possível cancelar. Tente novamente ou contate suporte.nutriai@outlook.com.'
+        t('common.error' as any),
+        err instanceof Error ? err.message : t('common.retry' as any)
       )
     } finally {
       setCancelling(false)
     }
   }
 
-  // silent=true → chamado automaticamente após redirect (não mostra alert de "pendente")
   const handleCheckStatus = async (silent = false) => {
     setLoading(true)
     try {
-      // Aguarda 2s para o webhook do MP processar antes de consultar
       if (silent) await new Promise(r => setTimeout(r, 2000))
 
       const { data } = await supabase
@@ -180,22 +195,21 @@ export default function SubscriptionScreen() {
           subscriptionType: data.subscription_type ?? undefined,
           mpSubscriptionId: data.mp_subscription_id ?? undefined,
         })
-        Alert.alert('✅ Premium ativo!', 'Sua assinatura foi confirmada. Bem-vinde ao Premium! 🎉')
+        Alert.alert(t('subscription.premium_active_title' as any), t('subscription.premium_active_msg' as any))
       } else if (!silent) {
         Alert.alert(
-          'Pagamento pendente',
-          'Não encontramos pagamento aprovado ainda.\n\nAguarde alguns instantes e tente novamente.'
+          t('subscription.payment_pending_title' as any),
+          t('subscription.payment_pending_msg' as any)
         )
       } else {
-        // Silent e ainda não aprovado — pode ter sido muito rápido, informa sem travar
         Alert.alert(
-          'Processando pagamento…',
-          'O pagamento ainda está sendo confirmado. Aguarde um momento e toque em "Verificar status".',
+          t('subscription.payment_processing_title' as any),
+          t('subscription.payment_processing_msg' as any),
           [{ text: 'Ok' }]
         )
       }
     } catch {
-      Alert.alert('Erro', 'Não foi possível verificar. Tente novamente.')
+      Alert.alert(t('common.error' as any), t('common.retry' as any))
     } finally {
       setLoading(false)
     }
@@ -207,26 +221,26 @@ export default function SubscriptionScreen() {
       {/* Botão de Fechar */}
       <View style={s.topBar}>
         <TouchableOpacity style={s.closeBtn} onPress={() => router.back()}>
-          <Text style={s.closeBtnText}>✕ Fechar</Text>
+          <Text style={s.closeBtnText}>{t('subscription.close_btn' as any)}</Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={s.title}>👑 NutriAI Premium</Text>
-      <Text style={s.sub}>Desbloqueie seu potencial completo</Text>
+      <Text style={s.title}>{t('subscription.page_title' as any)}</Text>
+      <Text style={s.sub}>{t('subscription.page_sub' as any)}</Text>
 
-      {/* Banner de vantagem — adapta conforme plano selecionado */}
+      {/* Banner de vantagem */}
       <View style={s.advantageBanner}>
         <Text style={s.advIcon}>{billing === 'monthly' ? '🔄' : '🎯'}</Text>
         <View style={{ flex: 1 }}>
           <Text style={s.advTitle}>
             {billing === 'monthly'
-              ? 'Assinatura mensal · cancele quando quiser'
-              : 'Pagamento único · acesso por 12 meses'}
+              ? t('subscription.adv_monthly_title' as any)
+              : t('subscription.adv_annual_title' as any)}
           </Text>
           <Text style={s.advSub}>
             {billing === 'monthly'
-              ? 'Cobrança automática de R$29/mês via Mercado Pago. Sem fidelidade.'
-              : 'Pague R$209 uma vez e tenha 1 ano completo de acesso Premium.'}
+              ? t('subscription.adv_monthly_sub' as any)
+              : t('subscription.adv_annual_sub' as any)}
           </Text>
         </View>
       </View>
@@ -234,11 +248,11 @@ export default function SubscriptionScreen() {
       {/* Toggle mensal / anual */}
       <View style={s.toggleWrap}>
         <TouchableOpacity style={[s.toggleOpt, billing === 'monthly' && s.toggleOptOn]} onPress={() => setBilling('monthly')}>
-          <Text style={[s.toggleText, billing === 'monthly' && s.toggleTextOn]}>Mensal</Text>
-          <View style={s.recurringPill}><Text style={s.recurringText}>Auto</Text></View>
+          <Text style={[s.toggleText, billing === 'monthly' && s.toggleTextOn]}>{t('subscription.monthly' as any)}</Text>
+          <View style={s.recurringPill}><Text style={s.recurringText}>{t('subscription.auto' as any)}</Text></View>
         </TouchableOpacity>
         <TouchableOpacity style={[s.toggleOpt, billing === 'annual' && s.toggleOptOn]} onPress={() => setBilling('annual')}>
-          <Text style={[s.toggleText, billing === 'annual' && s.toggleTextOn]}>Anual</Text>
+          <Text style={[s.toggleText, billing === 'annual' && s.toggleTextOn]}>{t('subscription.annual' as any)}</Text>
           <View style={s.savePill}><Text style={s.saveText}>−40%</Text></View>
         </TouchableOpacity>
       </View>
@@ -246,30 +260,30 @@ export default function SubscriptionScreen() {
       {/* Cards de planos */}
       <View style={s.plansRow}>
         <View style={s.planCard}>
-          <Text style={s.planName}>Grátis</Text>
+          <Text style={s.planName}>{t('subscription.free_plan' as any)}</Text>
           <Text style={s.planPrice}>R$0</Text>
-          <Text style={s.planPer}>para sempre</Text>
+          <Text style={s.planPer}>{t('subscription.free_forever' as any)}</Text>
           <View style={s.divider} />
           {FEATURES_FREE.map(f => (
-            <View key={f.label} style={s.featureRow}>
+            <View key={f.labelKey} style={s.featureRow}>
               <View style={[s.featureCheck, !f.ok && s.featureCheckNo]}>
                 <Text style={{ fontSize: 10, color: f.ok ? Colors.accent : Colors.text3 }}>{f.ok ? '✓' : '✕'}</Text>
               </View>
-              <Text style={[s.featureText, !f.ok && s.featureDisabled]}>{f.label}</Text>
+              <Text style={[s.featureText, !f.ok && s.featureDisabled]}>{t(f.labelKey as any)}</Text>
             </View>
           ))}
         </View>
 
         <View style={[s.planCard, s.planCardFeatured]}>
-          <View style={s.popularBadge}><Text style={s.popularText}>Recomendado</Text></View>
+          <View style={s.popularBadge}><Text style={s.popularText}>{t('subscription.recommended' as any)}</Text></View>
           <Text style={s.planName}>Premium</Text>
           <Text style={[s.planPrice, { color: Colors.accent }]}>{billing === 'annual' ? 'R$17' : 'R$29'}</Text>
-          <Text style={s.planPer}>{billing === 'annual' ? '/mês · R$209/ano' : '/mês · renovação automática'}</Text>
+          <Text style={s.planPer}>{billing === 'annual' ? t('subscription.plan_annual_per' as any) : t('subscription.plan_monthly_per' as any)}</Text>
           <View style={s.divider} />
           {FEATURES_PREMIUM.map(f => (
-            <View key={f.label} style={s.featureRow}>
+            <View key={f.labelKey} style={s.featureRow}>
               <View style={s.featureCheck}><Text style={{ fontSize: 10, color: Colors.accent }}>✓</Text></View>
-              <Text style={s.featureText}>{f.label}</Text>
+              <Text style={s.featureText}>{t(f.labelKey as any)}</Text>
             </View>
           ))}
         </View>
@@ -283,7 +297,9 @@ export default function SubscriptionScreen() {
             <Text style={s.activeEmoji}>{isTrial ? '🎁' : '👑'}</Text>
             <View style={{ flex: 1 }}>
               <Text style={[s.activeTitle, isTrial && s.trialTitle]}>
-                {isTrial ? `Trial Premium ativo · ${trialDaysLeft} dia${trialDaysLeft !== 1 ? 's' : ''} restante${trialDaysLeft !== 1 ? 's' : ''}` : `Premium ativo · ${planLabel}`}
+                {isTrial
+                  ? t('subscription.trial_active' as any, { days: trialDaysLeft, plural: trialDaysLeft !== 1 ? 's' : '' })
+                  : t('subscription.premium_active' as any, { plan: planLabel })}
               </Text>
               <Text style={s.activeSub}>{billingLabel}</Text>
             </View>
@@ -297,7 +313,7 @@ export default function SubscriptionScreen() {
               activeOpacity={0.8}
             >
               <Text style={s.upgradeTrialText}>
-                ⚡ Assine agora para não perder o acesso ao fim do trial
+                {t('subscription.upgrade_trial_banner' as any)}
               </Text>
             </TouchableOpacity>
           )}
@@ -331,7 +347,7 @@ export default function SubscriptionScreen() {
                   }).eq('id', user.id)
                 }}
               >
-                <Text style={[s.cancelBtnText, { color: Colors.text3 }]}>Encerrar trial</Text>
+                <Text style={[s.cancelBtnText, { color: Colors.text3 }]}>{t('subscription.end_trial' as any)}</Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
@@ -341,7 +357,7 @@ export default function SubscriptionScreen() {
               >
                 {cancelling
                   ? <ActivityIndicator size="small" color="#ff4444" />
-                  : <Text style={s.cancelBtnText}>Cancelar assinatura</Text>
+                  : <Text style={s.cancelBtnText}>{t('subscription.cancel_sub' as any)}</Text>
                 }
               </TouchableOpacity>
             )}
@@ -350,17 +366,17 @@ export default function SubscriptionScreen() {
               style={s.supportBtn}
               onPress={() => Linking.openURL('mailto:suporte.nutriai@outlook.com?subject=Problema com assinatura NutriAI')}
             >
-              <Text style={s.supportBtnText}>💬 Suporte</Text>
+              <Text style={s.supportBtnText}>{t('subscription.support_btn' as any)}</Text>
             </TouchableOpacity>
           </View>
 
           <Text style={s.manageNote}>
             {isTrial
-              ? 'Ao encerrar o trial você volta ao plano grátis imediatamente.'
+              ? t('subscription.note_trial_end' as any)
               : isRecurring
-                ? 'Cancelar encerra o acesso imediatamente e para futuras cobranças.'
-                : 'Cancelar encerra o acesso imediatamente. O valor pago não é reembolsável.'}
-            {'\n'}Para problemas com cobranças, contate suporte.nutriai@outlook.com.
+                ? t('subscription.note_cancel_recurring' as any)
+                : t('subscription.note_cancel_annual' as any)}
+            {'\n'}{t('subscription.support_note' as any)}
           </Text>
         </View>
 
@@ -371,19 +387,19 @@ export default function SubscriptionScreen() {
             {loading ? <ActivityIndicator color={Colors.bg} /> : (
               <View style={{ alignItems: 'center' }}>
                 <Text style={s.ctaText}>
-                  {billing === 'annual' ? 'Assinar por R$209/ano' : 'Assinar por R$29/mês'}
+                  {billing === 'annual' ? t('subscription.cta_annual' as any) : t('subscription.cta_monthly' as any)}
                 </Text>
                 <Text style={s.ctaSub}>
                   {billing === 'monthly'
-                    ? 'Assinatura recorrente via Mercado Pago · cancele quando quiser'
-                    : 'Pagamento único via Mercado Pago · PIX · Cartão · Débito'}
+                    ? t('subscription.cta_monthly_sub' as any)
+                    : t('subscription.cta_annual_sub' as any)}
                 </Text>
               </View>
             )}
           </TouchableOpacity>
 
           <TouchableOpacity style={s.checkBtn} onPress={() => handleCheckStatus(false)} disabled={loading}>
-            <Text style={s.checkBtnText}>Já paguei — verificar status</Text>
+            <Text style={s.checkBtnText}>{t('subscription.already_paid' as any)}</Text>
           </TouchableOpacity>
         </>
       )}
@@ -391,16 +407,16 @@ export default function SubscriptionScreen() {
       {/* Texto legal */}
       <View style={s.legalWrap}>
         <Text style={s.legalText}>
-          Ao assinar você concorda com os{' '}
-          <Text style={s.legalLink} onPress={() => router.push('/legal/terms' as never)}>Termos de Uso</Text>
+          {t('subscription.legal_agree' as any)}{' '}
+          <Text style={s.legalLink} onPress={() => router.push('/legal/terms' as never)}>{t('onboarding.terms_link' as any)}</Text>
           {', '}
-          <Text style={s.legalLink} onPress={() => router.push('/legal/privacy' as never)}>Política de Privacidade</Text>
-          {' e '}
-          <Text style={s.legalLink} onPress={() => router.push('/legal/lgpd' as never)}>Aviso LGPD</Text>
+          <Text style={s.legalLink} onPress={() => router.push('/legal/privacy' as never)}>{t('onboarding.privacy_link' as any)}</Text>
+          {' '}{t('onboarding.and' as any)}{' '}
+          <Text style={s.legalLink} onPress={() => router.push('/legal/lgpd' as never)}>{t('onboarding.consent_lgpd_link' as any)}</Text>
           .
         </Text>
         <Text style={s.legalText}>
-          Dúvidas?{' '}
+          {t('subscription.legal_questions' as any)}{' '}
           <Text style={s.legalLink} onPress={() => Linking.openURL('mailto:suporte.nutriai@outlook.com?subject=Dúvida sobre assinatura NutriAI')}>
             suporte.nutriai@outlook.com
           </Text>

@@ -1,5 +1,5 @@
 import { RANKS } from '@constants/index'
-import type { Gender, Goal, Profile, ActivityLevel, FitnessLevel, Rank, User } from '@types/index'
+import type { Gender, Goal, Profile, ActivityLevel, FitnessLevel, Rank, User } from '@/types/index'
 
 // ─── DB ↔ APP MAPPERS ────────────────────────────────────────────────────
 // O banco retorna snake_case; o tipo User usa camelCase.
@@ -151,7 +151,7 @@ export function calcEfficiencyScore(params: {
 
 // ─── FORMATTERS ──────────────────────────────────────────────────────────
 export function formatCalories(kcal: number): string {
-  return kcal.toLocaleString('pt-BR')
+  return kcal.toLocaleString()
 }
 
 export function formatWeight(kg: number): string {
@@ -159,13 +159,13 @@ export function formatWeight(kg: number): string {
 }
 
 export function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('pt-BR', {
+  return new Date(iso).toLocaleDateString(undefined, {
     weekday: 'long', day: 'numeric', month: 'long',
   })
 }
 
 export function formatShortDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+  return new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })
 }
 
 export function getGreeting(gender: Gender, name: string): string {

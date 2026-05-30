@@ -7,38 +7,41 @@ import { Image } from 'expo-image'
 import { Colors, Radius } from '@constants/index'
 import { fetchExerciseGif } from '@services/ai'
 import type { ExerciseGifData } from '@services/ai'
+import { useT } from '@/i18n/useT'
 
 const { width: SCREEN_W } = Dimensions.get('window')
 const GIF_SIZE = SCREEN_W - 80
 
-const MUSCLE_PT: Record<string, string> = {
-  chest: 'Peito', back: 'Costas', shoulders: 'Ombros', biceps: 'Bíceps',
-  triceps: 'Tríceps', 'upper arms': 'Braços', forearms: 'Antebraço',
-  abs: 'Abdômen', 'upper legs': 'Coxas', 'lower legs': 'Panturrilhas',
-  glutes: 'Glúteos', waist: 'Cintura', cardiovascular: 'Cardio', neck: 'Pescoço',
+// Maps API EN keys to i18n muscle/equipment sub-keys
+const MUSCLE_KEY: Record<string, string> = {
+  chest: 'muscle_chest', back: 'muscle_back', shoulders: 'muscle_shoulders',
+  biceps: 'muscle_biceps', triceps: 'muscle_triceps', 'upper arms': 'muscle_upper_arms',
+  forearms: 'muscle_forearms', abs: 'muscle_abs', 'upper legs': 'muscle_upper_legs',
+  'lower legs': 'muscle_lower_legs', glutes: 'muscle_glutes', waist: 'muscle_waist',
+  cardiovascular: 'muscle_cardiovascular', neck: 'muscle_neck',
 }
-const EQUIP_PT: Record<string, string> = {
-  barbell: 'Barra', dumbbell: 'Haltere', 'body weight': 'Peso corporal',
-  cable: 'Cabo', machine: 'Máquina', kettlebell: 'Kettlebell',
-  band: 'Elástico', 'ez barbell': 'Barra EZ', leverage: 'Aparelho',
-  'resistance band': 'Elástico', rope: 'Corda', assisted: 'Assistido',
-  other: 'Outro',
+const EQUIP_KEY: Record<string, string> = {
+  barbell: 'equip_barbell', dumbbell: 'equip_dumbbell', 'body weight': 'equip_body_weight',
+  cable: 'equip_cable', machine: 'equip_machine', kettlebell: 'equip_kettlebell',
+  band: 'equip_band', 'ez barbell': 'equip_ez_barbell', leverage: 'equip_leverage',
+  'resistance band': 'equip_resistance_band', rope: 'equip_rope', assisted: 'equip_assisted',
+  other: 'equip_other',
 }
 
 interface Props {
-  exerciseName:  string    // PT name (for display)
-  searchName:    string    // EN name (for lookup)
+  exerciseName:  string    // display name
+  searchName:    string    // EN name for lookup
   bodyPart?:     string    // EN body part (fallback lookup)
   visible:       boolean
   onClose:       () => void
 }
 
 export default function ExerciseGifModal({ exerciseName, searchName, bodyPart, visible, onClose }: Props) {
+  const { t } = useT()
   const [loading,  setLoading]  = useState(false)
   const [data,     setData]     = useState<ExerciseGifData | null | 'not_found'>(null)
   const [fetched,  setFetched]  = useState(false)
 
-  // Busca ao abrir (só uma vez por searchName)
   const handleOpen = async () => {
     if (fetched) return
     setLoading(true)
@@ -53,6 +56,15 @@ export default function ExerciseGifModal({ exerciseName, searchName, bodyPart, v
     }
   }
 
+  const getMuscleLabel = (key: string) => {
+    const sub = MUSCLE_KEY[key.toLowerCase()]
+    return sub ? t(`exercise_gif.${sub}` as any) : key
+  }
+  const getEquipLabel = (key: string) => {
+    const sub = EQUIP_KEY[key.toLowerCase()]
+    return sub ? t(`exercise_gif.${sub}` as any) : key
+  }
+
   return (
     <Modal
       visible={visible}
@@ -64,10 +76,8 @@ export default function ExerciseGifModal({ exerciseName, searchName, bodyPart, v
       <TouchableOpacity style={s.backdrop} activeOpacity={1} onPress={onClose} />
 
       <View style={s.sheet}>
-        {/* Handle */}
         <View style={s.handle} />
 
-        {/* Header */}
         <View style={s.header}>
           <Text style={s.title} numberOfLines={2}>{exerciseName}</Text>
           <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
@@ -79,23 +89,20 @@ export default function ExerciseGifModal({ exerciseName, searchName, bodyPart, v
           {loading && (
             <View style={s.center}>
               <ActivityIndicator size="large" color={Colors.accent} />
-              <Text style={s.loadingText}>Buscando demonstração...</Text>
+              <Text style={s.loadingText}>{t('exercise_gif.loading' as any)}</Text>
             </View>
           )}
 
           {!loading && data === 'not_found' && (
             <View style={s.center}>
               <Text style={s.notFoundEmoji}>🏋️</Text>
-              <Text style={s.notFoundText}>Demonstração não encontrada</Text>
-              <Text style={s.notFoundSub}>
-                Use a dica ℹ na tela do treino para ver as instruções em texto.
-              </Text>
+              <Text style={s.notFoundText}>{t('exercise_gif.not_found_title' as any)}</Text>
+              <Text style={s.notFoundSub}>{t('exercise_gif.not_found_sub' as any)}</Text>
             </View>
           )}
 
           {!loading && data && data !== 'not_found' && (
             <>
-              {/* GIF animado */}
               <View style={s.gifWrap}>
                 <Image
                   source={{ uri: data.gifUrl }}
@@ -105,38 +112,30 @@ export default function ExerciseGifModal({ exerciseName, searchName, bodyPart, v
                 />
               </View>
 
-              {/* Badges */}
               <View style={s.badges}>
                 {data.targetMuscle ? (
                   <View style={s.badge}>
-                    <Text style={s.badgeLabel}>🎯 Alvo</Text>
-                    <Text style={s.badgeVal}>
-                      {MUSCLE_PT[data.targetMuscle] ?? data.targetMuscle}
-                    </Text>
+                    <Text style={s.badgeLabel}>{t('exercise_gif.target_label' as any)}</Text>
+                    <Text style={s.badgeVal}>{getMuscleLabel(data.targetMuscle)}</Text>
                   </View>
                 ) : null}
                 {data.equipment ? (
                   <View style={s.badge}>
-                    <Text style={s.badgeLabel}>🔧 Equipamento</Text>
-                    <Text style={s.badgeVal}>
-                      {EQUIP_PT[data.equipment] ?? data.equipment}
-                    </Text>
+                    <Text style={s.badgeLabel}>{t('exercise_gif.equipment_label' as any)}</Text>
+                    <Text style={s.badgeVal}>{getEquipLabel(data.equipment)}</Text>
                   </View>
                 ) : null}
                 {data.bodyPart ? (
                   <View style={s.badge}>
-                    <Text style={s.badgeLabel}>💪 Grupo</Text>
-                    <Text style={s.badgeVal}>
-                      {MUSCLE_PT[data.bodyPart] ?? data.bodyPart}
-                    </Text>
+                    <Text style={s.badgeLabel}>{t('exercise_gif.group_label' as any)}</Text>
+                    <Text style={s.badgeVal}>{getMuscleLabel(data.bodyPart)}</Text>
                   </View>
                 ) : null}
               </View>
 
-              {/* Instruções passo a passo */}
               {data.instructions.length > 0 && (
                 <View style={s.instructionsCard}>
-                  <Text style={s.instructionsTitle}>Como executar</Text>
+                  <Text style={s.instructionsTitle}>{t('exercise_gif.how_to' as any)}</Text>
                   {data.instructions.map((step, i) => (
                     <View key={i} style={s.step}>
                       <View style={s.stepNum}>

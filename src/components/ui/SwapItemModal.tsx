@@ -4,21 +4,22 @@ import {
   TextInput, ScrollView, ActivityIndicator,
 } from 'react-native'
 import { Colors, Radius, Spacing } from '@constants/index'
+import { useT } from '@/i18n/useT'
 
-const MEAL_REASONS = [
-  { id: 'no_ingredient',  label: '🥦 Não tenho esse ingrediente' },
-  { id: 'more_practical', label: '⚡ Quero algo mais prático e rápido' },
-  { id: 'lighter',        label: '🥗 Prefiro algo mais leve' },
-  { id: 'different',      label: '✨ Quero variar, só isso' },
-  { id: 'allergy',        label: '⚠️ Tenho intolerância a um ingrediente' },
+const MEAL_REASON_KEYS = [
+  { id: 'no_ingredient',  labelKey: 'swap_modal.meal_no_ingredient' },
+  { id: 'more_practical', labelKey: 'swap_modal.meal_more_practical' },
+  { id: 'lighter',        labelKey: 'swap_modal.meal_lighter' },
+  { id: 'different',      labelKey: 'swap_modal.meal_different' },
+  { id: 'allergy',        labelKey: 'swap_modal.meal_allergy' },
 ]
 
-const WORKOUT_REASONS = [
-  { id: 'no_gym',         label: '🏠 Não tenho academia hoje' },
-  { id: 'muscle_pain',    label: '😣 Estou com dor muscular' },
-  { id: 'shorter',        label: '⏱️ Quero algo mais curto' },
-  { id: 'more_intense',   label: '🔥 Quero aumentar a intensidade' },
-  { id: 'home_workout',   label: '💪 Treino em casa sem equipamento' },
+const WORKOUT_REASON_KEYS = [
+  { id: 'no_gym',         labelKey: 'swap_modal.workout_no_gym' },
+  { id: 'muscle_pain',    labelKey: 'swap_modal.workout_muscle_pain' },
+  { id: 'shorter',        labelKey: 'swap_modal.workout_shorter' },
+  { id: 'more_intense',   labelKey: 'swap_modal.workout_more_intense' },
+  { id: 'home_workout',   labelKey: 'swap_modal.workout_home' },
 ]
 
 interface Props {
@@ -31,13 +32,15 @@ interface Props {
 }
 
 export default function SwapItemModal({ visible, type, title, loading, onClose, onSwap }: Props) {
+  const { t } = useT()
   const [selected, setSelected] = useState<string | null>(null)
   const [custom,   setCustom]   = useState('')
 
-  const reasons = type === 'meal' ? MEAL_REASONS : WORKOUT_REASONS
+  const reasons = type === 'meal' ? MEAL_REASON_KEYS : WORKOUT_REASON_KEYS
 
   const handleSwap = () => {
-    const reason = custom.trim() || reasons.find(r => r.id === selected)?.label || ''
+    const found = reasons.find(r => r.id === selected)
+    const reason = custom.trim() || (found ? t(found.labelKey as any) : '')
     if (!reason) return
     onSwap(reason)
   }
@@ -51,7 +54,7 @@ export default function SwapItemModal({ visible, type, title, loading, onClose, 
         <View style={s.handle} />
 
         <Text style={s.title}>↺ {title}</Text>
-        <Text style={s.sub}>Por qual motivo você quer trocar?</Text>
+        <Text style={s.sub}>{t('swap_modal.sub' as any)}</Text>
 
         <ScrollView showsVerticalScrollIndicator={false} style={s.scroll}>
           {reasons.map(r => (
@@ -64,17 +67,17 @@ export default function SwapItemModal({ visible, type, title, loading, onClose, 
               <View style={[s.radio, selected === r.id && s.radioSel]}>
                 {selected === r.id && <View style={s.radioDot} />}
               </View>
-              <Text style={[s.optionText, selected === r.id && s.optionTextSel]}>{r.label}</Text>
+              <Text style={[s.optionText, selected === r.id && s.optionTextSel]}>{t(r.labelKey as any)}</Text>
             </TouchableOpacity>
           ))}
 
           <View style={s.divider} />
-          <Text style={s.orLabel}>Ou descreva o motivo:</Text>
+          <Text style={s.orLabel}>{t('swap_modal.or_describe' as any)}</Text>
           <TextInput
             style={[s.input, custom.length > 0 && s.inputActive]}
             value={custom}
-            onChangeText={t => { setCustom(t); if (t.trim()) setSelected(null) }}
-            placeholder="Ex: Não tenho ovos em casa hoje..."
+            onChangeText={v => { setCustom(v); if (v.trim()) setSelected(null) }}
+            placeholder={t('swap_modal.placeholder' as any)}
             placeholderTextColor={Colors.text3}
             multiline
             maxLength={200}
@@ -83,7 +86,7 @@ export default function SwapItemModal({ visible, type, title, loading, onClose, 
 
         <View style={s.footer}>
           <TouchableOpacity style={s.cancelBtn} onPress={onClose} disabled={loading}>
-            <Text style={s.cancelText}>Cancelar</Text>
+            <Text style={s.cancelText}>{t('common.cancel' as any)}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[s.swapBtn, !canSwap && s.swapBtnDisabled]}
@@ -92,7 +95,7 @@ export default function SwapItemModal({ visible, type, title, loading, onClose, 
           >
             {loading
               ? <ActivityIndicator color={Colors.bg} size="small" />
-              : <Text style={s.swapText}>✨ Trocar com IA</Text>}
+              : <Text style={s.swapText}>{t('swap_modal.swap_btn' as any)}</Text>}
           </TouchableOpacity>
         </View>
       </View>

@@ -8,9 +8,11 @@ import { Platform } from 'react-native'
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge:  false,
+    // SDK 54: shouldShowAlert foi substituído por shouldShowBanner + shouldShowList
+    shouldShowBanner: true,
+    shouldShowList:   true,
+    shouldPlaySound:  true,
+    shouldSetBadge:   false,
   }),
 })
 

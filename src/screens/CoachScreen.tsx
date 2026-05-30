@@ -10,7 +10,7 @@ import { Colors, Spacing, Radius } from '@constants/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useCoachStore, useUserStore, useNutritionStore, useProgressStore, useWorkoutStore } from '@store/index'
 import { sendCoachMessage, swapPlanItem } from '@services/ai'
-import type { ChatMessage, PlannedMeal, WorkoutSession } from '@types/index'
+import type { ChatMessage, PlannedMeal, WorkoutSession } from '@/types/index'
 import { useT } from '@/i18n/useT'
 
 // ─── Intent detection ────────────────────────────────────────────────────────

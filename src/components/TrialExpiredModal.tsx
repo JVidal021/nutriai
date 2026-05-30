@@ -5,23 +5,26 @@ import {
 } from 'react-native'
 import { router } from 'expo-router'
 import { Colors, Spacing, Radius } from '@constants/index'
+import { useT } from '@/i18n/useT'
+
+const LOST_FEATURE_KEYS = [
+  'trial_expired.feat_1',
+  'trial_expired.feat_2',
+  'trial_expired.feat_3',
+  'trial_expired.feat_4',
+  'trial_expired.feat_5',
+  'trial_expired.feat_6',
+  'trial_expired.feat_7',
+]
 
 interface Props {
   visible: boolean
   onContinueFree: () => void
 }
 
-const LOST_FEATURES = [
-  '📸 Fotos ilimitadas para análise',
-  '🤖 Dieta personalizada por IA',
-  '💪 Treinos gerados para você',
-  '🌿 Coach IA sem limite de mensagens',
-  '📊 Relatório semanal detalhado',
-  '🏆 Sistema de ranks completo',
-  '🤝 Modo Co-op e desafios',
-]
-
 export default function TrialExpiredModal({ visible, onContinueFree }: Props) {
+  const { t } = useT()
+
   const handleSubscribe = () => {
     onContinueFree() // fecha o modal
     router.push('/(tabs)/subscription' as never)
@@ -39,30 +42,26 @@ export default function TrialExpiredModal({ visible, onContinueFree }: Props) {
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scroll}>
 
             <Text style={s.emoji}>⏰</Text>
-            <Text style={s.title}>Seu trial Premium acabou</Text>
-            <Text style={s.sub}>
-              Seus 15 dias de teste gratuito chegaram ao fim. Foi um prazer ter você no Premium!
-            </Text>
+            <Text style={s.title}>{t('trial_expired.title' as any)}</Text>
+            <Text style={s.sub}>{t('trial_expired.sub' as any)}</Text>
 
             <View style={s.featuresCard}>
-              <Text style={s.featuresTitle}>O que você tinha acesso:</Text>
-              {LOST_FEATURES.map(f => (
-                <Text key={f} style={s.featureItem}>{f}</Text>
+              <Text style={s.featuresTitle}>{t('trial_expired.features_title' as any)}</Text>
+              {LOST_FEATURE_KEYS.map(key => (
+                <Text key={key} style={s.featureItem}>{t(key as any)}</Text>
               ))}
             </View>
 
             <TouchableOpacity style={s.btnPrimary} onPress={handleSubscribe}>
-              <Text style={s.btnPrimaryText}>👑 Assinar Premium agora</Text>
-              <Text style={s.btnPrimarySub}>A partir de R$29/mês · cancele quando quiser</Text>
+              <Text style={s.btnPrimaryText}>{t('trial_expired.subscribe_btn' as any)}</Text>
+              <Text style={s.btnPrimarySub}>{t('trial_expired.price_sub' as any)}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={s.btnSecondary} onPress={onContinueFree}>
-              <Text style={s.btnSecondaryText}>Continuar no plano grátis</Text>
+              <Text style={s.btnSecondaryText}>{t('trial_expired.continue_free' as any)}</Text>
             </TouchableOpacity>
 
-            <Text style={s.legal}>
-              Dúvidas? suporte.nutriai@outlook.com
-            </Text>
+            <Text style={s.legal}>{t('trial_expired.legal' as any)}</Text>
 
           </ScrollView>
         </View>

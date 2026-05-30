@@ -14,7 +14,6 @@ import {
   useProgressStore, useWorkoutStore,
 } from '@store/index'
 import { useDailyStore } from '@store/dailyStore'
-import { getGreeting, getMoodAdaptationMessage, gText } from '@utils/index'
 import { HomeSkeleton } from '@components/ui/Skeleton'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { MoodType, WorkoutSession } from '@/types/index'
@@ -90,40 +89,12 @@ function buildCurrentWeek(streak: number, checkedInToday: boolean) {
   })
 }
 
-const MUSCLE_PT: Record<string, string> = {
-  chest:     'Peito',
-  back:      'Costas',
-  shoulders: 'Ombros',
-  biceps:    'Bíceps',
-  triceps:   'Tríceps',
-  legs:      'Pernas',
-  glutes:    'Glúteos',
-  core:      'Core',
-  cardio:    'Cardio',
-  mobility:  'Mobilidade',
-  arms:      'Braços',
-}
-
 function getMuscleChips(workout: WorkoutSession | undefined): string[] {
   if (!workout) return []
   if (workout.muscleGroups?.length)
-    return workout.muscleGroups.slice(0, 4).map(g => MUSCLE_PT[g] ?? g)
-  // fallback: collect from block titles
+    return workout.muscleGroups.slice(0, 4) // raw IDs — translated inside component
+  // fallback: collect from AI-generated block titles
   return [...new Set(workout.blocks.map(b => b.title).filter(Boolean))].slice(0, 4)
-}
-
-function buildInsight(streak: number, calPercent: number, workoutDone: boolean): string {
-  if (streak >= 7 && workoutDone)
-    return `${streak} dias seguidos! 🎉 Amanhã considere descanso ativo — caminhada leve ajuda na recuperação.`
-  if (streak >= 3)
-    return `${streak} dias de sequência! Continue assim, você está construindo um hábito sólido. 💪`
-  if (workoutDone && calPercent >= 70)
-    return `Treino feito e alimentação no ponto! Dia produtivo. Não esqueça de hidratar. 💧`
-  if (calPercent < 25)
-    return `Você mal começou a se alimentar hoje. Lembre-se: nutrição é tão importante quanto o treino. 🥗`
-  if (calPercent > 95)
-    return `Meta calórica quase atingida! Atenção para não ultrapassar — prefira proteínas no final do dia.`
-  return `Foco no processo. Cada pequena ação de hoje é um investimento no seu resultado amanhã. 🌱`
 }
 
 // ─── Screen ──────────────────────────────────────────────────────────────────
@@ -135,6 +106,20 @@ export default function HomeScreen() {
   const { progress, getRankProgress, logCheckin, getTodayCheckin, addXp } = useProgressStore()
   const { weekWorkouts }              = useWorkoutStore()
   const { hydrationMl, addHydration, resetIfNewDay } = useDailyStore()
+
+  // ─── i18n helpers ────────────────────────────────────────────────────────
+  const getMoodLabel = (id: string): string => ({
+    great:     t('moods.great' as any),
+    good:      t('moods.good' as any),
+    neutral:   t('moods.neutral' as any),
+    tired:     t('moods.tired' as any),
+    exhausted: t('moods.exhausted' as any),
+  }[id] ?? id)
+
+  const getMuscleLabel = (key: string): string => {
+    const translated = t(`muscles.${key}` as any)
+    return translated.startsWith('muscles.') ? key : translated
+  }
 
   const xpAnim  = useRef(new Animated.Value(0)).current
   const calAnim = useRef(new Animated.Value(0)).current
@@ -156,7 +141,14 @@ export default function HomeScreen() {
 
   const muscleChips = useMemo(() => getMuscleChips(todayWorkout), [todayWorkout])
   const last7Days   = useMemo(() => buildCurrentWeek(streak, !!checkin), [streak, checkin])
-  const aiInsight   = useMemo(() => buildInsight(streak, calPercent, workoutDone), [streak, calPercent, workoutDone])
+  const aiInsight   = useMemo(() => {
+    if (streak >= 7 && workoutDone) return t('home.insight_streak_max' as any, { streak })
+    if (streak >= 3)                return t('home.insight_streak_good' as any, { streak })
+    if (workoutDone && calPercent >= 70) return t('home.insight_workout_cal' as any)
+    if (calPercent < 25)            return t('home.insight_cal_low' as any)
+    if (calPercent > 95)            return t('home.insight_cal_high' as any)
+    return                               t('home.insight_default' as any)
+  }, [streak, calPercent, workoutDone, t])
 
   useEffect(() => {
     resetIfNewDay()
@@ -177,7 +169,10 @@ export default function HomeScreen() {
 
   if (isLoading || !user) return <HomeSkeleton />
 
-  const greeting = getGreeting(user.gender, user.name)
+  const hour = new Date().getHours()
+  const greetingPeriod = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening'
+  const greetingSuffix = user.gender === 'fem' ? 'f' : 'm'
+  const greeting = t(`home.greeting_${greetingPeriod}_${greetingSuffix}` as any)
   const totalExercises = todayWorkout?.blocks.reduce((a, b) => a + ((b.exercises as any[])?.length ?? 0), 0) ?? 0
 
   return (
@@ -193,7 +188,7 @@ export default function HomeScreen() {
         style={s.heroCard}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
       >
-        <Text style={s.heroGreeting}>{greeting.split(',')[0]}</Text>
+        <Text style={s.heroGreeting}>{greeting}</Text>
         <Text style={s.heroName}>{user.name} 👋</Text>
         <View style={s.heroInsightBox}>
           <Text style={s.heroInsightText}>
@@ -248,7 +243,7 @@ export default function HomeScreen() {
             <View style={s.chipsRow}>
               {muscleChips.map(chip => (
                 <View key={chip} style={s.chip}>
-                  <Text style={s.chipText}>{chip}</Text>
+                  <Text style={s.chipText}>{getMuscleLabel(chip)}</Text>
                 </View>
               ))}
             </View>
@@ -313,8 +308,8 @@ export default function HomeScreen() {
           <View style={{ flex: 1 }}>
             <Text style={s.rankLabel}>{rank.label}</Text>
             <Text style={s.rankXp}>
-              {(progress.totalXp ?? 0).toLocaleString('pt-BR')} XP
-              {next ? ` · +${(next.minXp - (progress.totalXp ?? 0)).toLocaleString()} para ${next.label}` : ''}
+              {(progress.totalXp ?? 0).toLocaleString()} XP
+              {next ? ` · +${(next.minXp - (progress.totalXp ?? 0)).toLocaleString()} ${t('home.rank_xp_to' as any)} ${next.label}` : ''}
             </Text>
             <View style={s.xpTrack}>
               <Animated.View style={[s.xpFill, { width: xpBarWidth }]} />
@@ -395,7 +390,7 @@ export default function HomeScreen() {
                 onPress={() => handleCheckin(m.id as MoodType)}
               >
                 <Text style={s.moodEmoji}>{m.emoji}</Text>
-                <Text style={[s.moodLabel, { color: mc.text }]}>{m.label}</Text>
+                <Text style={[s.moodLabel, { color: mc.text }]}>{getMoodLabel(m.id)}</Text>
                 {isSelected && <Text style={s.moodCheck}>✓</Text>}
               </TouchableOpacity>
             )
@@ -403,7 +398,9 @@ export default function HomeScreen() {
         </View>
         {checkin && (
           <Text style={[s.checkinDoneText, { marginTop: 10 }]}>
-            {getMoodAdaptationMessage(user.gender, checkin.mood)}
+            {(checkin.mood === 'tired' || checkin.mood === 'exhausted')
+              ? t('home.mood_tired' as any)
+              : t('home.mood_default' as any)}
           </Text>
         )}
       </View>

@@ -6,9 +6,11 @@ import { Colors, Spacing, Radius, RANKS, PROFILES, XP_VALUES } from '@constants/
 import { RANK_GRADIENTS, RANK_TEXT_COLOR, SHADOWS } from '@constants/theme'
 import { useProgressStore, useUserStore } from '@store/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useT } from '@/i18n/useT'
 
 export default function RanksScreen() {
   const insets = useSafeAreaInsets()
+  const { t } = useT()
   const { progress, getRankProgress } = useProgressStore()
   const { user, updateUser, isLoading } = useUserStore()
   const { current: rank, next, percent } = getRankProgress()
@@ -27,22 +29,63 @@ export default function RanksScreen() {
   const gradColors = RANK_GRADIENTS[rank.tier] ?? ['#555','#333']
   const textColor  = RANK_TEXT_COLOR[rank.tier] ?? '#FFF'
 
+  // ─── Profile helpers ───────────────────────────────────────────────────────
+  const getProfileTitle = (id: string): string => ({
+    escultura:  t('onboarding.profile_escultura_title' as any),
+    vitalidade: t('onboarding.profile_vitalidade_title' as any),
+    harmonia:   t('onboarding.profile_harmonia_title' as any),
+  }[id] ?? id)
+
+  const getProfileDesc = (id: string): string => ({
+    escultura:  t('onboarding.profile_escultura_desc' as any),
+    vitalidade: t('onboarding.profile_vitalidade_desc' as any),
+    harmonia:   t('onboarding.profile_harmonia_desc' as any),
+  }[id] ?? id)
+
+  const getProfileBonus = (id: string): string => ({
+    escultura:  t('onboarding.profile_escultura_bonus' as any),
+    vitalidade: t('onboarding.profile_vitalidade_bonus' as any),
+    harmonia:   t('onboarding.profile_harmonia_bonus' as any),
+  }[id] ?? id)
+
   const handleShare = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     await Share.share({
-      message:
-        `Estou no rank ${rank.emoji} ${rank.label} no NutriAI!\n\n` +
-        `🔥 ${progress.streak ?? 0} dias de sequência\n` +
-        `⚡ ${(progress.totalXp ?? 0).toLocaleString('pt-BR')} XP\n` +
-        `💪 ${progress.workoutsCompleted ?? 0} treinos\n\n` +
-        `🌿 NutriAI — Nutrição e treino com IA`,
+      message: t('ranks.share_msg' as any, {
+        emoji:    rank.emoji,
+        label:    rank.label,
+        streak:   progress.streak ?? 0,
+        xp:       (progress.totalXp ?? 0).toLocaleString(),
+        workouts: progress.workoutsCompleted ?? 0,
+      }),
     })
   }
+
+  const EARN_ITEMS = [
+    { emoji:'📸', labelKey:'ranks.earn_meal_label',    subKey:'ranks.earn_meal_sub',    xp: XP_VALUES.MEAL_LOGGED   },
+    { emoji:'💪', labelKey:'ranks.earn_workout_label', subKey:'ranks.earn_workout_sub', xp: XP_VALUES.WORKOUT_DONE  },
+    { emoji:'🔥', labelKey:'ranks.earn_streak_label',  subKey:'ranks.earn_streak_sub',  xp: XP_VALUES.STREAK_7_DAYS },
+    { emoji:'📋', labelKey:'ranks.earn_checkin_label', subKey:'ranks.earn_checkin_sub', xp: XP_VALUES.CHECKIN_DONE  },
+  ]
+
+  const RANK_ROWS = [
+    { tier:'bronze',    emoji:'🥉', labelKey:'ranks.bronze',    rangeKey:'ranks.bronze_range'    },
+    { tier:'silver',    emoji:'🥈', labelKey:'ranks.silver',    rangeKey:'ranks.silver_range'    },
+    { tier:'gold',      emoji:'🥇', labelKey:'ranks.gold',      rangeKey:'ranks.gold_range'      },
+    { tier:'diamond',   emoji:'💎', labelKey:'ranks.diamond',   rangeKey:'ranks.diamond_range'   },
+    { tier:'legendary', emoji:'👑', labelKey:'ranks.legendary', rangeKey:'ranks.legendary_range' },
+  ]
+
+  const STATS = [
+    { labelKey: 'profile.stat_active_days', v: String(progress.activeDays ?? 0)         },
+    { labelKey: 'profile.stat_adherence',   v: `${progress.adherencePercent ?? 0}%`      },
+    { labelKey: 'profile.stat_workouts',    v: String(progress.workoutsCompleted ?? 0)   },
+  ]
 
   return (
     <ScrollView style={s.root} contentContainerStyle={[s.content, { paddingTop: insets.top + 20 }]} showsVerticalScrollIndicator={false}>
 
-      <Text style={s.title}>🏆 Ranks & XP</Text>
+      <Text style={s.title}>{t('ranks.title' as any)}</Text>
 
       {/* Card de rank com gradiente dinâmico */}
       <LinearGradient
@@ -57,8 +100,10 @@ export default function RanksScreen() {
           <View style={{ flex: 1 }}>
             <Text style={[s.rankLabelBig, { color: textColor }]}>{rank.label}</Text>
             <Text style={[s.rankXpText, { color: textColor, opacity: 0.8 }]}>
-              {(progress.totalXp ?? 0).toLocaleString('pt-BR')} XP
-              {next ? ` / ${next.minXp.toLocaleString('pt-BR')}` : ' · Rank máximo'}
+              {(progress.totalXp ?? 0).toLocaleString()} XP
+              {next
+                ? ` / ${next.minXp.toLocaleString()}`
+                : ` ${t('ranks.max_rank' as any)}`}
             </Text>
           </View>
           <View style={[s.streakPill, { backgroundColor: 'rgba(0,0,0,0.25)' }]}>
@@ -72,20 +117,20 @@ export default function RanksScreen() {
               <Animated.View style={[s.xpBarFill, { width: barWidth, backgroundColor: textColor }]} />
             </View>
             <Text style={[s.xpNextText, { color: textColor, opacity: 0.75 }]}>
-              Faltam {(next.minXp - (progress.totalXp ?? 0)).toLocaleString('pt-BR')} XP para {next.emoji} {next.label}
+              {t('ranks.xp_remaining' as any, {
+                xp:    (next.minXp - (progress.totalXp ?? 0)).toLocaleString(),
+                emoji: next.emoji,
+                label: next.label,
+              })}
             </Text>
           </>
         )}
 
         <View style={s.statsRow}>
-          {[
-            { l: 'dias ativos',  v: String(progress.activeDays ?? 0) },
-            { l: 'aderência',    v: `${progress.adherencePercent ?? 0}%` },
-            { l: 'treinos',      v: String(progress.workoutsCompleted ?? 0) },
-          ].map(st => (
-            <View key={st.l} style={[s.statBox, { backgroundColor: 'rgba(0,0,0,0.25)' }]}>
+          {STATS.map(st => (
+            <View key={st.labelKey} style={[s.statBox, { backgroundColor: 'rgba(0,0,0,0.25)' }]}>
               <Text style={[s.statVal, { color: textColor }]}>{st.v}</Text>
-              <Text style={[s.statLbl, { color: textColor, opacity: 0.7 }]}>{st.l}</Text>
+              <Text style={[s.statLbl, { color: textColor, opacity: 0.7 }]}>{t(st.labelKey as any)}</Text>
             </View>
           ))}
         </View>
@@ -94,24 +139,19 @@ export default function RanksScreen() {
           style={[s.shareBtn, { backgroundColor: 'rgba(0,0,0,0.25)' }]}
           onPress={handleShare}
         >
-          <Text style={[s.shareBtnText, { color: textColor }]}>📤 Compartilhar evolução</Text>
+          <Text style={[s.shareBtnText, { color: textColor }]}>{t('ranks.share_btn' as any)}</Text>
         </TouchableOpacity>
       </LinearGradient>
 
       {/* Como ganhar XP */}
       <View style={[s.card, SHADOWS.sm]}>
-        <Text style={s.cardTitle}>Como ganhar XP</Text>
-        {[
-          { emoji:'📸', label:'Registrar refeição', sub:'até 3× por dia',      xp: XP_VALUES.MEAL_LOGGED   },
-          { emoji:'💪', label:'Completar treino',   sub:'todos os exercícios', xp: XP_VALUES.WORKOUT_DONE  },
-          { emoji:'🔥', label:'Streak de 7 dias',   sub:'bônus semanal',       xp: XP_VALUES.STREAK_7_DAYS },
-          { emoji:'📋', label:'Check-in diário',    sub:'humor + adaptação',   xp: XP_VALUES.CHECKIN_DONE  },
-        ].map(item => (
-          <View key={item.label} style={s.xpRow}>
+        <Text style={s.cardTitle}>{t('ranks.how_to_earn' as any)}</Text>
+        {EARN_ITEMS.map(item => (
+          <View key={item.labelKey} style={s.xpRow}>
             <Text style={s.xpEmoji}>{item.emoji}</Text>
             <View style={{ flex: 1 }}>
-              <Text style={s.xpLabel}>{item.label}</Text>
-              <Text style={s.xpSub}>{item.sub}</Text>
+              <Text style={s.xpLabel}>{t(item.labelKey as any)}</Text>
+              <Text style={s.xpSub}>{t(item.subKey as any)}</Text>
             </View>
             <LinearGradient colors={['#1A1200','#111']} style={s.xpBadge}>
               <Text style={s.xpBadgeText}>+{item.xp} XP</Text>
@@ -122,7 +162,7 @@ export default function RanksScreen() {
 
       {/* Perfil */}
       <View style={[s.card, SHADOWS.sm]}>
-        <Text style={s.cardTitle}>Perfil de treino</Text>
+        <Text style={s.cardTitle}>{t('ranks.workout_profile' as any)}</Text>
         {PROFILES.map(p => {
           const isSel = user?.profile === p.id
           return (
@@ -133,9 +173,9 @@ export default function RanksScreen() {
             >
               <Text style={s.profileEmoji}>{p.emoji}</Text>
               <View style={{ flex: 1 }}>
-                <Text style={s.profileTitle}>{p.title}</Text>
-                <Text style={s.profileDesc}>{p.description}</Text>
-                <Text style={s.profileBonus}>{p.bonus}</Text>
+                <Text style={s.profileTitle}>{getProfileTitle(p.id)}</Text>
+                <Text style={s.profileDesc}>{getProfileDesc(p.id)}</Text>
+                <Text style={s.profileBonus}>{getProfileBonus(p.id)}</Text>
               </View>
               {isSel && (
                 <LinearGradient colors={['#C8F060','#A8D040']} style={s.checkCircle}>
@@ -147,33 +187,27 @@ export default function RanksScreen() {
         })}
       </View>
 
-      {/* Tabela de ranks com gradientes */}
+      {/* Tabela de ranks */}
       <View style={[s.card, SHADOWS.sm]}>
-        <Text style={s.cardTitle}>Tabela de ranks</Text>
-        {[
-          { tier:'bronze',    emoji:'🥉', label:'Bronze I–III',   range:'0–999 XP'       },
-          { tier:'silver',    emoji:'🥈', label:'Prata I–III',    range:'1.000–3.000 XP' },
-          { tier:'gold',      emoji:'🥇', label:'Ouro I–III',     range:'3.001–7.000 XP' },
-          { tier:'diamond',   emoji:'💎', label:'Diamante I–III', range:'7.001–15.000 XP'},
-          { tier:'legendary', emoji:'👑', label:'Lendário',       range:'15.001+ XP'     },
-        ].map(row => {
+        <Text style={s.cardTitle}>{t('ranks.rank_table' as any)}</Text>
+        {RANK_ROWS.map(row => {
           const isCurrent = row.tier === rank.tier
           if (isCurrent) {
             return (
               <LinearGradient key={row.tier} colors={RANK_GRADIENTS[row.tier]} style={s.rankRowHighlight} start={{x:0,y:0}} end={{x:1,y:0}}>
                 <Text style={s.rankRowEmoji}>{row.emoji}</Text>
                 <Text style={[s.rankRowLabel, { color: RANK_TEXT_COLOR[row.tier], fontWeight:'700' }]}>
-                  {row.label} ← você
+                  {t(row.labelKey as any)} {t('ranks.current' as any)}
                 </Text>
-                <Text style={[s.rankRowRange, { color: RANK_TEXT_COLOR[row.tier], opacity: 0.8 }]}>{row.range}</Text>
+                <Text style={[s.rankRowRange, { color: RANK_TEXT_COLOR[row.tier], opacity: 0.8 }]}>{t(row.rangeKey as any)}</Text>
               </LinearGradient>
             )
           }
           return (
             <View key={row.tier} style={s.rankRowNormal}>
               <Text style={[s.rankRowEmoji, { opacity: 0.5 }]}>{row.emoji}</Text>
-              <Text style={[s.rankRowLabel, { color: Colors.text2 }]}>{row.label}</Text>
-              <Text style={s.rankRowRange}>{row.range}</Text>
+              <Text style={[s.rankRowLabel, { color: Colors.text2 }]}>{t(row.labelKey as any)}</Text>
+              <Text style={s.rankRowRange}>{t(row.rangeKey as any)}</Text>
             </View>
           )
         })}

@@ -9,9 +9,11 @@ import { Colors, Spacing, Radius } from '@constants/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNutritionStore, useWorkoutStore, useUserStore } from '@store/index'
 import { generateDietPlan, generateWorkoutPlan } from '@services/ai'
+import { useT } from '@/i18n/useT'
 
 export default function WeeklyFeedbackScreen() {
   const insets = useSafeAreaInsets()
+  const { t } = useT()
   const { type } = useLocalSearchParams<{ type: 'diet' | 'workout' }>()
   const { user }          = useUserStore()
   const { setWeekPlan, weeklyFeedback, setWeeklyFeedback } = useNutritionStore()
@@ -27,9 +29,9 @@ export default function WeeklyFeedbackScreen() {
   const buildFeedbackText = (withFeedback: boolean): string => {
     if (!withFeedback) return ''
     const parts: string[] = []
-    if (whatWorked.trim())    parts.push(`O que funcionou: ${whatWorked.trim()}`)
-    if (whatDidnt.trim())     parts.push(`O que não funcionou: ${whatDidnt.trim()}`)
-    if (wantsToChange.trim()) parts.push(`Mudanças desejadas: ${wantsToChange.trim()}`)
+    if (whatWorked.trim())    parts.push(`${t('weekly_feedback.feedback_worked' as any)} ${whatWorked.trim()}`)
+    if (whatDidnt.trim())     parts.push(`${t('weekly_feedback.feedback_didnt' as any)} ${whatDidnt.trim()}`)
+    if (wantsToChange.trim()) parts.push(`${t('weekly_feedback.feedback_change' as any)} ${wantsToChange.trim()}`)
     return parts.join('. ')
   }
 
@@ -38,7 +40,6 @@ export default function WeeklyFeedbackScreen() {
     try {
       const feedbackText = buildFeedbackText(withFeedback)
 
-      // Salvar feedback para futura referência
       if (withFeedback && feedbackText) {
         setWeeklyFeedback({
           whatWorked,
@@ -56,11 +57,9 @@ export default function WeeklyFeedbackScreen() {
         setWeekWorkouts(plan)
       }
 
-      // Volta explicitamente para a aba correta em vez de router.back()
-      // (evita ir para Home em certas pilhas de navegação)
       router.replace(isDiet ? '/(tabs)/diet' : '/(tabs)/workout')
     } catch (err) {
-      Alert.alert('Erro', err instanceof Error ? err.message : 'Tente novamente.')
+      Alert.alert(t('common.error' as any), err instanceof Error ? err.message : t('common.retry' as any))
     } finally {
       setGenerating(false)
     }
@@ -76,32 +75,27 @@ export default function WeeklyFeedbackScreen() {
       contentContainerStyle={[s.content, { paddingTop: insets.top + 20 }]}
       keyboardShouldPersistTaps="handled"
     >
-      {/* Cabeçalho */}
       <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
-        <Text style={s.backText}>← Voltar</Text>
+        <Text style={s.backText}>← {t('common.back' as any)}</Text>
       </TouchableOpacity>
 
       <Text style={s.title}>
-        {isDiet ? '🥗 Novo Plano Alimentar' : '💪 Novo Plano de Treino'}
+        {isDiet ? t('weekly_feedback.diet_title' as any) : t('weekly_feedback.workout_title' as any)}
       </Text>
-      <Text style={s.sub}>
-        Como foi a semana? Seu feedback ajuda a IA a gerar um plano cada vez mais personalizado.
-        Os campos são opcionais — você pode pular se preferir.
-      </Text>
+      <Text style={s.sub}>{t('weekly_feedback.sub' as any)}</Text>
 
-      {/* Card de feedback */}
       <View style={s.card}>
         <View style={s.question}>
           <Text style={s.qIcon}>✅</Text>
           <View style={{ flex: 1 }}>
-            <Text style={s.qLabel}>O que funcionou bem?</Text>
+            <Text style={s.qLabel}>{t('weekly_feedback.q1_label' as any)}</Text>
             <TextInput
               style={s.input}
               value={whatWorked}
               onChangeText={setWhatWorked}
               placeholder={isDiet
-                ? 'Ex: Adorei os almoços, eram práticos...'
-                : 'Ex: Os treinos de perna foram ótimos...'}
+                ? t('weekly_feedback.q1_diet_placeholder' as any)
+                : t('weekly_feedback.q1_workout_placeholder' as any)}
               placeholderTextColor={Colors.text3}
               multiline
               maxLength={300}
@@ -112,14 +106,14 @@ export default function WeeklyFeedbackScreen() {
         <View style={s.question}>
           <Text style={s.qIcon}>❌</Text>
           <View style={{ flex: 1 }}>
-            <Text style={s.qLabel}>O que não funcionou?</Text>
+            <Text style={s.qLabel}>{t('weekly_feedback.q2_label' as any)}</Text>
             <TextInput
               style={s.input}
               value={whatDidnt}
               onChangeText={setWhatDidnt}
               placeholder={isDiet
-                ? 'Ex: O jantar era pesado demais...'
-                : 'Ex: Não consegui fazer o treino de quarta...'}
+                ? t('weekly_feedback.q2_diet_placeholder' as any)
+                : t('weekly_feedback.q2_workout_placeholder' as any)}
               placeholderTextColor={Colors.text3}
               multiline
               maxLength={300}
@@ -130,14 +124,14 @@ export default function WeeklyFeedbackScreen() {
         <View style={[s.question, { borderBottomWidth: 0 }]}>
           <Text style={s.qIcon}>💡</Text>
           <View style={{ flex: 1 }}>
-            <Text style={s.qLabel}>O que quer mudar no próximo?</Text>
+            <Text style={s.qLabel}>{t('weekly_feedback.q3_label' as any)}</Text>
             <TextInput
               style={s.input}
               value={wantsToChange}
               onChangeText={setWantsToChange}
               placeholder={isDiet
-                ? 'Ex: Menos carboidratos à noite, mais frango...'
-                : 'Ex: Mais foco em costas e bíceps...'}
+                ? t('weekly_feedback.q3_diet_placeholder' as any)
+                : t('weekly_feedback.q3_workout_placeholder' as any)}
               placeholderTextColor={Colors.text3}
               multiline
               maxLength={300}
@@ -146,7 +140,6 @@ export default function WeeklyFeedbackScreen() {
         </View>
       </View>
 
-      {/* Botões */}
       <TouchableOpacity
         style={[s.generateBtn, generating && { opacity: 0.7 }]}
         onPress={() => handleGenerate(true)}
@@ -156,8 +149,8 @@ export default function WeeklyFeedbackScreen() {
           ? <ActivityIndicator color={Colors.bg} />
           : (
             <View style={{ alignItems: 'center' }}>
-              <Text style={s.generateText}>✨ Gerar plano com meu feedback</Text>
-              <Text style={s.generateSub}>A IA vai usar suas respostas para personalizar</Text>
+              <Text style={s.generateText}>{t('weekly_feedback.generate_btn' as any)}</Text>
+              <Text style={s.generateSub}>{t('weekly_feedback.generate_sub' as any)}</Text>
             </View>
           )}
       </TouchableOpacity>
@@ -167,7 +160,7 @@ export default function WeeklyFeedbackScreen() {
         onPress={() => handleGenerate(false)}
         disabled={generating}
       >
-        <Text style={s.skipText}>Pular e gerar sem feedback</Text>
+        <Text style={s.skipText}>{t('weekly_feedback.skip_btn' as any)}</Text>
       </TouchableOpacity>
     </ScrollView>
     </KeyboardAvoidingView>

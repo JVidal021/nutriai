@@ -11,7 +11,7 @@ import { Colors, Spacing, Radius, XP_VALUES } from '@constants/index'
 import { analyzeMealPhoto, analyzeMealText } from '@services/ai'
 import { db } from '@services/supabase'
 import { useUserStore, useNutritionStore, useProgressStore } from '@store/index'
-import type { ScanResult, Meal } from '@types/index'
+import type { ScanResult, Meal } from '@/types/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useT } from '@/i18n/useT'
 

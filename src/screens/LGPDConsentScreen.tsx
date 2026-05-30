@@ -6,6 +6,7 @@ import {
 import { Colors, Spacing, Radius } from '@constants/index'
 import { supabase } from '@services/supabase'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useT } from '@/i18n/useT'
 
 interface ConsentItem {
   id: string
@@ -65,6 +66,7 @@ interface Props {
 
 export default function LGPDConsentScreen({ onAccept, onDecline }: Props) {
   const insets = useSafeAreaInsets()
+  const { t } = useT()
   const [consents, setConsents] = useState<Record<string, boolean>>(
     Object.fromEntries(CONSENT_ITEMS.map(c => [c.id, c.required]))
   )
@@ -82,28 +84,27 @@ export default function LGPDConsentScreen({ onAccept, onDecline }: Props) {
   const handleAccept = async () => {
     if (!allRequiredAccepted) {
       Alert.alert(
-        'Consentimentos obrigatórios',
-        'Para usar o NutriAI, é necessário aceitar os itens marcados como obrigatórios, pois são essenciais para o funcionamento do app.'
+        t('lgpd_consent.required_title' as any),
+        t('lgpd_consent.required_msg' as any)
       )
       return
     }
 
     setIsLoading(true)
     try {
-      // Registrar consentimento no banco com timestamp e versão
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         await supabase.from('consents').upsert({
           user_id: user.id,
           consents,
-          version: '1.0',  // incrementar quando a política mudar
-          ip_hash: null,   // não coletamos IP — apenas o timestamp basta
+          version: '1.0',
+          ip_hash: null,
           given_at: new Date().toISOString(),
         })
       }
       onAccept(consents)
     } catch (err) {
-      Alert.alert('Erro', 'Não foi possível registrar seu consentimento. Tente novamente.')
+      Alert.alert(t('common.error' as any), t('lgpd_consent.error_msg' as any))
     } finally {
       setIsLoading(false)
     }
@@ -111,11 +112,11 @@ export default function LGPDConsentScreen({ onAccept, onDecline }: Props) {
 
   const handleDecline = () => {
     Alert.alert(
-      'Tem certeza?',
-      'Sem aceitar os termos obrigatórios, não é possível usar o NutriAI, pois esses dados são essenciais para personalizar seu plano de saúde.',
+      t('lgpd_consent.decline_confirm_title' as any),
+      t('lgpd_consent.decline_confirm_msg' as any),
       [
-        { text: 'Voltar', style: 'cancel' },
-        { text: 'Sair mesmo assim', style: 'destructive', onPress: onDecline },
+        { text: t('common.back' as any), style: 'cancel' },
+        { text: t('lgpd_consent.decline_anyway' as any), style: 'destructive', onPress: onDecline },
       ]
     )
   }
@@ -126,8 +127,8 @@ export default function LGPDConsentScreen({ onAccept, onDecline }: Props) {
       <View style={[s.header, { paddingTop: insets.top + 12 }]}>
         <View style={s.logoMark}><Text style={s.logoLeaf}>🌿</Text></View>
         <View style={s.headerText}>
-          <Text style={s.title}>Seus dados, seu controle</Text>
-          <Text style={s.subtitle}>Antes de começar, precisa dar um ok para cada item abaixo.</Text>
+          <Text style={s.title}>{t('lgpd_consent.header_title' as any)}</Text>
+          <Text style={s.subtitle}>{t('lgpd_consent.header_sub' as any)}</Text>
         </View>
       </View>
 
@@ -137,11 +138,8 @@ export default function LGPDConsentScreen({ onAccept, onDecline }: Props) {
         <View style={s.lgpdBanner}>
           <Text style={s.lgpdIcon}>🔒</Text>
           <View style={s.lgpdText}>
-            <Text style={s.lgpdTitle}>Protegido pela LGPD</Text>
-            <Text style={s.lgpdSub}>
-              Seus dados de saúde são classificados como sensíveis pela Lei Geral de Proteção de Dados.
-              Você tem direito de acessar, corrigir e excluir seus dados a qualquer momento.
-            </Text>
+            <Text style={s.lgpdTitle}>{t('lgpd_consent.banner_title' as any)}</Text>
+            <Text style={s.lgpdSub}>{t('lgpd_consent.banner_sub' as any)}</Text>
           </View>
         </View>
 
@@ -159,7 +157,7 @@ export default function LGPDConsentScreen({ onAccept, onDecline }: Props) {
                 <View style={s.cardBadgeRow}>
                   <View style={[s.badge, item.required ? s.badgeRequired : s.badgeOptional]}>
                     <Text style={[s.badgeText, item.required ? s.badgeTextRequired : s.badgeTextOptional]}>
-                      {item.required ? 'Obrigatório' : 'Opcional'}
+                      {item.required ? t('lgpd_consent.badge_required' as any) : t('lgpd_consent.badge_optional' as any)}
                     </Text>
                   </View>
                   <Text style={s.lawRef}>{item.lawRef}</Text>
@@ -178,11 +176,11 @@ export default function LGPDConsentScreen({ onAccept, onDecline }: Props) {
         {/* Links legais */}
         <View style={s.legalLinks}>
           <TouchableOpacity onPress={() => Linking.openURL('https://nutriai.app/privacidade')}>
-            <Text style={s.legalLink}>Política de Privacidade</Text>
+            <Text style={s.legalLink}>{t('onboarding.privacy_link' as any)}</Text>
           </TouchableOpacity>
           <Text style={s.legalSep}>·</Text>
           <TouchableOpacity onPress={() => Linking.openURL('https://nutriai.app/termos')}>
-            <Text style={s.legalLink}>Termos de Uso</Text>
+            <Text style={s.legalLink}>{t('onboarding.terms_link' as any)}</Text>
           </TouchableOpacity>
         </View>
 
@@ -207,12 +205,12 @@ export default function LGPDConsentScreen({ onAccept, onDecline }: Props) {
       <View style={s.footer}>
         <Text style={s.footerHint}>
           {allRequiredAccepted
-            ? '✓ Todos os itens obrigatórios aceitos'
-            : `Aceite os ${CONSENT_ITEMS.filter(c => c.required && !consents[c.id]).length} itens obrigatórios para continuar`}
+            ? t('lgpd_consent.all_accepted' as any)
+            : t('lgpd_consent.pending' as any, { count: CONSENT_ITEMS.filter(c => c.required && !consents[c.id]).length })}
         </Text>
         <View style={s.btnRow}>
           <TouchableOpacity style={s.btnDecline} onPress={handleDecline}>
-            <Text style={s.btnDeclineText}>Recusar</Text>
+            <Text style={s.btnDeclineText}>{t('lgpd_consent.decline_btn' as any)}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[s.btnAccept, !allRequiredAccepted && s.btnAcceptDisabled]}
@@ -220,7 +218,7 @@ export default function LGPDConsentScreen({ onAccept, onDecline }: Props) {
             disabled={isLoading}
           >
             <Text style={s.btnAcceptText}>
-              {isLoading ? 'Salvando...' : 'Aceitar e continuar →'}
+              {isLoading ? t('lgpd_consent.saving' as any) : t('lgpd_consent.accept_btn' as any)}
             </Text>
           </TouchableOpacity>
         </View>

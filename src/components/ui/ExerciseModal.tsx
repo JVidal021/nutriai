@@ -5,12 +5,14 @@ import {
 } from 'react-native'
 import { Colors, Radius, Spacing } from '@constants/index'
 import { findExercise } from '@data/exercises'
+import { useT } from '@/i18n/useT'
 
 interface Props {
   exerciseName: string | null
   onClose: () => void
 }
 
+// Keyed by Portuguese muscle names from exercise data (data layer is in PT)
 const MUSCLE_EMOJI: Record<string, string> = {
   'Quadríceps': '🦵', 'Glúteos': '🍑', 'Isquiotibiais': '🦵',
   'Peitoral': '💪', 'Peitoral maior': '💪', 'Peitoral superior': '💪',
@@ -25,6 +27,13 @@ const MUSCLE_EMOJI: Record<string, string> = {
   'Corpo todo': '🔥',
 }
 
+// Maps Portuguese difficulty values from exercise data to translation keys
+const DIFFICULTY_KEY: Record<string, string> = {
+  'iniciante':     'exercise.difficulty_beginner',
+  'intermediário': 'exercise.difficulty_intermediate',
+  'avançado':      'exercise.difficulty_advanced',
+}
+
 const DIFFICULTY_COLOR: Record<string, string> = {
   'iniciante':     Colors.teal,
   'intermediário': Colors.orange,
@@ -32,6 +41,8 @@ const DIFFICULTY_COLOR: Record<string, string> = {
 }
 
 export default function ExerciseModal({ exerciseName, onClose }: Props) {
+  const { t } = useT()
+
   if (!exerciseName) return null
 
   const info = findExercise(exerciseName)
@@ -45,7 +56,6 @@ export default function ExerciseModal({ exerciseName, onClose }: Props) {
     >
       <View style={s.overlay}>
         <View style={s.sheet}>
-          {/* Handle bar */}
           <View style={s.handle} />
 
           <ScrollView showsVerticalScrollIndicator={false}>
@@ -58,7 +68,7 @@ export default function ExerciseModal({ exerciseName, onClose }: Props) {
                   <View style={s.badgeRow}>
                     <View style={[s.badge, { backgroundColor: DIFFICULTY_COLOR[info.difficulty] + '20' }]}>
                       <Text style={[s.badgeText, { color: DIFFICULTY_COLOR[info.difficulty] }]}>
-                        {info.difficulty}
+                        {t((DIFFICULTY_KEY[info.difficulty] ?? 'exercise.difficulty_beginner') as any)}
                       </Text>
                     </View>
                     <View style={s.equipBadge}>
@@ -70,18 +80,16 @@ export default function ExerciseModal({ exerciseName, onClose }: Props) {
             </View>
 
             {!info ? (
-              // Exercício não encontrado no banco — mensagem amigável
               <View style={s.notFoundBox}>
                 <Text style={s.notFoundText}>
-                  Informações detalhadas deste exercício ainda não estão no banco.{'\n\n'}
-                  💡 Dica: pesquise "{exerciseName}" no YouTube para ver a execução correta.
+                  {t('exercise.not_found' as any, { name: exerciseName })}
                 </Text>
               </View>
             ) : (
               <>
                 {/* Músculos */}
                 <View style={s.section}>
-                  <Text style={s.sectionTitle}>Músculos trabalhados</Text>
+                  <Text style={s.sectionTitle}>{t('exercise.muscles_worked' as any)}</Text>
                   <View style={s.muscleRow}>
                     {info.muscles.map(m => (
                       <View key={m} style={s.muscleChip}>
@@ -93,7 +101,7 @@ export default function ExerciseModal({ exerciseName, onClose }: Props) {
                   {info.secondary.length > 0 && (
                     <>
                       <Text style={[s.sectionTitle, { marginTop: 8, fontSize: 11, color: Colors.text3 }]}>
-                        Secundários
+                        {t('exercise.secondary_muscles' as any)}
                       </Text>
                       <View style={s.muscleRow}>
                         {info.secondary.map(m => (
@@ -108,7 +116,7 @@ export default function ExerciseModal({ exerciseName, onClose }: Props) {
 
                 {/* Como executar */}
                 <View style={s.section}>
-                  <Text style={s.sectionTitle}>Como executar</Text>
+                  <Text style={s.sectionTitle}>{t('exercise.how_to' as any)}</Text>
                   <Text style={s.howText}>{info.how}</Text>
                 </View>
 
@@ -116,7 +124,7 @@ export default function ExerciseModal({ exerciseName, onClose }: Props) {
                 <View style={[s.section, s.tipBox]}>
                   <Text style={s.tipIcon}>💡</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={s.tipTitle}>Dica de ouro</Text>
+                    <Text style={s.tipTitle}>{t('exercise.tip_title' as any)}</Text>
                     <Text style={s.tipText}>{info.tip}</Text>
                   </View>
                 </View>
@@ -125,7 +133,7 @@ export default function ExerciseModal({ exerciseName, onClose }: Props) {
                 <View style={[s.section, s.mistakeBox]}>
                   <Text style={s.tipIcon}>⚠️</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={[s.tipTitle, { color: Colors.orange }]}>Erro mais comum</Text>
+                    <Text style={[s.tipTitle, { color: Colors.orange }]}>{t('exercise.mistake_title' as any)}</Text>
                     <Text style={s.tipText}>{info.mistake}</Text>
                   </View>
                 </View>
@@ -134,7 +142,7 @@ export default function ExerciseModal({ exerciseName, onClose }: Props) {
           </ScrollView>
 
           <TouchableOpacity style={s.closeBtn} onPress={onClose}>
-            <Text style={s.closeBtnText}>Entendido ✓</Text>
+            <Text style={s.closeBtnText}>{t('exercise.close_btn' as any)}</Text>
           </TouchableOpacity>
         </View>
       </View>

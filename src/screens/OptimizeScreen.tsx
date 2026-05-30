@@ -4,9 +4,11 @@ import { Colors, Spacing, Radius } from '@constants/index'
 import { useProgressStore, useUserStore } from '@store/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { calcEfficiencyScore, weeksToGoal } from '@utils/index'
+import { useT } from '@/i18n/useT'
 
 export default function OptimizeScreen() {
   const insets = useSafeAreaInsets()
+  const { t } = useT()
   const { user, isLoading } = useUserStore()
   const { progress } = useProgressStore()
 
@@ -21,69 +23,74 @@ export default function OptimizeScreen() {
 
   const weeks = user ? weeksToGoal(user.weight, user.targetWeight) : 0
 
+  const scoreLabel = efficiency >= 80
+    ? t('optimize.score_efficient' as any)
+    : efficiency >= 60
+      ? t('optimize.score_progress' as any)
+      : t('optimize.score_attention' as any)
+
   const patterns = [
-    { color: Colors.teal,   title: 'Melhor desempenho às quartas',         desc: 'Seus treinos de Qua têm 18% mais carga. Coloque o treino mais pesado neste dia.'        },
-    { color: Colors.orange, title: 'Excesso calórico recorrente às sextas', desc: 'Média +280 kcal acima da meta. A IA ajusta seu jantar de quinta automaticamente.'        },
-    { color: Colors.purple, title: 'Sono impacta o desempenho',             desc: 'Dias com < 6h reduzem gasto calórico em ~22%. Correlação: 0,84.'                        },
-    { color: Colors.red,    title: 'Hidratação abaixo do ideal',            desc: '6 dos últimos 10 dias abaixo de 2L. Impacto estimado: −5% de eficiência.'               },
+    { color: Colors.teal,   titleKey: 'optimize.pattern1_title', descKey: 'optimize.pattern1_desc' },
+    { color: Colors.orange, titleKey: 'optimize.pattern2_title', descKey: 'optimize.pattern2_desc' },
+    { color: Colors.purple, titleKey: 'optimize.pattern3_title', descKey: 'optimize.pattern3_desc' },
+    { color: Colors.red,    titleKey: 'optimize.pattern4_title', descKey: 'optimize.pattern4_desc' },
   ]
 
   return (
     <ScrollView style={s.root} contentContainerStyle={[s.content, { paddingTop: insets.top + 20 }]} showsVerticalScrollIndicator={false}>
-      <Text style={s.title}>📊 Otimização</Text>
-      <Text style={s.sub}>Seu metabolismo como um sistema lógico</Text>
+      <Text style={s.title}>{t('optimize.title' as any)}</Text>
+      <Text style={s.sub}>{t('optimize.sub' as any)}</Text>
 
       <View style={s.scoreCard}>
-        <Text style={s.scoreSub}>Índice de Eficiência Metabólica</Text>
+        <Text style={s.scoreSub}>{t('optimize.efficiency_label' as any)}</Text>
         <Text style={s.scoreNum}>{efficiency}</Text>
-        <Text style={s.scoreLabel}>/ 100 · Sistema {efficiency >= 80 ? 'Eficiente' : efficiency >= 60 ? 'Em progresso' : 'Precisa de atenção'}</Text>
+        <Text style={s.scoreLabel}>{scoreLabel}</Text>
         <View style={s.scoreBar}>
           <View style={[s.scoreBarFill, { flex: efficiency / 100 }]} />
         </View>
         <Text style={s.scoreFooter}>
-          Mantendo o ritmo atual, você atinge a meta em{' '}
-          <Text style={{ color: Colors.accent, fontWeight: '700' }}>{weeks} semanas</Text>
+          {t('optimize.goal_weeks' as any, { weeks })}
         </Text>
       </View>
 
       <View style={s.metricsGrid}>
         {[
-          { label: 'kcal/treino',   val: '+340',            color: Colors.purple },
-          { label: 'ritmo/semana',  val: '−0,4kg',          color: Colors.teal   },
-          { label: 'aderência',     val: `${progress.adherencePercent}%`, color: Colors.accent },
-          { label: 'dias p/ meta',  val: String(weeks * 7), color: Colors.orange },
+          { labelKey: 'optimize.kcal_workout', val: '+340',            color: Colors.purple },
+          { labelKey: 'optimize.weekly_pace',  val: '−0,4kg',          color: Colors.teal   },
+          { labelKey: 'optimize.adherence',    val: `${progress.adherencePercent}%`, color: Colors.accent },
+          { labelKey: 'optimize.days_to_goal', val: String(weeks * 7), color: Colors.orange },
         ].map(m => (
-          <View key={m.label} style={s.metricBox}>
+          <View key={m.labelKey} style={s.metricBox}>
             <Text style={[s.metricVal, { color: m.color }]}>{m.val}</Text>
-            <Text style={s.metricLbl}>{m.label}</Text>
+            <Text style={s.metricLbl}>{t(m.labelKey as any)}</Text>
           </View>
         ))}
       </View>
 
       <View style={s.card}>
-        <Text style={s.cardTitle}>Padrões detectados pela IA</Text>
+        <Text style={s.cardTitle}>{t('optimize.patterns_title' as any)}</Text>
         {patterns.map(p => (
-          <View key={p.title} style={s.patternRow}>
+          <View key={p.titleKey} style={s.patternRow}>
             <View style={[s.patternDot, { backgroundColor: p.color }]} />
             <View style={{ flex: 1 }}>
-              <Text style={s.patternTitle}>{p.title}</Text>
-              <Text style={s.patternDesc}>{p.desc}</Text>
+              <Text style={s.patternTitle}>{t(p.titleKey as any)}</Text>
+              <Text style={s.patternDesc}>{t(p.descKey as any)}</Text>
             </View>
           </View>
         ))}
       </View>
 
       <View style={s.card}>
-        <Text style={s.cardTitle}>Simulação: +1 treino/semana</Text>
+        <Text style={s.cardTitle}>{t('optimize.sim_title' as any)}</Text>
         <View style={s.scenarioRow}>
           {[
-            { val: '−3 sem',  label: 'para atingir meta',   color: Colors.teal   },
-            { val: String(Math.min(efficiency + 5, 100)), label: 'nova eficiência', color: Colors.accent },
-            { val: '+340',    label: 'kcal extra/semana',    color: Colors.purple },
+            { val: t('optimize.sim_weeks' as any),   labelKey: 'optimize.sim_weeks_label',   color: Colors.teal   },
+            { val: String(Math.min(efficiency + 5, 100)), labelKey: 'optimize.sim_efficiency', color: Colors.accent },
+            { val: t('optimize.sim_kcal' as any),    labelKey: 'optimize.sim_kcal_label',    color: Colors.purple },
           ].map(item => (
-            <View key={item.label} style={s.scenarioBox}>
+            <View key={item.labelKey} style={s.scenarioBox}>
               <Text style={[s.scenarioVal, { color: item.color }]}>{item.val}</Text>
-              <Text style={s.scenarioLbl}>{item.label}</Text>
+              <Text style={s.scenarioLbl}>{t(item.labelKey as any)}</Text>
             </View>
           ))}
         </View>

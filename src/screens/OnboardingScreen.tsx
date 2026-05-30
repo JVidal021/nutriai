@@ -16,34 +16,35 @@ import { supabase } from '@services/supabase'
 import type { Goal, Gender, Profile, ActivityLevel, FitnessLevel, User } from '../types'
 import { dbUserToUser } from '@utils/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useT } from '@/i18n/useT'
 
 const { width } = Dimensions.get('window')
 
-const GOALS: Array<{ id: Goal; emoji: string; title: string; sub: string }> = [
-  { id: 'lose_weight',   emoji: '📉', title: 'Perder peso',        sub: 'Déficit calórico inteligente'   },
-  { id: 'gain_muscle',   emoji: '💪', title: 'Ganhar massa',        sub: 'Superávit + treino de força'    },
-  { id: 'maintain',      emoji: '❤️', title: 'Manter saúde',        sub: 'Equilíbrio e bem-estar'         },
-  { id: 'performance',   emoji: '🏃', title: 'Melhorar performance', sub: 'Foco em esporte e resistência' },
+const GOALS: Array<{ id: Goal; emoji: string; titleKey: string; subKey: string }> = [
+  { id: 'lose_weight',  emoji: '📉', titleKey: 'profile.goal_lose',              subKey: 'profile.goal_lose_sub'         },
+  { id: 'gain_muscle',  emoji: '💪', titleKey: 'profile.goal_gain',              subKey: 'profile.goal_gain_sub'         },
+  { id: 'maintain',     emoji: '❤️', titleKey: 'profile.goal_maintain',          subKey: 'profile.goal_maintain_sub'     },
+  { id: 'performance',  emoji: '🏃', titleKey: 'profile.goal_performance_label', subKey: 'profile.goal_performance_sub'  },
 ]
 
-const GENDERS: Array<{ id: Gender; emoji: string; title: string; sub: string }> = [
-  { id: 'masc', emoji: '🙋',    title: 'Masculino',          sub: 'O app vai se referir a você no masculino'   },
-  { id: 'fem',  emoji: '🙋‍♀️', title: 'Feminino',           sub: 'O app vai se referir a você no feminino'    },
-  { id: 'neu',  emoji: '🧑',    title: 'Neutro / Não-binário',sub: 'O app vai usar linguagem neutra e inclusiva'},
-  { id: 'skip', emoji: '🤫',    title: 'Prefiro não informar', sub: 'Tudo bem — usaremos linguagem neutra'      },
+const GENDERS: Array<{ id: Gender; emoji: string; titleKey: string; subKey: string }> = [
+  { id: 'masc', emoji: '🙋',    titleKey: 'onboarding.gender_m',    subKey: 'onboarding.gender_masc_sub' },
+  { id: 'fem',  emoji: '🙋‍♀️', titleKey: 'onboarding.gender_f',    subKey: 'onboarding.gender_fem_sub'  },
+  { id: 'neu',  emoji: '🧑',    titleKey: 'onboarding.gender_neu',  subKey: 'onboarding.gender_neu_sub'  },
+  { id: 'skip', emoji: '🤫',    titleKey: 'onboarding.gender_skip', subKey: 'onboarding.gender_skip_sub' },
 ]
 
-const ACTIVITIES: Array<{ id: ActivityLevel; emoji: string; title: string; sub: string }> = [
-  { id: 'sedentary', emoji: '🛋️', title: 'Sedentário',         sub: 'Pouco ou nenhum exercício'       },
-  { id: 'light',     emoji: '🚶', title: 'Levemente ativo',    sub: '1–3 vezes por semana'             },
-  { id: 'moderate',  emoji: '🚴', title: 'Moderadamente ativo',sub: '3–5 vezes por semana'             },
-  { id: 'active',    emoji: '🏋️', title: 'Muito ativo',        sub: '6–7 vezes por semana'             },
+const ACTIVITIES: Array<{ id: ActivityLevel; emoji: string; titleKey: string; subKey: string }> = [
+  { id: 'sedentary', emoji: '🛋️', titleKey: 'profile.activity_sedentary',     subKey: 'onboarding.activity_sedentary_sub' },
+  { id: 'light',     emoji: '🚶', titleKey: 'profile.activity_light',          subKey: 'onboarding.activity_light_sub'     },
+  { id: 'moderate',  emoji: '🚴', titleKey: 'profile.activity_moderate_label', subKey: 'onboarding.activity_moderate_sub'  },
+  { id: 'active',    emoji: '🏋️', titleKey: 'profile.activity_active',         subKey: 'onboarding.activity_active_sub'    },
 ]
 
-const FITNESS_LEVELS: Array<{ id: FitnessLevel; emoji: string; title: string; sub: string }> = [
-  { id: 'beginner',     emoji: '🌱', title: 'Iniciante',      sub: 'Começando agora ou menos de 6 meses de treino'   },
-  { id: 'intermediate', emoji: '💪', title: 'Intermediário',   sub: 'Entre 6 meses e 2 anos de treino regular'        },
-  { id: 'advanced',     emoji: '🏆', title: 'Avançado',        sub: 'Mais de 2 anos, treino consistente e progressivo' },
+const FITNESS_LEVELS: Array<{ id: FitnessLevel; emoji: string; titleKey: string; subKey: string }> = [
+  { id: 'beginner',     emoji: '🌱', titleKey: 'profile.fitness_beginner_label',     subKey: 'profile.fitness_beginner_sub'     },
+  { id: 'intermediate', emoji: '💪', titleKey: 'profile.fitness_intermediate_label', subKey: 'profile.fitness_intermediate_sub' },
+  { id: 'advanced',     emoji: '🏆', titleKey: 'profile.fitness_advanced_label',     subKey: 'profile.fitness_advanced_sub'     },
 ]
 
 const RESTRICTIONS = [
@@ -54,24 +55,25 @@ const RESTRICTIONS = [
 type FoodBudget   = 'economico' | 'moderado' | 'premium'
 type CookingTime  = 'rapido' | 'moderado' | 'elaborado'
 
-const FOOD_BUDGETS: Array<{ id: FoodBudget; emoji: string; title: string; sub: string }> = [
-  { id: 'economico', emoji: '💰', title: 'Econômico',      sub: 'Arroz, feijão, frango, ovos — pratos simples e acessíveis'         },
-  { id: 'moderado',  emoji: '🛒', title: 'Moderado',       sub: 'Ingredientes variados sem exageros — boa variedade no dia a dia'    },
-  { id: 'premium',   emoji: '💎', title: 'Sem restrição',  sub: 'Qualquer ingrediente — carnes nobres, suplementos e importados'     },
+const FOOD_BUDGETS: Array<{ id: FoodBudget; emoji: string; titleKey: string; subKey: string }> = [
+  { id: 'economico', emoji: '💰', titleKey: 'profile.budget_economico_label', subKey: 'profile.budget_economico_sub' },
+  { id: 'moderado',  emoji: '🛒', titleKey: 'profile.budget_moderado_label',  subKey: 'profile.budget_moderado_sub'  },
+  { id: 'premium',   emoji: '💎', titleKey: 'profile.budget_premium_label',   subKey: 'profile.budget_premium_sub'   },
 ]
 
-const COOKING_TIMES: Array<{ id: CookingTime; emoji: string; title: string; sub: string }> = [
-  { id: 'rapido',    emoji: '⏱️', title: 'Rápido (< 20 min)', sub: 'Receitas práticas — fritadeira air fryer, micro-ondas, simples' },
-  { id: 'moderado',  emoji: '🍳', title: 'Normal (20–40 min)', sub: 'Equilíbrio entre praticidade e variedade de sabores'           },
-  { id: 'elaborado', emoji: '👨‍🍳', title: 'Gosto de cozinhar', sub: 'Receitas elaboradas são bem-vindas — tempo disponível'         },
+const COOKING_TIMES: Array<{ id: CookingTime; emoji: string; titleKey: string; subKey: string }> = [
+  { id: 'rapido',    emoji: '⏱️',  titleKey: 'profile.cooking_rapido_title',    subKey: 'profile.cooking_rapido_sub'    },
+  { id: 'moderado',  emoji: '🍳',  titleKey: 'profile.cooking_moderado_title',  subKey: 'profile.cooking_moderado_sub'  },
+  { id: 'elaborado', emoji: '👨‍🍳', titleKey: 'profile.cooking_elaborado_title', subKey: 'profile.cooking_elaborado_sub' },
 ]
 
 export default function OnboardingScreen() {
+  const { t } = useT()
   const insets = useSafeAreaInsets()
   const { completeOnboarding } = useUserStore()
   const [step, setStep] = useState(0)
   const [loading, setLoading] = useState(false)
-  const [isLoginMode, setIsLoginMode] = useState(false) 
+  const [isLoginMode, setIsLoginMode] = useState(false)
   const progress = useRef(new Animated.Value(0)).current
 
   // Form state
@@ -101,6 +103,19 @@ export default function OnboardingScreen() {
 
   const TOTAL_STEPS = 9
 
+  // ─── Profile title/desc helpers ─────────────────────────────────────────
+  const getProfileTitle = (id: string): string => ({
+    escultura:  t('onboarding.profile_escultura_title' as any),
+    vitalidade: t('onboarding.profile_vitalidade_title' as any),
+    harmonia:   t('onboarding.profile_harmonia_title' as any),
+  }[id] ?? id)
+
+  const getProfileDesc = (id: string): string => ({
+    escultura:  t('onboarding.profile_escultura_desc' as any),
+    vitalidade: t('onboarding.profile_vitalidade_desc' as any),
+    harmonia:   t('onboarding.profile_harmonia_desc' as any),
+  }[id] ?? id)
+
   const animateProgress = (toStep: number) => {
     Animated.timing(progress, {
       toValue: toStep / TOTAL_STEPS,
@@ -111,7 +126,10 @@ export default function OnboardingScreen() {
 
   const next = () => {
     if (step === 0 && !isLoginMode && !lgpdAccepted) {
-      Alert.alert('Consentimento necessário', 'Para criar sua conta, aceite os Termos de Uso e a Política de Privacidade.')
+      Alert.alert(
+        t('onboarding.consent_required_title' as any),
+        t('onboarding.consent_required_msg' as any),
+      )
       return
     }
     const n = step + 1
@@ -138,7 +156,10 @@ export default function OnboardingScreen() {
   // ─── LOGIN REAL NO SUPABASE ──────────────────────────────────────────────
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Ops', 'E-mail e senha são obrigatórios.')
+      Alert.alert(
+        t('onboarding.fields_required_title' as any),
+        t('onboarding.login_fields_msg' as any),
+      )
       return
     }
 
@@ -157,7 +178,7 @@ export default function OnboardingScreen() {
         .eq('id', data.user.id)
         .single()
 
-      if (dbError || !dbUser) throw new Error('Não foi possível carregar seu perfil. Tente novamente.')
+      if (dbError || !dbUser) throw new Error(t('onboarding.profile_load_error' as any))
 
       const userObj = dbUserToUser({
         ...dbUser,
@@ -169,7 +190,10 @@ export default function OnboardingScreen() {
       router.replace('/(tabs)/home')
 
     } catch (err: any) {
-      Alert.alert('Erro no login', 'E-mail ou senha incorretos.')
+      Alert.alert(
+        t('onboarding.login_error_title' as any),
+        t('onboarding.login_error_msg' as any),
+      )
     } finally {
       setLoading(false)
     }
@@ -178,7 +202,10 @@ export default function OnboardingScreen() {
   // ─── CADASTRO REAL + GRAVAÇÃO NA TABELA USERS ────────────────────────────
   const finish = async () => {
     if (!name.trim() || !email.trim() || !password.trim()) {
-      Alert.alert('Ops', 'Nome, e-mail e senha são obrigatórios.')
+      Alert.alert(
+        t('onboarding.fields_required_title' as any),
+        t('onboarding.register_fields_msg' as any),
+      )
       setStep(0)
       animateProgress(0)
       return
@@ -209,14 +236,14 @@ export default function OnboardingScreen() {
       })
 
       if (error) throw error
-      if (!data.user) throw new Error('Este e-mail já está cadastrado. Use a opção de login.')
+      if (!data.user) throw new Error(t('onboarding.email_registered' as any))
 
       // Sem sessão = confirmação de e-mail habilitada no Supabase.
       // Desative em: Dashboard → Authentication → Providers → Email → "Confirm email"
       if (!data.session) {
         Alert.alert(
-          'Confirme seu e-mail',
-          `Enviamos um link de confirmação para ${email.trim()}. Confirme e faça login.`,
+          t('onboarding.confirm_email_title' as any),
+          t('onboarding.confirm_email_msg' as any, { email: email.trim() }),
         )
         return
       }
@@ -248,7 +275,7 @@ export default function OnboardingScreen() {
       await AsyncStorage.removeItem('nutriai-user')
 
       // ─── Resgatar código de convite (se informado) ──────────────────
-      let trialData: { isPremium: boolean; premiumPlan?: 'trial'; premiumExpiresAt?: string; promoCodeUsed?: string } = {
+      let trialData: { isPremium: boolean; premiumPlan?: 'trial'; subscriptionType?: 'recurring' | 'one_time' | 'trial'; premiumExpiresAt?: string; promoCodeUsed?: string } = {
         isPremium: false,
       }
 
@@ -266,13 +293,16 @@ export default function OnboardingScreen() {
             promoCodeUsed:    promoCode.trim(),
           }
           Alert.alert(
-            '🎁 Trial ativado!',
-            `Seu período de teste Premium de ${promoResult.trial_days} dias começou. Aproveite todos os recursos!`,
-            [{ text: 'Boa! 🚀' }]
+            t('profile.trial_activated' as any),
+            t('onboarding.trial_msg_long' as any, { days: promoResult.trial_days }),
+            [{ text: t('onboarding.trial_ok_btn' as any) }]
           )
         } else {
           // Código inválido não impede o cadastro — apenas avisa
-          Alert.alert('Código inválido', promoResult?.error ?? 'Código não reconhecido. Você pode adicionar um código válido depois.')
+          Alert.alert(
+            t('onboarding.promo_invalid_title' as any),
+            promoResult?.error ?? t('onboarding.promo_invalid_msg' as any),
+          )
         }
       }
 
@@ -302,7 +332,10 @@ export default function OnboardingScreen() {
       router.replace('/(tabs)/home')
 
     } catch (err: any) {
-      Alert.alert('Erro no cadastro', err.message || 'Tente novamente.')
+      Alert.alert(
+        t('onboarding.register_error_title' as any),
+        err.message || t('common.retry' as any),
+      )
     } finally {
       setLoading(false)
     }
@@ -340,42 +373,44 @@ export default function OnboardingScreen() {
         {step === 0 && (
           <View style={s.step}>
             <Text style={s.stepTitle}>
-              {isLoginMode ? 'Bem-vindo\nde volta! 🌿' : 'Bem-vindo ao\nNutriAI 🌿'}
+              {isLoginMode
+                ? t('onboarding.welcome_login' as any)
+                : t('onboarding.welcome_register' as any)}
             </Text>
-            
+
             {!isLoginMode && (
               <View style={s.card}>
                 <View style={s.featureRow}>
                   <Text style={s.featureEmoji}>📸</Text>
-                  <Text style={s.featureText}>Analise pratos e macros por foto</Text>
+                  <Text style={s.featureText}>{t('onboarding.feature_photo' as any)}</Text>
                 </View>
                 <View style={s.featureRow}>
                   <Text style={s.featureEmoji}>🧠</Text>
-                  <Text style={s.featureText}>Dieta e treino gerados por IA</Text>
+                  <Text style={s.featureText}>{t('onboarding.feature_ai' as any)}</Text>
                 </View>
               </View>
             )}
 
             {!isLoginMode && (
               <View style={s.inputWrap}>
-                <Text style={s.inputLabel}>Nome completo</Text>
+                <Text style={s.inputLabel}>{t('onboarding.full_name_label' as any)}</Text>
                 <TextInput
                   style={s.input}
                   value={name}
                   onChangeText={setName}
-                  placeholder="Seu nome"
+                  placeholder={t('onboarding.full_name_placeholder' as any)}
                   placeholderTextColor={Colors.text3}
                 />
               </View>
             )}
 
             <View style={s.inputWrap}>
-              <Text style={s.inputLabel}>Seu e-mail</Text>
+              <Text style={s.inputLabel}>{t('onboarding.email_input_label' as any)}</Text>
               <TextInput
                 style={s.input}
                 value={email}
                 onChangeText={setEmail}
-                placeholder="exemplo@email.com"
+                placeholder={t('onboarding.email_input_placeholder' as any)}
                 placeholderTextColor={Colors.text3}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -383,12 +418,12 @@ export default function OnboardingScreen() {
             </View>
 
             <View style={s.inputWrap}>
-              <Text style={s.inputLabel}>Senha</Text>
+              <Text style={s.inputLabel}>{t('onboarding.password_input_label' as any)}</Text>
               <TextInput
                 style={s.input}
                 value={password}
                 onChangeText={setPassword}
-                placeholder="Mínimo 6 caracteres"
+                placeholder={t('onboarding.password_input_placeholder' as any)}
                 placeholderTextColor={Colors.text3}
                 secureTextEntry
               />
@@ -397,13 +432,16 @@ export default function OnboardingScreen() {
             {!isLoginMode && (
               <View style={s.inputWrap}>
                 <Text style={s.inputLabel}>
-                  🎁 Código de convite <Text style={{ color: Colors.text3, fontWeight: '400' }}>(opcional)</Text>
+                  {t('onboarding.promo_input_label' as any)}{' '}
+                  <Text style={{ color: Colors.text3, fontWeight: '400' }}>
+                    {t('onboarding.optional' as any)}
+                  </Text>
                 </Text>
                 <TextInput
                   style={s.input}
                   value={promoCode}
-                  onChangeText={(t) => setPromoCode(t.toUpperCase())}
-                  placeholder="Ex: NUTRI15"
+                  onChangeText={(v) => setPromoCode(v.toUpperCase())}
+                  placeholder={t('onboarding.promo_input_placeholder' as any)}
                   placeholderTextColor={Colors.text3}
                   autoCapitalize="characters"
                   autoCorrect={false}
@@ -421,13 +459,19 @@ export default function OnboardingScreen() {
                   {lgpdAccepted && <Text style={s.consentCheck}>✓</Text>}
                 </View>
                 <Text style={s.consentText}>
-                  Li e concordo com os{' '}
-                  <Text style={s.consentLink} onPress={() => router.push('/legal/terms')}>Termos de Uso</Text>
+                  {t('onboarding.consent_read' as any)}{' '}
+                  <Text style={s.consentLink} onPress={() => router.push('/legal/terms')}>
+                    {t('onboarding.terms_link' as any)}
+                  </Text>
                   {', '}
-                  <Text style={s.consentLink} onPress={() => router.push('/legal/privacy')}>Política de Privacidade</Text>
-                  {' e '}
-                  <Text style={s.consentLink} onPress={() => router.push('/legal/lgpd')}>Aviso LGPD</Text>
-                  {', incluindo o tratamento dos meus dados de saúde.'}
+                  <Text style={s.consentLink} onPress={() => router.push('/legal/privacy')}>
+                    {t('onboarding.privacy_link' as any)}
+                  </Text>
+                  {' '}{t('onboarding.and' as any)}{' '}
+                  <Text style={s.consentLink} onPress={() => router.push('/legal/lgpd')}>
+                    {t('onboarding.consent_lgpd_link' as any)}
+                  </Text>
+                  {t('onboarding.consent_health' as any)}
                 </Text>
               </TouchableOpacity>
             )}
@@ -437,7 +481,9 @@ export default function OnboardingScreen() {
               onPress={() => setIsLoginMode(!isLoginMode)}
             >
               <Text style={s.toggleModeText}>
-                {isLoginMode ? 'Não tem uma conta? Cadastre-se' : 'Já tem uma conta? Entrar'}
+                {isLoginMode
+                  ? t('onboarding.toggle_no_account' as any)
+                  : t('onboarding.toggle_has_account' as any)}
               </Text>
             </TouchableOpacity>
           </View>
@@ -445,11 +491,14 @@ export default function OnboardingScreen() {
 
         {step === 1 && (
           <View style={s.step}>
-            <Text style={s.stepTitle}>Qual é{'\n'}seu objetivo?</Text>
+            <Text style={s.stepTitle}>{t('onboarding.step_goal' as any)}</Text>
             {GOALS.map((g) => (
               <TouchableOpacity key={g.id} style={[s.optCard, goal === g.id && s.optCardSel]} onPress={() => setGoal(g.id)}>
                 <Text style={s.optEmoji}>{g.emoji}</Text>
-                <View style={s.optText}><Text style={s.optTitle}>{g.title}</Text><Text style={s.optSub}>{g.sub}</Text></View>
+                <View style={s.optText}>
+                  <Text style={s.optTitle}>{t(g.titleKey as any)}</Text>
+                  <Text style={s.optSub}>{t(g.subKey as any)}</Text>
+                </View>
               </TouchableOpacity>
             ))}
           </View>
@@ -457,11 +506,14 @@ export default function OnboardingScreen() {
 
         {step === 2 && (
           <View style={s.step}>
-            <Text style={s.stepTitle}>Como prefere{'\n'}ser chamade?</Text>
+            <Text style={s.stepTitle}>{t('onboarding.step_gender' as any)}</Text>
             {GENDERS.map((g) => (
               <TouchableOpacity key={g.id} style={[s.optCard, gender === g.id && s.optCardSel]} onPress={() => setGender(g.id)}>
                 <Text style={s.optEmoji}>{g.emoji}</Text>
-                <View style={s.optText}><Text style={s.optTitle}>{g.title}</Text><Text style={s.optSub}>{g.sub}</Text></View>
+                <View style={s.optText}>
+                  <Text style={s.optTitle}>{t(g.titleKey as any)}</Text>
+                  <Text style={s.optSub}>{t(g.subKey as any)}</Text>
+                </View>
               </TouchableOpacity>
             ))}
           </View>
@@ -469,11 +521,14 @@ export default function OnboardingScreen() {
 
         {step === 3 && (
           <View style={s.step}>
-            <Text style={s.stepTitle}>Escolha{'\n'}seu perfil</Text>
+            <Text style={s.stepTitle}>{t('onboarding.step_profile' as any)}</Text>
             {PROFILES.map((p) => (
               <TouchableOpacity key={p.id} style={[s.optCard, profile === p.id && s.optCardSel]} onPress={() => setProfile(p.id as Profile)}>
                 <Text style={s.optEmoji}>{p.emoji}</Text>
-                <View style={s.optText}><Text style={s.optTitle}>{p.title}</Text><Text style={s.optSub}>{p.description}</Text></View>
+                <View style={s.optText}>
+                  <Text style={s.optTitle}>{getProfileTitle(p.id)}</Text>
+                  <Text style={s.optSub}>{getProfileDesc(p.id)}</Text>
+                </View>
               </TouchableOpacity>
             ))}
           </View>
@@ -481,15 +536,15 @@ export default function OnboardingScreen() {
 
         {step === 4 && (
           <View style={s.step}>
-            <Text style={s.stepTitle}>Seus dados{'\n'}físicos</Text>
+            <Text style={s.stepTitle}>{t('onboarding.step_body' as any)}</Text>
             {[
-              { label: 'Altura (cm)', value: height, setter: setHeight, min: 140, max: 220 },
-              { label: 'Peso atual (kg)', value: weight, setter: setWeight, min: 30, max: 200 },
-              { label: 'Peso meta (kg)', value: targetW, setter: setTargetW, min: 30, max: 200 },
-              { label: 'Idade', value: age, setter: setAge, min: 12, max: 100 },
+              { labelKey: 'onboarding.height_label',         value: height,  setter: setHeight,  min: 140, max: 220 },
+              { labelKey: 'onboarding.weight_current_label', value: weight,  setter: setWeight,  min: 30,  max: 200 },
+              { labelKey: 'onboarding.target_weight_label',  value: targetW, setter: setTargetW, min: 30,  max: 200 },
+              { labelKey: 'onboarding.age_label',            value: age,     setter: setAge,     min: 12,  max: 100 },
             ].map((field) => (
-              <View key={field.label} style={s.sliderWrap}>
-                <Text style={s.sliderLabel}>{field.label}</Text>
+              <View key={field.labelKey} style={s.sliderWrap}>
+                <Text style={s.sliderLabel}>{t(field.labelKey as any)}</Text>
                 <View style={s.numericRow}>
                   <TouchableOpacity style={s.numericBtn} onPress={() => field.setter((v) => Math.max(field.min, v - 1))}>
                     <Text style={s.numericBtnText}>−</Text>
@@ -497,8 +552,8 @@ export default function OnboardingScreen() {
                   <TextInput
                     style={s.numericInput}
                     value={String(field.value)}
-                    onChangeText={(t) => {
-                      const n = parseInt(t.replace(/[^0-9]/g, ''), 10)
+                    onChangeText={(v) => {
+                      const n = parseInt(v.replace(/[^0-9]/g, ''), 10)
                       if (!isNaN(n)) field.setter(Math.min(field.max, Math.max(field.min, n)))
                     }}
                     keyboardType="number-pad"
@@ -517,11 +572,14 @@ export default function OnboardingScreen() {
 
         {step === 5 && (
           <View style={s.step}>
-            <Text style={s.stepTitle}>Nível de{'\n'}atividade</Text>
+            <Text style={s.stepTitle}>{t('onboarding.step_activity' as any)}</Text>
             {ACTIVITIES.map((a) => (
               <TouchableOpacity key={a.id} style={[s.optCard, activity === a.id && s.optCardSel]} onPress={() => setActivity(a.id)}>
                 <Text style={s.optEmoji}>{a.emoji}</Text>
-                <View style={s.optText}><Text style={s.optTitle}>{a.title}</Text><Text style={s.optSub}>{a.sub}</Text></View>
+                <View style={s.optText}>
+                  <Text style={s.optTitle}>{t(a.titleKey as any)}</Text>
+                  <Text style={s.optSub}>{t(a.subKey as any)}</Text>
+                </View>
               </TouchableOpacity>
             ))}
           </View>
@@ -529,14 +587,17 @@ export default function OnboardingScreen() {
 
         {step === 6 && (
           <View style={s.step}>
-            <Text style={s.stepTitle}>Experiência{'\n'}na academia?</Text>
+            <Text style={s.stepTitle}>{t('onboarding.step_fitness' as any)}</Text>
             <Text style={[s.optSub, { marginBottom: 4, fontSize: 13, color: Colors.text2 }]}>
-              Isso define a complexidade e o volume dos seus treinos gerados por IA.
+              {t('onboarding.fitness_hint' as any)}
             </Text>
             {FITNESS_LEVELS.map((f) => (
               <TouchableOpacity key={f.id} style={[s.optCard, fitnessLevel === f.id && s.optCardSel]} onPress={() => setFitnessLevel(f.id)}>
                 <Text style={s.optEmoji}>{f.emoji}</Text>
-                <View style={s.optText}><Text style={s.optTitle}>{f.title}</Text><Text style={s.optSub}>{f.sub}</Text></View>
+                <View style={s.optText}>
+                  <Text style={s.optTitle}>{t(f.titleKey as any)}</Text>
+                  <Text style={s.optSub}>{t(f.subKey as any)}</Text>
+                </View>
               </TouchableOpacity>
             ))}
           </View>
@@ -544,7 +605,7 @@ export default function OnboardingScreen() {
 
         {step === 7 && (
           <View style={s.step}>
-            <Text style={s.stepTitle}>Restrições{'\n'}alimentares?</Text>
+            <Text style={s.stepTitle}>{t('onboarding.step_restrictions' as any)}</Text>
             <View style={s.tagsWrap}>
               {RESTRICTIONS.map((r) => (
                 <TouchableOpacity key={r} style={[s.tag, restrictions.includes(r) && s.tagSel]} onPress={() => toggleRestriction(r)}>
@@ -557,45 +618,57 @@ export default function OnboardingScreen() {
 
         {step === 8 && (
           <View style={s.step}>
-            <Text style={s.stepTitle}>Sua realidade{'\n'}alimentar 🍽️</Text>
+            <Text style={s.stepTitle}>{t('onboarding.step_food' as any)}</Text>
             <Text style={s.prefSub}>
-              A IA vai criar um plano que você realmente consegue comprar e preparar.
+              {t('onboarding.step8_sub' as any)}
             </Text>
 
-            <Text style={s.prefLabel}>💰 Orçamento para alimentação</Text>
+            <Text style={s.prefLabel}>{t('onboarding.budget_pref_label' as any)}</Text>
             {FOOD_BUDGETS.map((b) => (
               <TouchableOpacity key={b.id} style={[s.optCard, foodBudget === b.id && s.optCardSel]} onPress={() => setFoodBudget(b.id)}>
                 <Text style={s.optEmoji}>{b.emoji}</Text>
-                <View style={s.optText}><Text style={s.optTitle}>{b.title}</Text><Text style={s.optSub}>{b.sub}</Text></View>
+                <View style={s.optText}>
+                  <Text style={s.optTitle}>{t(b.titleKey as any)}</Text>
+                  <Text style={s.optSub}>{t(b.subKey as any)}</Text>
+                </View>
               </TouchableOpacity>
             ))}
 
-            <Text style={[s.prefLabel, { marginTop: 8 }]}>⏱️ Tempo disponível para cozinhar</Text>
+            <Text style={[s.prefLabel, { marginTop: 8 }]}>{t('onboarding.cooking_pref_label' as any)}</Text>
             {COOKING_TIMES.map((c) => (
               <TouchableOpacity key={c.id} style={[s.optCard, cookingTime === c.id && s.optCardSel]} onPress={() => setCookingTime(c.id)}>
                 <Text style={s.optEmoji}>{c.emoji}</Text>
-                <View style={s.optText}><Text style={s.optTitle}>{c.title}</Text><Text style={s.optSub}>{c.sub}</Text></View>
+                <View style={s.optText}>
+                  <Text style={s.optTitle}>{t(c.titleKey as any)}</Text>
+                  <Text style={s.optSub}>{t(c.subKey as any)}</Text>
+                </View>
               </TouchableOpacity>
             ))}
 
-            <Text style={[s.prefLabel, { marginTop: 8 }]}>😋 O que você gosta ou costuma comer? <Text style={s.prefOptional}>(opcional)</Text></Text>
+            <Text style={[s.prefLabel, { marginTop: 8 }]}>
+              {t('onboarding.likes_pref_label' as any)}{' '}
+              <Text style={s.prefOptional}>{t('onboarding.optional' as any)}</Text>
+            </Text>
             <TextInput
               style={[s.input, s.inputMulti]}
               value={foodLikes}
               onChangeText={setFoodLikes}
-              placeholder="Ex: frango grelhado, arroz com feijão, omelete, banana..."
+              placeholder={t('onboarding.likes_placeholder' as any)}
               placeholderTextColor={Colors.text3}
               multiline
               numberOfLines={3}
               maxLength={300}
             />
 
-            <Text style={s.prefLabel}>🚫 O que evita ou não gosta? <Text style={s.prefOptional}>(opcional)</Text></Text>
+            <Text style={s.prefLabel}>
+              {t('onboarding.dislikes_pref_label' as any)}{' '}
+              <Text style={s.prefOptional}>{t('onboarding.optional' as any)}</Text>
+            </Text>
             <TextInput
               style={[s.input, s.inputMulti]}
               value={foodDislikes}
               onChangeText={setFoodDislikes}
-              placeholder="Ex: fígado, chuchu, peixe, comida muito temperada..."
+              placeholder={t('onboarding.dislikes_placeholder' as any)}
               placeholderTextColor={Colors.text3}
               multiline
               numberOfLines={3}
@@ -610,7 +683,7 @@ export default function OnboardingScreen() {
       <View style={s.footer}>
         {step > 0 && !isLoginMode && (
           <TouchableOpacity style={s.btnBack} onPress={back} disabled={loading}>
-            <Text style={s.btnBackText}>Voltar</Text>
+            <Text style={s.btnBackText}>{t('common.back' as any)}</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity
@@ -620,7 +693,11 @@ export default function OnboardingScreen() {
         >
           {loading ? <ActivityIndicator color={Colors.bg} /> : (
             <Text style={s.btnNextText}>
-              {isLoginMode && step === 0 ? 'Entrar' : (step === TOTAL_STEPS - 1 ? 'Ver meu plano ✨' : 'Continuar')}
+              {isLoginMode && step === 0
+                ? t('onboarding.btn_enter' as any)
+                : step === TOTAL_STEPS - 1
+                  ? t('onboarding.btn_finish' as any)
+                  : t('common.continue' as any)}
             </Text>
           )}
         </TouchableOpacity>
