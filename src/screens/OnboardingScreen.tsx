@@ -17,6 +17,7 @@ import type { Goal, Gender, Profile, ActivityLevel, FitnessLevel, User } from '.
 import { dbUserToUser } from '@utils/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useT } from '@/i18n/useT'
+import { PasswordStrength } from '@components/ui/PasswordStrength'
 
 const { width } = Dimensions.get('window')
 
@@ -452,6 +453,8 @@ export default function OnboardingScreen() {
                 placeholderTextColor={Colors.text3}
                 secureTextEntry
               />
+              {/* Indicador de força — só no cadastro */}
+              {!isLoginMode && <PasswordStrength password={password} />}
             </View>
 
             {!isLoginMode && (
