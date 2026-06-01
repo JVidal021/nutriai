@@ -199,6 +199,17 @@ export default function OnboardingScreen() {
     }
   }
 
+  // Valida senha forte localmente (mesmas regras do Supabase) com mensagem clara.
+  // Retorna a chave i18n do primeiro erro, ou null se a senha for válida.
+  const validatePassword = (pwd: string): string | null => {
+    if (pwd.length < 8)          return 'errors.password_too_short'
+    if (!/[A-Z]/.test(pwd))      return 'errors.password_needs_upper'
+    if (!/[a-z]/.test(pwd))      return 'errors.password_needs_lower'
+    if (!/[0-9]/.test(pwd))      return 'errors.password_needs_digit'
+    if (!/[^A-Za-z0-9]/.test(pwd)) return 'errors.password_needs_symbol'
+    return null
+  }
+
   // ─── CADASTRO REAL + GRAVAÇÃO NA TABELA USERS ────────────────────────────
   const finish = async () => {
     if (!name.trim() || !email.trim() || !password.trim()) {
@@ -206,6 +217,15 @@ export default function OnboardingScreen() {
         t('onboarding.fields_required_title' as any),
         t('onboarding.register_fields_msg' as any),
       )
+      setStep(0)
+      animateProgress(0)
+      return
+    }
+
+    // Validação de senha forte antes de chamar o Supabase (evita erro técnico em inglês)
+    const pwdError = validatePassword(password.trim())
+    if (pwdError) {
+      Alert.alert(t('onboarding.fields_required_title' as any), t(pwdError as any))
       setStep(0)
       animateProgress(0)
       return
@@ -332,10 +352,15 @@ export default function OnboardingScreen() {
       router.replace('/(tabs)/home')
 
     } catch (err: any) {
-      Alert.alert(
-        t('onboarding.register_error_title' as any),
-        err.message || t('common.retry' as any),
-      )
+      // Traduz erros de senha do servidor (vêm em inglês) para mensagem amigável
+      const raw = (err?.message ?? '').toLowerCase()
+      let msg = err?.message || t('common.retry' as any)
+      if (raw.includes('password') && (raw.includes('weak') || raw.includes('leaked') || raw.includes('pwned') || raw.includes('strength'))) {
+        msg = t('errors.weak_password' as any)
+      } else if (raw.includes('already') || raw.includes('registered')) {
+        msg = t('onboarding.email_registered' as any)
+      }
+      Alert.alert(t('onboarding.register_error_title' as any), msg)
     } finally {
       setLoading(false)
     }
