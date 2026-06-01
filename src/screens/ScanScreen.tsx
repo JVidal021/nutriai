@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useMemo } from 'react'
 import {
   View, Text, StyleSheet, TouchableOpacity,
   Alert, ActivityIndicator, ScrollView, Image,
@@ -44,7 +44,8 @@ export default function ScanScreen() {
   const [scanState, setScanState] = useState<ScanState>('idle')
   const [photoUri, setPhotoUri]   = useState<string | null>(null)
   const [result, setResult]       = useState<ScanResult | null>(null)
-  const [textInput, setTextInput] = useState('')
+  const [textInput, setTextInput]   = useState('')
+  const [quantities, setQuantities] = useState<number[]>([])
   const [placeholder] = useState(
     TEXT_EXAMPLES[Math.floor(Math.random() * TEXT_EXAMPLES.length)]
   )
@@ -85,6 +86,28 @@ export default function ScanScreen() {
     if (photo) await analyzePhoto(photo.uri)
   }
 
+  // ─── Totais ajustados em tempo real conforme quantidades editadas ────────
+  const adjustedTotal = useMemo(() => {
+    if (!result || quantities.length !== result.foods.length) return result?.total ?? null
+    return result.foods.reduce(
+      (acc, food, i) => {
+        const ratio = quantities[i] / (food.quantity_g || 1)
+        return {
+          calories: acc.calories + food.calories  * ratio,
+          protein:  acc.protein  + food.protein_g * ratio,
+          carbs:    acc.carbs    + food.carbs_g   * ratio,
+          fat:      acc.fat      + food.fat_g     * ratio,
+        }
+      },
+      { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    )
+  }, [result, quantities])
+
+  const adjustQty = (i: number, delta: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    setQuantities(prev => prev.map((q, idx) => idx === i ? Math.max(5, q + delta) : q))
+  }
+
   // ─── ANÁLISE POR FOTO ─────────────────────────────────────────────────
   const analyzePhoto = async (uri: string) => {
     setPhotoUri(uri)
@@ -92,6 +115,7 @@ export default function ScanScreen() {
     try {
       const scanResult = await analyzeMealPhoto(uri)
       setResult(scanResult)
+      setQuantities(scanResult.foods.map(f => f.quantity_g))
       setScanState('result')
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
     } catch (err) {
@@ -111,6 +135,7 @@ export default function ScanScreen() {
     try {
       const scanResult = await analyzeMealText(text)
       setResult(scanResult)
+      setQuantities(scanResult.foods.map(f => f.quantity_g))
       setScanState('result')
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
     } catch (err) {
@@ -125,20 +150,30 @@ export default function ScanScreen() {
     const meal: Meal = {
       id:           Date.now().toString(),
       userId:       user.id,
-      // BUG 5 FIX: tipo determinado pelo horário, não hardcoded como 'lunch'
       type:         getMealTypeFromTime(),
-      foods:        result.foods.map((f, i) => ({
-        id:       `${i}`,
-        name:     f.name,
-        quantity: f.quantity_g,
-        macros:   {
-          calories: f.calories,
-          protein:  f.protein_g,
-          carbs:    f.carbs_g,
-          fat:      f.fat_g,
-        },
-      })),
-      totalMacros:  result.total,
+      foods:        result.foods.map((f, i) => {
+        const qty   = quantities[i] ?? f.quantity_g
+        const ratio = qty / (f.quantity_g || 1)
+        return {
+          id:       `${i}`,
+          name:     f.name,
+          quantity: qty,
+          macros:   {
+            calories: Math.round(f.calories  * ratio),
+            protein:  Math.round(f.protein_g * ratio * 10) / 10,
+            carbs:    Math.round(f.carbs_g   * ratio * 10) / 10,
+            fat:      Math.round(f.fat_g     * ratio * 10) / 10,
+          },
+        }
+      }),
+      totalMacros:  adjustedTotal
+        ? {
+            calories: Math.round(adjustedTotal.calories),
+            protein:  Math.round(adjustedTotal.protein  * 10) / 10,
+            carbs:    Math.round(adjustedTotal.carbs     * 10) / 10,
+            fat:      Math.round(adjustedTotal.fat       * 10) / 10,
+          }
+        : result.total,
       photoUrl:     photoUri ?? undefined,
       aiConfidence: result.confidence,
       loggedAt:     new Date().toISOString(),
@@ -174,6 +209,7 @@ export default function ScanScreen() {
     setScanState('idle')
     setPhotoUri(null)
     setResult(null)
+    setQuantities([])
     setTextInput('')
   }
 
@@ -218,15 +254,15 @@ export default function ScanScreen() {
         <Image source={{ uri: photoUri }} style={s.resultPhoto} />
       )}
 
-      {/* Totais */}
+      {/* Totais (recalculados conforme ajuste de porção) */}
       <View style={s.totalsCard}>
         <Text style={s.totalsTitle}>{t('scan.meal_total')}</Text>
         <View style={s.macrosGrid}>
           {[
-            { label: t('scan.macro_calories'), val: result.total.calories, unit: 'kcal', color: Colors.accent  },
-            { label: t('scan.macro_protein'),  val: result.total.protein,  unit: 'g',    color: Colors.purple  },
-            { label: t('scan.macro_carbs'),    val: result.total.carbs,    unit: 'g',    color: Colors.teal    },
-            { label: t('scan.macro_fat'),      val: result.total.fat,      unit: 'g',    color: Colors.orange  },
+            { label: t('scan.macro_calories'), val: adjustedTotal?.calories ?? result.total.calories, unit: 'kcal', color: Colors.accent },
+            { label: t('scan.macro_protein'),  val: adjustedTotal?.protein  ?? result.total.protein,  unit: 'g',    color: Colors.purple },
+            { label: t('scan.macro_carbs'),    val: adjustedTotal?.carbs    ?? result.total.carbs,    unit: 'g',    color: Colors.teal   },
+            { label: t('scan.macro_fat'),      val: adjustedTotal?.fat      ?? result.total.fat,      unit: 'g',    color: Colors.orange },
           ].map(m => (
             <View key={m.label} style={s.macroBox}>
               <Text style={[s.macroVal, { color: m.color }]}>{Math.round(m.val)}</Text>
@@ -236,33 +272,53 @@ export default function ScanScreen() {
           ))}
         </View>
         <View style={s.confidenceRow}>
-          <Text style={s.confidenceText}>
-            {t('scan.confidence')} {result.confidence}%
-          </Text>
-          <View style={[s.confidenceBar, { width: `${result.confidence}%` }]} />
+          <Text style={s.confidenceText}>{t('scan.confidence')} {result.confidence}%</Text>
+          <View style={[s.confidenceBar, { width: `${result.confidence}%` as any }]} />
         </View>
-        {result.notes && (
-          <Text style={s.notesText}>💬 {result.notes}</Text>
-        )}
+        {result.notes && <Text style={s.notesText}>💬 {result.notes}</Text>}
       </View>
 
-      {/* Lista de alimentos */}
+      {/* Lista de alimentos com ajuste de porção */}
       <View style={s.foodsCard}>
-        <Text style={s.foodsTitle}>{t('scan.identified_foods')}</Text>
-        {result.foods.map((food, i) => (
-          <View key={i} style={s.foodRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={s.foodName}>{food.name}</Text>
-              <Text style={s.foodQty}>{food.quantity_g}g</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+          <Text style={s.foodsTitle}>{t('scan.identified_foods')}</Text>
+          <Text style={s.portionHint}>{t('scan_adjust.portion_hint' as any)}</Text>
+        </View>
+        {result.foods.map((food, i) => {
+          const qty   = quantities[i] ?? food.quantity_g
+          const ratio = qty / (food.quantity_g || 1)
+          const isTaco = (food as any).source === 'taco'
+          return (
+            <View key={i} style={s.foodRow}>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={s.foodName}>{food.name}</Text>
+                  <View style={[s.sourceBadge, isTaco ? s.sourceBadgeTaco : s.sourceBadgeAi]}>
+                    <Text style={[s.sourceBadgeText, isTaco ? s.sourceBadgeTextTaco : s.sourceBadgeTextAi]}>
+                      {isTaco ? t('scan_adjust.taco_badge' as any) : t('scan_adjust.ai_badge' as any)}
+                    </Text>
+                  </View>
+                </View>
+                {/* Botões de ajuste de porção */}
+                <View style={s.qtyRow}>
+                  <TouchableOpacity style={s.qtyBtn} onPress={() => adjustQty(i, -10)}>
+                    <Text style={s.qtyBtnTxt}>−</Text>
+                  </TouchableOpacity>
+                  <Text style={s.qtyVal}>{qty}g</Text>
+                  <TouchableOpacity style={s.qtyBtn} onPress={() => adjustQty(i, +10)}>
+                    <Text style={s.qtyBtnTxt}>+</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={s.foodCal}>{Math.round(food.calories * ratio)} kcal</Text>
+                <Text style={s.foodMacros}>
+                  P:{Math.round(food.protein_g * ratio * 10) / 10}g · C:{Math.round(food.carbs_g * ratio * 10) / 10}g · G:{Math.round(food.fat_g * ratio * 10) / 10}g
+                </Text>
+              </View>
             </View>
-            <View style={{ alignItems: 'flex-end' }}>
-              <Text style={s.foodCal}>{Math.round(food.calories)} kcal</Text>
-              <Text style={s.foodMacros}>
-                P:{Math.round(food.protein_g)}g · C:{Math.round(food.carbs_g)}g · G:{Math.round(food.fat_g)}g
-              </Text>
-            </View>
-          </View>
-        ))}
+          )
+        })}
       </View>
 
       {/* Ações */}
@@ -489,8 +545,21 @@ const s = StyleSheet.create({
   confidenceBar:     { height: 3, backgroundColor: Colors.teal, borderRadius: 2 },
   notesText:         { fontSize: 12, color: Colors.text2, fontStyle: 'italic' },
   foodsCard:         { backgroundColor: Colors.bg2, borderRadius: Radius.lg, padding: 16, borderWidth: 1, borderColor: Colors.border, marginBottom: 10 },
-  foodsTitle:        { fontSize: 14, fontWeight: '600', color: Colors.text, marginBottom: 10 },
-  foodRow:           { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  foodsTitle:        { fontSize: 14, fontWeight: '600', color: Colors.text },
+  portionHint:       { fontSize: 10, color: Colors.text3, fontStyle: 'italic' },
+  // Badges TACO / IA
+  sourceBadge:       { borderRadius: 6, paddingHorizontal: 5, paddingVertical: 2 },
+  sourceBadgeTaco:   { backgroundColor: 'rgba(45,212,170,.15)', borderWidth: 1, borderColor: 'rgba(45,212,170,.3)' },
+  sourceBadgeAi:     { backgroundColor: 'rgba(139,127,255,.15)', borderWidth: 1, borderColor: 'rgba(139,127,255,.3)' },
+  sourceBadgeText:   { fontSize: 9, fontWeight: '700' },
+  sourceBadgeTextTaco: { color: Colors.teal },
+  sourceBadgeTextAi:   { color: Colors.purple },
+  // Ajuste de porção
+  qtyRow:            { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
+  qtyBtn:            { width: 26, height: 26, borderRadius: 13, backgroundColor: Colors.bg3, borderWidth: 1, borderColor: Colors.border2, alignItems: 'center', justifyContent: 'center' },
+  qtyBtnTxt:         { fontSize: 14, fontWeight: '700', color: Colors.accent, lineHeight: 17 },
+  qtyVal:            { fontSize: 13, fontWeight: '700', color: Colors.text, minWidth: 42, textAlign: 'center' },
+  foodRow:           { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.border },
   foodName:          { fontSize: 13, fontWeight: '500', color: Colors.text },
   foodQty:           { fontSize: 11, color: Colors.text2, marginTop: 1 },
   foodCal:           { fontSize: 14, fontWeight: '700', color: Colors.accent },

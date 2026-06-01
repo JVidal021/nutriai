@@ -782,6 +782,12 @@
     "loading": "Loading demonstrations...",
     "hint": "Tap a video to watch · Tap outside to close"
   },
+  "scan_adjust": {
+    "adjust_label": "Adjust portion",
+    "taco_badge": "TACO",
+    "ai_badge": "AI",
+    "portion_hint": "Tap +/− to adjust the quantity"
+  },
   "exercise": {
     "not_found": "Detailed information for this exercise is not yet in our database.\n\n💡 Tip: search \"{{name}}\" on YouTube to see the correct form.",
     "muscles_worked": "Muscles worked",

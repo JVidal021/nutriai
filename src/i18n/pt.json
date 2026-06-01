@@ -703,6 +703,12 @@
     "loading": "Buscando demonstrações...",
     "hint": "Toque em um vídeo para assistir · Toque fora para fechar"
   },
+  "scan_adjust": {
+    "adjust_label": "Ajustar porção",
+    "taco_badge": "TACO",
+    "ai_badge": "IA",
+    "portion_hint": "Toque +/− para ajustar a quantidade"
+  },
   "exercise": {
     "not_found": "Informações detalhadas deste exercício ainda não estão no banco.\n\n💡 Dica: pesquise \"{{name}}\" no YouTube para ver a execução correta.",
     "muscles_worked": "Músculos trabalhados",
