@@ -2,7 +2,7 @@
   "expo": {
     "name": "NutriAI",
     "slug": "nutriai",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -17,7 +17,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.nutriai.app",
-      "buildNumber": "3",
+      "buildNumber": "4",
       "infoPlist": {
         "NSCameraUsageDescription": "O NutriAI usa a câmera para fotografar seus pratos e analisar as calorias.",
         "NSPhotoLibraryUsageDescription": "O NutriAI acessa sua galeria para analisar fotos de refeições."
@@ -29,7 +29,7 @@
         "backgroundColor": "#0A0A0A"
       },
       "package": "com.nutriai.app",
-      "versionCode": 3,
+      "versionCode": 4,
       "jsEngine": "hermes",
       "softwareKeyboardLayoutMode": "resize",
       "blockedPermissions": [
@@ -57,10 +57,20 @@
       ],
       "expo-web-browser",
       "expo-font",
-      "expo-localization"
+      "expo-localization",
+      "expo-updates"
     ],
     "scheme": "nutriai",
     "newArchEnabled": true,
+    "updates": {
+      "url": "https://u.expo.dev/96e4cfe4-5f9d-4f3a-9f1c-037c8812eb01",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "extra": {
       "router": {},
       "eas": {
