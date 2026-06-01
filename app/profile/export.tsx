@@ -8,9 +8,11 @@ import { Colors, Spacing, Radius } from '@constants/index'
 import { supabase } from '@services/supabase'
 import { useUserStore } from '@store/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useT } from '@/i18n/useT'
 
 export default function ExportScreen() {
   const insets = useSafeAreaInsets()
+  const { t } = useT()
   const { user } = useUserStore()
   const [loading, setLoading] = useState(false)
 
@@ -26,24 +28,23 @@ export default function ExportScreen() {
 
       if (error) throw error
 
-      // Resumo dos dados para exibição
       const summary = [
-        `Nome: ${data.name}`,
-        `E-mail: ${data.email}`,
-        `Peso: ${data.weight} kg`,
-        `Altura: ${data.height} cm`,
-        `Idade: ${data.age} anos`,
-        `Objetivo: ${data.goal}`,
-        `Conta criada em: ${new Date(data.created_at).toLocaleDateString('pt-BR')}`,
+        `${t('data_export.alert_name' as any)}: ${data.name}`,
+        `${t('data_export.alert_email' as any)}: ${data.email}`,
+        `${t('data_export.alert_weight' as any)}: ${data.weight} kg`,
+        `${t('data_export.alert_height' as any)}: ${data.height} cm`,
+        `${t('data_export.alert_age' as any)}: ${data.age} ${t('data_export.alert_age_unit' as any)}`,
+        `${t('data_export.alert_goal' as any)}: ${data.goal}`,
+        `${t('data_export.alert_created' as any)}: ${new Date(data.created_at).toLocaleDateString(undefined)}`,
       ].join('\n')
 
       Alert.alert(
-        '📄 Seus dados',
-        `${summary}\n\nPara uma exportação completa (refeições, treinos, histórico), entre em contato: suporte.nutriai@outlook.com`,
+        t('data_export.alert_title' as any),
+        `${summary}\n\n${t('data_export.alert_footer' as any)}`,
         [{ text: 'OK' }]
       )
     } catch {
-      Alert.alert('Erro', 'Não foi possível carregar seus dados. Tente novamente.')
+      Alert.alert(t('common.error' as any), t('data_export.error' as any))
     } finally {
       setLoading(false)
     }
@@ -52,23 +53,23 @@ export default function ExportScreen() {
   return (
     <ScrollView style={s.root} contentContainerStyle={[s.content, { paddingTop: insets.top + 20 }]}>
       <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
-        <Text style={s.backText}>← Voltar</Text>
+        <Text style={s.backText}>← {t('common.back' as any)}</Text>
       </TouchableOpacity>
 
-      <Text style={s.title}>📄 Exportar meus dados</Text>
-      <Text style={s.sub}>Você tem direito de receber uma cópia de todos os dados que armazenamos sobre você (LGPD Art. 18).</Text>
+      <Text style={s.title}>{t('data_export.title' as any)}</Text>
+      <Text style={s.sub}>{t('data_export.sub' as any)}</Text>
 
       <View style={s.card}>
-        <Text style={s.cardTitle}>O que está incluído</Text>
+        <Text style={s.cardTitle}>{t('data_export.included_title' as any)}</Text>
         {[
-          '👤 Perfil e dados pessoais',
-          '📊 Histórico de peso e checkins',
-          '🍽️ Refeições e calorias registradas',
-          '💪 Histórico de treinos',
-          '🏆 XP, ranks e conquistas',
-          '⚙️ Preferências e configurações',
-        ].map(item => (
-          <Text key={item} style={s.item}>{item}</Text>
+          'data_export.item_profile',
+          'data_export.item_weight',
+          'data_export.item_meals',
+          'data_export.item_workouts',
+          'data_export.item_xp',
+          'data_export.item_prefs',
+        ].map(key => (
+          <Text key={key} style={s.item}>{t(key as any)}</Text>
         ))}
       </View>
 
@@ -79,17 +80,15 @@ export default function ExportScreen() {
       >
         {loading
           ? <ActivityIndicator color={Colors.bg} />
-          : <Text style={s.btnText}>📥 Ver meus dados</Text>
+          : <Text style={s.btnText}>{t('data_export.view_btn' as any)}</Text>
         }
       </TouchableOpacity>
 
       <View style={s.infoCard}>
-        <Text style={s.infoTitle}>Exportação completa</Text>
-        <Text style={s.infoText}>
-          Para receber um arquivo JSON completo com todo o seu histórico, envie um e-mail para:
-        </Text>
+        <Text style={s.infoTitle}>{t('data_export.full_title' as any)}</Text>
+        <Text style={s.infoText}>{t('data_export.full_text' as any)}</Text>
         <Text style={s.email}>suporte.nutriai@outlook.com</Text>
-        <Text style={s.infoText}>Responderemos em até 15 dias úteis, conforme a LGPD.</Text>
+        <Text style={s.infoText}>{t('data_export.full_deadline' as any)}</Text>
       </View>
     </ScrollView>
   )

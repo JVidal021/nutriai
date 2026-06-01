@@ -87,10 +87,12 @@ export interface ScanResult {
     protein_g: number
     carbs_g: number
     fat_g: number
+    source?: 'taco' | 'ai'   // origem dos macros: tabela TACO oficial ou estimativa da IA
   }>
   total: Macros
   confidence: number
   notes: string
+  tacoValidated?: boolean    // true se algum alimento foi validado pela tabela TACO
 }
 
 // ─── WORKOUT ─────────────────────────────────────────────────────────────

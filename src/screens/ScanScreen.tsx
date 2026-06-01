@@ -55,6 +55,24 @@ export default function ScanScreen() {
   const { addMeal } = useNutritionStore()
   const { addXp }   = useProgressStore()
 
+  // ─── Totais ajustados em tempo real conforme quantidades editadas ────────
+  // IMPORTANTE: hook declarado ANTES de qualquer early return (Regras dos Hooks)
+  const adjustedTotal = useMemo(() => {
+    if (!result || quantities.length !== result.foods.length) return result?.total ?? null
+    return result.foods.reduce(
+      (acc, food, i) => {
+        const ratio = quantities[i] / (food.quantity_g || 1)
+        return {
+          calories: acc.calories + food.calories  * ratio,
+          protein:  acc.protein  + food.protein_g * ratio,
+          carbs:    acc.carbs    + food.carbs_g   * ratio,
+          fat:      acc.fat      + food.fat_g     * ratio,
+        }
+      },
+      { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    )
+  }, [result, quantities])
+
   if (isLoading || !user) return null
 
   // ─── CÂMERA ───────────────────────────────────────────────────────────
@@ -85,23 +103,6 @@ export default function ScanScreen() {
     const photo = await cameraRef.current.takePictureAsync({ quality: 0.8 })
     if (photo) await analyzePhoto(photo.uri)
   }
-
-  // ─── Totais ajustados em tempo real conforme quantidades editadas ────────
-  const adjustedTotal = useMemo(() => {
-    if (!result || quantities.length !== result.foods.length) return result?.total ?? null
-    return result.foods.reduce(
-      (acc, food, i) => {
-        const ratio = quantities[i] / (food.quantity_g || 1)
-        return {
-          calories: acc.calories + food.calories  * ratio,
-          protein:  acc.protein  + food.protein_g * ratio,
-          carbs:    acc.carbs    + food.carbs_g   * ratio,
-          fat:      acc.fat      + food.fat_g     * ratio,
-        }
-      },
-      { calories: 0, protein: 0, carbs: 0, fat: 0 }
-    )
-  }, [result, quantities])
 
   const adjustQty = (i: number, delta: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -287,7 +288,7 @@ export default function ScanScreen() {
         {result.foods.map((food, i) => {
           const qty   = quantities[i] ?? food.quantity_g
           const ratio = qty / (food.quantity_g || 1)
-          const isTaco = (food as any).source === 'taco'
+          const isTaco = food.source === 'taco'
           return (
             <View key={i} style={s.foodRow}>
               <View style={{ flex: 1 }}>

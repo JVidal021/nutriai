@@ -24,8 +24,6 @@ export default function WeeklyReportScreen() {
   const { weekPlan } = useNutritionStore()
   const { weekWorkouts } = useWorkoutStore()
 
-  if (isLoading || !user) return null
-
   const today     = new Date()
   const weekStart = startOfWeek(today, { weekStartsOn: 1 })
   const weekEnd   = endOfWeek(today, { weekStartsOn: 1 })
@@ -117,6 +115,9 @@ export default function WeeklyReportScreen() {
     }
     return { icon: '📈', textKey: 'weekly_report.insight_default', params: {}, color: Colors.orange }
   }, [stats])
+
+  // Early return DEPOIS de todos os hooks (Regras dos Hooks)
+  if (isLoading || !user) return null
 
   return (
     <ScrollView style={s.root} contentContainerStyle={[s.content, { paddingTop: insets.top + 20 }]} showsVerticalScrollIndicator={false}>

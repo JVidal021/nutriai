@@ -8,6 +8,7 @@ import { Colors, Spacing, Radius } from '@constants/index'
 import { supabase } from '@services/supabase'
 import { useUserStore } from '@store/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useT } from '@/i18n/useT'
 
 interface Consents {
   health_data:     boolean
@@ -25,6 +26,7 @@ const DEFAULT_CONSENTS: Consents = {
 
 export default function PrivacyScreen() {
   const insets = useSafeAreaInsets()
+  const { t } = useT()
   const { user } = useUserStore()
   const [consents, setConsents]   = useState<Consents>(DEFAULT_CONSENTS)
   const [loading, setLoading]     = useState(true)
@@ -49,9 +51,9 @@ export default function PrivacyScreen() {
   const toggle = (key: keyof Consents) => {
     if (key === 'health_data' || key === 'meal_photos') {
       Alert.alert(
-        'Consentimento obrigatório',
-        'Este dado é necessário para o funcionamento do app. Para revogar, exclua sua conta.',
-        [{ text: 'Entendi' }]
+        t('privacy_consent.required_title' as any),
+        t('privacy_consent.required_msg' as any),
+        [{ text: t('privacy_consent.required_ok' as any) }]
       )
       return
     }
@@ -68,19 +70,19 @@ export default function PrivacyScreen() {
         version:  '1.0',
         updated_at: new Date().toISOString(),
       })
-      Alert.alert('✅ Preferências salvas', 'Seus consentimentos foram atualizados.')
+      Alert.alert(t('privacy_consent.saved_title' as any), t('privacy_consent.saved_msg' as any))
     } catch {
-      Alert.alert('Erro', 'Não foi possível salvar. Tente novamente.')
+      Alert.alert(t('common.error' as any), t('privacy_consent.save_error' as any))
     } finally {
       setSaving(false)
     }
   }
 
-  const ITEMS: Array<{ key: keyof Consents; title: string; desc: string; required: boolean }> = [
-    { key: 'health_data',        required: true,  title: 'Dados de saúde e nutrição',    desc: 'Peso, altura, calorias e histórico alimentar para gerar seu plano personalizado.' },
-    { key: 'meal_photos',        required: true,  title: 'Fotos das refeições',           desc: 'Imagens enviadas para análise de calorias pela IA. Não compartilhadas com terceiros.' },
-    { key: 'push_notifications', required: false, title: 'Notificações push',             desc: 'Lembretes de refeições, treinos e streak. Você pode desativar nas configurações do celular.' },
-    { key: 'analytics',          required: false, title: 'Análise de uso (analytics)',    desc: 'Dados anônimos de navegação para melhorarmos o app. Nenhum dado pessoal é incluído.' },
+  const ITEMS: Array<{ key: keyof Consents; titleKey: string; descKey: string; required: boolean }> = [
+    { key: 'health_data',        required: true,  titleKey: 'privacy_consent.health_title',    descKey: 'privacy_consent.health_desc' },
+    { key: 'meal_photos',        required: true,  titleKey: 'privacy_consent.photos_title',     descKey: 'privacy_consent.photos_desc' },
+    { key: 'push_notifications', required: false, titleKey: 'privacy_consent.push_title',        descKey: 'privacy_consent.push_desc' },
+    { key: 'analytics',          required: false, titleKey: 'privacy_consent.analytics_title',   descKey: 'privacy_consent.analytics_desc' },
   ]
 
   if (loading) return (
@@ -92,22 +94,22 @@ export default function PrivacyScreen() {
   return (
     <ScrollView style={s.root} contentContainerStyle={[s.content, { paddingTop: insets.top + 20 }]}>
       <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
-        <Text style={s.backText}>← Voltar</Text>
+        <Text style={s.backText}>← {t('common.back' as any)}</Text>
       </TouchableOpacity>
 
-      <Text style={s.title}>🔒 Gerenciar consentimentos</Text>
-      <Text style={s.sub}>Controle quais dados você autoriza o NutriAI a coletar e processar, conforme a LGPD.</Text>
+      <Text style={s.title}>{t('privacy_consent.title' as any)}</Text>
+      <Text style={s.sub}>{t('privacy_consent.sub' as any)}</Text>
 
       {ITEMS.map(item => (
         <View key={item.key} style={s.row}>
           <View style={s.rowLeft}>
             <View style={s.rowHeader}>
-              <Text style={s.rowTitle}>{item.title}</Text>
+              <Text style={s.rowTitle}>{t(item.titleKey as any)}</Text>
               {item.required && (
-                <View style={s.requiredBadge}><Text style={s.requiredText}>Obrigatório</Text></View>
+                <View style={s.requiredBadge}><Text style={s.requiredText}>{t('privacy_consent.required_badge' as any)}</Text></View>
               )}
             </View>
-            <Text style={s.rowDesc}>{item.desc}</Text>
+            <Text style={s.rowDesc}>{t(item.descKey as any)}</Text>
           </View>
           <Switch
             value={consents[item.key]}
@@ -125,14 +127,11 @@ export default function PrivacyScreen() {
       >
         {saving
           ? <ActivityIndicator color={Colors.bg} />
-          : <Text style={s.btnText}>Salvar preferências</Text>
+          : <Text style={s.btnText}>{t('privacy_consent.save_btn' as any)}</Text>
         }
       </TouchableOpacity>
 
-      <Text style={s.legal}>
-        Dúvidas sobre privacidade: suporte.nutriai@outlook.com{'\n'}
-        Respondemos em até 15 dias úteis (LGPD Art. 18).
-      </Text>
+      <Text style={s.legal}>{t('privacy_consent.legal' as any)}</Text>
     </ScrollView>
   )
 }

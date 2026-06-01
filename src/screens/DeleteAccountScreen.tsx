@@ -98,7 +98,7 @@ export default function DeleteAccountScreen() {
           <Text style={s.altText}>{t('delete_account.alt_export' as any)}</Text>
           <Text style={s.altArrow}>→</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={s.altRow} onPress={() => router.push('/subscription')}>
+        <TouchableOpacity style={s.altRow} onPress={() => router.push('/(tabs)/subscription')}>
           <Text style={s.altText}>{t('delete_account.alt_pause' as any)}</Text>
           <Text style={s.altArrow}>→</Text>
         </TouchableOpacity>

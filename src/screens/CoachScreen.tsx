@@ -68,6 +68,12 @@ export default function CoachScreen() {
   const { progress }                                                   = useProgressStore()
   const { weekWorkouts, swapWorkoutDay }                             = useWorkoutStore()
 
+  // IMPORTANTE: hook declarado ANTES de qualquer early return (Regras dos Hooks)
+  useEffect(() => {
+    const id = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100)
+    return () => clearTimeout(id)
+  }, [messages])
+
   if (isLoading || !user) return null
 
   const todayStr     = new Date().toISOString().split('T')[0]
@@ -77,10 +83,6 @@ export default function CoachScreen() {
 
   // ID of the last assistant message (for "Apply" button placement)
   const lastAIMessageId = [...messages].reverse().find(m => m.role === 'assistant')?.id
-
-  useEffect(() => {
-    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100)
-  }, [messages])
 
   const handleSend = async (text: string) => {
     const msg = text.trim()
