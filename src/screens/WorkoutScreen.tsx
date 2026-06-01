@@ -14,7 +14,7 @@ import { format, addDays, startOfWeek } from 'date-fns'
 import SwapItemModal from '@components/ui/SwapItemModal'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { WorkoutSession } from '@/types/index'
-import { useT } from '@/i18n/useT'
+import { useT, resolveErrorMessage } from '@/i18n/useT'
 
 const DAYS_KEYS = ['days_short.mon','days_short.tue','days_short.wed','days_short.thu','days_short.fri','days_short.sat','days_short.sun']
 const BLOCK_LABEL_KEYS: Record<string, string> = {
@@ -102,7 +102,7 @@ export default function WorkoutScreen() {
       swapWorkoutDay(today, newWorkout as unknown as WorkoutSession)
       Alert.alert(t('workout.mood_adapt_success'), t('workout.mood_adapt_success_msg'))
     } catch (err) {
-      Alert.alert(t('common.error' as any), err instanceof Error ? err.message : t('common.retry' as any))
+      Alert.alert(t('common.error' as any), resolveErrorMessage(err))
     } finally {
       setAdaptingMood(false)
     }
@@ -141,7 +141,7 @@ export default function WorkoutScreen() {
       setSwapModal(null)
       Alert.alert(t('workout.swap_success'), t('workout.swap_success_msg'))
     } catch (err) {
-      Alert.alert(t('common.error' as any), err instanceof Error ? err.message : t('common.retry' as any))
+      Alert.alert(t('common.error' as any), resolveErrorMessage(err))
     } finally {
       setSwapping(false)
     }

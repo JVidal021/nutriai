@@ -11,7 +11,7 @@ import { format, addDays, startOfWeek } from 'date-fns'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import SwapItemModal from '@components/ui/SwapItemModal'
 import type { PlannedMeal } from '@/types/index'
-import { useT } from '@/i18n/useT'
+import { useT, resolveErrorMessage } from '@/i18n/useT'
 
 const DAYS_KEYS = ['days_short.mon','days_short.tue','days_short.wed','days_short.thu','days_short.fri','days_short.sat','days_short.sun']
 const MEAL_EMOJI: Record<string, string> = {
@@ -78,7 +78,7 @@ export default function DietScreen() {
       setSwapModal(null)
       Alert.alert(t('diet.swap_success'), t('diet.swap_success_msg'))
     } catch (err) {
-      Alert.alert(t('common.error'), err instanceof Error ? err.message : t('common.retry'))
+      Alert.alert(t('common.error'), resolveErrorMessage(err))
     } finally {
       setSwapping(false)
     }
@@ -126,7 +126,7 @@ export default function DietScreen() {
       )
       Alert.alert(t('diet.mood_adapt_success'), t('diet.mood_adapt_success_msg'))
     } catch (err) {
-      Alert.alert(t('common.error'), err instanceof Error ? err.message : t('common.retry'))
+      Alert.alert(t('common.error'), resolveErrorMessage(err))
     } finally {
       setAdaptingMood(false)
     }

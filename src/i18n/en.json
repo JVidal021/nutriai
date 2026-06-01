@@ -659,6 +659,7 @@
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
+    "timeout": "The operation took too long. Check your connection and try again.",
     "network": "No connection. Check your internet.",
     "auth": "Authentication error. Please log in again.",
     "invalid_email": "Invalid email.",

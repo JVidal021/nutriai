@@ -13,7 +13,7 @@ import { db } from '@services/supabase'
 import { useUserStore, useNutritionStore, useProgressStore } from '@store/index'
 import type { ScanResult, Meal } from '@/types/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useT } from '@/i18n/useT'
+import { useT, resolveErrorMessage } from '@/i18n/useT'
 
 // BUG 5 FIX: determinar tipo da refeição pelo horário do dia
 function getMealTypeFromTime(): Meal['type'] {
@@ -120,7 +120,7 @@ export default function ScanScreen() {
       setScanState('result')
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
     } catch (err) {
-      Alert.alert(t('scan.error_analysis'), err instanceof Error ? err.message : t('common.retry'))
+      Alert.alert(t('scan.error_analysis'), resolveErrorMessage(err))
       reset()
     }
   }
@@ -140,7 +140,7 @@ export default function ScanScreen() {
       setScanState('result')
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
     } catch (err) {
-      Alert.alert(t('scan.error_analysis'), err instanceof Error ? err.message : t('common.retry'))
+      Alert.alert(t('scan.error_analysis'), resolveErrorMessage(err))
       setScanState('idle')
     }
   }

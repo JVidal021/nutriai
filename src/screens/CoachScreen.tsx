@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useCoachStore, useUserStore, useNutritionStore, useProgressStore, useWorkoutStore } from '@store/index'
 import { sendCoachMessage, swapPlanItem } from '@services/ai'
 import type { ChatMessage, PlannedMeal, WorkoutSession } from '@/types/index'
-import { useT } from '@/i18n/useT'
+import { useT, resolveErrorMessage } from '@/i18n/useT'
 
 // ─── Intent detection ────────────────────────────────────────────────────────
 type NavIntent = 'diet' | 'workout' | null
@@ -227,7 +227,7 @@ export default function CoachScreen() {
         ],
       )
     } catch (err) {
-      Alert.alert(t('common.error'), err instanceof Error ? err.message : t('common.retry'))
+      Alert.alert(t('common.error'), resolveErrorMessage(err))
     } finally {
       setApplying(false)
     }
@@ -255,7 +255,7 @@ export default function CoachScreen() {
         ],
       )
     } catch (err) {
-      Alert.alert(t('common.error'), err instanceof Error ? err.message : t('common.retry'))
+      Alert.alert(t('common.error'), resolveErrorMessage(err))
     } finally {
       setApplying(false)
     }

@@ -27,6 +27,10 @@ import {
 } from '@expo-google-fonts/dm-sans'
 import i18n, { initI18n } from '@/i18n/index'
 import { ErrorBoundary } from '@components/ErrorBoundary'
+import { initSentry } from '@services/sentry'
+
+// Inicializa crash reporting o quanto antes (no-op se sem DSN)
+initSentry()
 
 // Mantém o splash screen enquanto as fontes carregam
 SplashScreen.preventAutoHideAsync()

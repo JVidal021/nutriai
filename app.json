@@ -58,10 +58,14 @@
       "expo-web-browser",
       "expo-font",
       "expo-localization",
-      "expo-updates"
+      "expo-updates",
+      "@sentry/react-native"
     ],
     "scheme": "nutriai",
     "newArchEnabled": true,
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
     "updates": {
       "url": "https://u.expo.dev/96e4cfe4-5f9d-4f3a-9f1c-037c8812eb01",
       "enabled": true,

@@ -9,7 +9,7 @@ import { Colors, Spacing, Radius } from '@constants/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNutritionStore, useWorkoutStore, useUserStore } from '@store/index'
 import { generateDietPlan, generateWorkoutPlan } from '@services/ai'
-import { useT } from '@/i18n/useT'
+import { useT, resolveErrorMessage } from '@/i18n/useT'
 
 export default function WeeklyFeedbackScreen() {
   const insets = useSafeAreaInsets()
@@ -59,7 +59,7 @@ export default function WeeklyFeedbackScreen() {
 
       router.replace(isDiet ? '/(tabs)/diet' : '/(tabs)/workout')
     } catch (err) {
-      Alert.alert(t('common.error' as any), err instanceof Error ? err.message : t('common.retry' as any))
+      Alert.alert(t('common.error' as any), resolveErrorMessage(err))
     } finally {
       setGenerating(false)
     }

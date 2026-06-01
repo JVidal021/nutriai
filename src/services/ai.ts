@@ -9,6 +9,20 @@ function edgeFunctionUrl(name: string): string {
   return `${base}/functions/v1/${name}`
 }
 
+// Timeout por função (ms). generate-plan gera a semana inteira via IA → mais lento.
+const TIMEOUTS: Record<string, number> = {
+  'generate-plan': 90_000,  // dieta/treino da semana
+  'analyze-meal':  45_000,  // visão + TACO
+  'coach-message': 45_000,
+  'swap-item':     45_000,
+  'exercise-gif':  20_000,
+}
+const DEFAULT_TIMEOUT = 30_000
+
+// Mensagem de timeout — chave i18n resolvida na camada de UI via err.message.
+// Aqui usamos um marcador reconhecível para a UI poder traduzir se quiser.
+const TIMEOUT_ERROR = 'TIMEOUT'
+
 // ─── Helper autenticado ───────────────────────────────────────────────────
 async function callEdgeFunction(
   name: string,
@@ -17,14 +31,30 @@ async function callEdgeFunction(
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) throw new Error('Usuário não autenticado')
 
-  const res = await fetch(edgeFunctionUrl(name), {
-    method: 'POST',
-    headers: {
-      'Content-Type':  'application/json',
-      'Authorization': `Bearer ${session.access_token}`,
-    },
-    body: JSON.stringify(body),
-  })
+  // Timeout via AbortController — evita spinner eterno se a API travar
+  const controller = new AbortController()
+  const ms = TIMEOUTS[name] ?? DEFAULT_TIMEOUT
+  const timer = setTimeout(() => controller.abort(), ms)
+
+  let res: Response
+  try {
+    res = await fetch(edgeFunctionUrl(name), {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    })
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new Error(TIMEOUT_ERROR)
+    }
+    throw err
+  } finally {
+    clearTimeout(timer)
+  }
 
   const json = await res.json()
   if (!res.ok || !json.success) {

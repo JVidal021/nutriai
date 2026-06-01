@@ -14,3 +14,15 @@ export function getCurrentLanguage(): AppLanguage {
 
 /** Trocar idioma de qualquer lugar (fora de componente) */
 export { changeLanguage }
+
+/**
+ * Resolve a mensagem de erro de uma exceção para texto amigável traduzido.
+ * Trata o marcador TIMEOUT (de callEdgeFunction) e cai no fallback genérico.
+ * Use em catch: Alert.alert(title, resolveErrorMessage(err))
+ */
+export function resolveErrorMessage(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err ?? '')
+  if (msg === 'TIMEOUT') return i18n.t('errors.timeout')
+  if (!msg || msg === 'undefined') return i18n.t('errors.generic')
+  return msg
+}

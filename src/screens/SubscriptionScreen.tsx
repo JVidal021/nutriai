@@ -9,7 +9,7 @@ import { Colors, Spacing, Radius } from '@constants/index'
 import { useUserStore } from '@store/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '@services/supabase'
-import { useT } from '@/i18n/useT'
+import { useT, resolveErrorMessage } from '@/i18n/useT'
 
 const FEATURES_FREE: Array<{ labelKey: string; ok: boolean }> = [
   { labelKey: 'subscription.feat_f1',  ok: true  },
@@ -113,7 +113,7 @@ export default function SubscriptionScreen() {
         )
       }
     } catch (err) {
-      Alert.alert(t('common.error' as any), err instanceof Error ? err.message : t('common.retry' as any))
+      Alert.alert(t('common.error' as any), resolveErrorMessage(err))
     } finally {
       setLoading(false)
     }
@@ -169,7 +169,7 @@ export default function SubscriptionScreen() {
     } catch (err) {
       Alert.alert(
         t('common.error' as any),
-        err instanceof Error ? err.message : t('common.retry' as any)
+        resolveErrorMessage(err)
       )
     } finally {
       setCancelling(false)

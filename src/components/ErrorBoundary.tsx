@@ -2,6 +2,7 @@ import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native'
 import { Colors, Spacing, Radius } from '@constants/index'
 import i18n from '@/i18n/index'
+import { captureError } from '@services/sentry'
 
 interface Props {
   children: React.ReactNode
@@ -33,6 +34,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     // Log para diagnóstico (removido em produção pelo transform-remove-console)
     console.error('[ErrorBoundary] Erro capturado:', error, info.componentStack)
+    // Reporta ao Sentry (no-op se sem DSN configurado)
+    captureError(error, { componentStack: info.componentStack })
   }
 
   handleReload = () => {

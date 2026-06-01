@@ -659,6 +659,7 @@
   },
   "errors": {
     "generic": "Algo deu errado. Tente novamente.",
+    "timeout": "A operação demorou demais. Verifique sua conexão e tente novamente.",
     "network": "Sem conexão. Verifique sua internet.",
     "auth": "Erro de autenticação. Faça login novamente.",
     "invalid_email": "E-mail inválido.",
