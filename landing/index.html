@@ -7,7 +7,7 @@
   <meta name="description" content="O NutriAI cria seu plano alimentar e de treino personalizado com Inteligência Artificial. Fotografe suas refeições, acompanhe calorias e evolua com o Coach IA." />
   <meta property="og:title" content="NutriAI — Dieta e treino por IA" />
   <meta property="og:description" content="Plano alimentar personalizado, treinos adaptados ao seu nível e Coach IA disponível 24h. Tudo no seu bolso." />
-  <meta property="og:image" content="https://nutriai.app/og-image.png" />
+  <meta property="og:image" content="https://nutriai-e24.pages.dev/og-image.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -19,17 +19,19 @@
       --bg2:     #111111;
       --bg3:     #1A1A1A;
       --accent:  #C8F060;
-      --teal:    #4ECDC4;
+      --accent2: #A8D040;
+      --teal:    #2DD4AA;
+      --purple:  #8B7FFF;
+      --orange:  #FF7A45;
       --text:    #F0F0F0;
-      --text2:   #A0A0A0;
-      --text3:   #606060;
-      --border:  #222222;
-      --border2: #333333;
+      --text2:   #888888;
+      --text3:   #555555;
+      --border:  #1C1C1C;
+      --border2: #2A2A2A;
       --radius:  16px;
     }
 
     html { scroll-behavior: smooth; }
-
     body {
       font-family: 'Inter', system-ui, sans-serif;
       background: var(--bg);
@@ -47,124 +49,130 @@
       align-items: center;
       justify-content: space-between;
       padding: 16px 40px;
-      background: rgba(10,10,10,0.85);
-      backdrop-filter: blur(16px);
+      background: rgba(10,10,10,0.9);
+      backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
     }
-    .nav-logo {
-      font-size: 20px;
-      font-weight: 900;
-      color: var(--accent);
-      letter-spacing: -0.5px;
-    }
-    .nav-logo span { color: var(--text); }
+    .nav-logo { font-size: 20px; font-weight: 900; color: var(--accent); letter-spacing: -0.5px; }
+    .nav-links { display: flex; gap: 32px; }
+    .nav-links a { color: var(--text2); text-decoration: none; font-size: 14px; font-weight: 500; transition: color .2s; }
+    .nav-links a:hover { color: var(--text); }
     .nav-cta {
       background: var(--accent);
-      color: #0A0A0A;
-      font-weight: 700;
-      font-size: 14px;
+      color: #000;
       padding: 10px 22px;
       border-radius: 50px;
+      font-size: 14px;
+      font-weight: 700;
       text-decoration: none;
       transition: opacity .2s;
     }
-    .nav-cta:hover { opacity: .85; }
+    .nav-cta:hover { opacity: 0.85; }
+    @media (max-width: 768px) {
+      nav { padding: 14px 20px; }
+      .nav-links { display: none; }
+    }
+
+    /* ── TRIAL BANNER ── */
+    .trial-banner {
+      margin-top: 72px;
+      background: linear-gradient(90deg, rgba(200,240,96,.12), rgba(200,240,96,.06));
+      border-bottom: 1px solid rgba(200,240,96,.2);
+      text-align: center;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .trial-banner span { color: var(--text2); font-weight: 400; }
 
     /* ── HERO ── */
     .hero {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      padding: 80px 24px 60px;
       text-align: center;
-      padding: 120px 24px 80px;
-      position: relative;
-      overflow: hidden;
-    }
-    .hero-glow {
-      position: absolute;
-      width: 600px; height: 600px;
-      background: radial-gradient(circle, rgba(200,240,96,.15) 0%, transparent 70%);
-      top: 50%; left: 50%;
-      transform: translate(-50%, -55%);
-      pointer-events: none;
+      max-width: 800px;
+      margin: 0 auto;
     }
     .hero-badge {
       display: inline-flex;
       align-items: center;
       gap: 8px;
       background: rgba(200,240,96,.1);
-      border: 1px solid rgba(200,240,96,.3);
+      border: 1px solid rgba(200,240,96,.25);
       border-radius: 50px;
-      padding: 8px 18px;
+      padding: 6px 16px;
       font-size: 13px;
       font-weight: 600;
       color: var(--accent);
       margin-bottom: 28px;
     }
     .hero h1 {
-      font-size: clamp(44px, 8vw, 80px);
+      font-size: clamp(36px, 7vw, 64px);
       font-weight: 900;
       line-height: 1.05;
       letter-spacing: -2px;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
-    .hero h1 .accent { color: var(--accent); }
-    .hero p {
-      font-size: clamp(17px, 2.5vw, 20px);
+    .hero h1 .highlight {
+      background: linear-gradient(135deg, var(--accent), var(--teal));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: 18px;
       color: var(--text2);
       max-width: 560px;
-      margin: 0 auto 40px;
+      margin: 0 auto 36px;
       line-height: 1.6;
     }
-    .hero-actions {
+    .hero-cta-row {
       display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
+      gap: 14px;
       justify-content: center;
-      margin-bottom: 56px;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
     }
     .btn-primary {
       display: inline-flex;
       align-items: center;
       gap: 10px;
       background: var(--accent);
-      color: #0A0A0A;
-      font-weight: 800;
-      font-size: 16px;
+      color: #000;
       padding: 16px 32px;
       border-radius: 50px;
+      font-size: 16px;
+      font-weight: 800;
       text-decoration: none;
       transition: transform .2s, opacity .2s;
     }
-    .btn-primary:hover { transform: translateY(-2px); opacity: .9; }
+    .btn-primary:hover { transform: translateY(-2px); opacity: 0.9; }
     .btn-secondary {
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      background: transparent;
-      color: var(--text);
-      font-weight: 600;
-      font-size: 16px;
+      border: 1px solid var(--border2);
+      color: var(--text2);
       padding: 16px 32px;
       border-radius: 50px;
-      border: 1px solid var(--border2);
+      font-size: 16px;
+      font-weight: 600;
       text-decoration: none;
-      transition: border-color .2s, background .2s;
+      transition: border-color .2s, color .2s;
     }
-    .btn-secondary:hover { border-color: var(--accent); background: rgba(200,240,96,.05); }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
     .hero-stats {
       display: flex;
+      justify-content: center;
       gap: 40px;
       flex-wrap: wrap;
-      justify-content: center;
     }
     .hero-stat { text-align: center; }
     .hero-stat-num { font-size: 28px; font-weight: 900; color: var(--accent); }
-    .hero-stat-lbl { font-size: 13px; color: var(--text2); margin-top: 2px; }
+    .hero-stat-lbl { font-size: 12px; color: var(--text3); margin-top: 2px; }
 
-    /* ── MOCKUP ── */
+    /* ── PHONE MOCKUPS ── */
     .mockup-section {
       padding: 60px 24px;
       display: flex;
@@ -172,329 +180,353 @@
     }
     .mockup-wrap {
       display: flex;
-      gap: 20px;
+      gap: 16px;
       align-items: flex-end;
-      flex-wrap: wrap;
       justify-content: center;
     }
     .mockup-phone {
-      width: 220px;
-      background: var(--bg2);
-      border-radius: 36px;
-      border: 1px solid var(--border2);
-      overflow: hidden;
-      box-shadow: 0 40px 80px rgba(0,0,0,.5);
+      width: 200px;
+      background: #111;
+      border-radius: 32px;
+      border: 2px solid #222;
+      padding: 12px 10px;
+      box-shadow: 0 32px 64px rgba(0,0,0,.7);
+      flex-shrink: 0;
     }
-    .mockup-phone.center { transform: translateY(-20px); width: 240px; }
+    .mockup-phone.center {
+      width: 230px;
+      transform: translateY(-24px);
+      border-color: rgba(200,240,96,.3);
+      box-shadow: 0 40px 80px rgba(200,240,96,.12), 0 32px 64px rgba(0,0,0,.7);
+    }
     .mockup-screen {
-      padding: 20px 16px;
-      min-height: 440px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .mock-header { font-size: 11px; font-weight: 700; color: var(--text2); letter-spacing: 1px; text-transform: uppercase; }
-    .mock-greeting { font-size: 18px; font-weight: 800; }
-    .mock-card {
-      background: var(--bg3);
-      border-radius: 12px;
-      padding: 12px;
-      border: 1px solid var(--border);
-    }
-    .mock-card-label { font-size: 10px; color: var(--text2); margin-bottom: 6px; }
-    .mock-card-val { font-size: 22px; font-weight: 800; color: var(--accent); }
-    .mock-progress {
-      height: 6px;
-      background: var(--border);
-      border-radius: 3px;
-      margin-top: 8px;
+      background: #0A0A0A;
+      border-radius: 22px;
+      padding: 14px 10px;
+      min-height: 360px;
       overflow: hidden;
     }
-    .mock-progress-fill {
-      height: 100%;
-      border-radius: 3px;
-      background: var(--accent);
-    }
-    .mock-meal {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .mock-meal:last-child { border: none; }
-    .mock-meal-icon { font-size: 20px; }
-    .mock-meal-name { font-size: 12px; font-weight: 600; flex: 1; }
-    .mock-meal-cal { font-size: 11px; color: var(--accent); font-weight: 700; }
-    .mock-bubble {
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-size: 12px;
-      line-height: 1.5;
-    }
-    .mock-bubble.ai { background: var(--bg3); border: 1px solid var(--border); }
-    .mock-bubble.user { background: var(--accent); color: #0A0A0A; margin-left: 24px; }
-    .mock-xp { display: flex; align-items: center; gap: 8px; }
-    .mock-rank { font-size: 18px; }
-    .mock-xp-info { flex: 1; }
-    .mock-xp-name { font-size: 12px; font-weight: 700; }
-    .mock-xp-sub { font-size: 10px; color: var(--text2); }
+    /* mock UI elements */
+    .mock-header { font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .mock-greeting { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 10px; }
+    .mock-card { background: #111; border-radius: 12px; padding: 10px; margin-bottom: 8px; border: 1px solid #1C1C1C; }
+    .mock-card-label { font-size: 9px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+    .mock-card-val { font-size: 18px; font-weight: 800; color: var(--text); }
+    .mock-progress { height: 5px; background: #1A1A1A; border-radius: 3px; overflow: hidden; margin-top: 6px; }
+    .mock-progress-fill { height: 100%; border-radius: 3px; background: var(--accent); }
+    /* rings row */
+    .mock-rings { display: flex; gap: 6px; margin-bottom: 8px; }
+    .mock-ring-box { flex: 1; background: #111; border-radius: 10px; padding: 8px 6px; text-align: center; border: 1px solid #1C1C1C; }
+    .mock-ring-pct { font-size: 13px; font-weight: 800; color: var(--accent); }
+    .mock-ring-icon { font-size: 10px; }
+    .mock-ring-label { font-size: 8px; color: var(--text2); margin-top: 2px; }
+    /* days */
+    .mock-days { display: flex; gap: 3px; margin-top: 6px; }
+    .mock-day { flex: 1; border-radius: 6px; padding: 4px 2px; text-align: center; background: #1A1A1A; }
+    .mock-day.done { background: rgba(200,240,96,.18); }
+    .mock-day.today { background: var(--accent); }
+    .mock-day-lbl { font-size: 7px; font-weight: 700; color: #555; }
+    .mock-day.done .mock-day-lbl { color: var(--accent); }
+    .mock-day.today .mock-day-lbl { color: #000; }
+    .mock-day-dot { width: 4px; height: 4px; border-radius: 2px; background: transparent; margin: 2px auto 0; }
+    .mock-day.done .mock-day-dot { background: var(--accent); }
+    .mock-day.today .mock-day-dot { background: #000; }
+    /* rank */
+    .mock-rank-row { display: flex; align-items: center; gap: 8px; }
+    .mock-rank-emoji { font-size: 28px; }
+    .mock-rank-name { font-size: 13px; font-weight: 800; color: var(--text); }
+    .mock-rank-xp { font-size: 10px; color: var(--text2); margin-top: 2px; }
+    /* meal rows */
+    .mock-meal { display: flex; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 1px solid #1A1A1A; }
+    .mock-meal:last-child { border-bottom: none; }
+    .mock-meal-icon { font-size: 14px; }
+    .mock-meal-name { flex: 1; font-size: 10px; color: var(--text2); }
+    .mock-meal-cal { font-size: 10px; font-weight: 700; color: var(--accent); }
+    /* coach bubbles */
+    .mock-bubble { font-size: 10px; line-height: 1.5; padding: 8px 10px; border-radius: 12px; margin-bottom: 6px; }
+    .mock-bubble.ai { background: #1A1A1A; color: var(--text); border-bottom-left-radius: 4px; }
+    .mock-bubble.user { background: rgba(200,240,96,.15); color: var(--accent); border-bottom-right-radius: 4px; text-align: right; }
+    .mock-workout-block { background: #1A1A1A; border-radius: 8px; padding: 8px; margin-bottom: 6px; border-left: 3px solid var(--accent); }
+    .mock-block-name { font-size: 10px; font-weight: 700; color: var(--text); }
+    .mock-block-sub { font-size: 9px; color: var(--text2); margin-top: 2px; }
 
-    /* ── FEATURES ── */
+    @media (max-width: 600px) {
+      .mockup-wrap { gap: 10px; }
+      .mockup-phone { width: 140px; padding: 8px 7px; }
+      .mockup-phone.center { width: 165px; }
+      .mockup-screen { min-height: 260px; padding: 10px 8px; }
+    }
+
+    /* ── HOW IT WORKS ── */
     .section { padding: 80px 24px; max-width: 1100px; margin: 0 auto; }
     .section-label {
+      display: inline-block;
       font-size: 12px;
       font-weight: 700;
       color: var(--accent);
-      letter-spacing: 2px;
       text-transform: uppercase;
-      text-align: center;
+      letter-spacing: 1.5px;
       margin-bottom: 12px;
     }
-    .section-title {
-      font-size: clamp(30px, 5vw, 48px);
-      font-weight: 900;
-      letter-spacing: -1px;
-      text-align: center;
+    .section-title { font-size: clamp(28px, 5vw, 42px); font-weight: 900; letter-spacing: -1px; line-height: 1.1; margin-bottom: 14px; }
+    .section-sub { font-size: 17px; color: var(--text2); max-width: 540px; margin-bottom: 48px; }
+
+    .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; }
+    .step-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      position: relative;
+    }
+    .step-num {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: rgba(200,240,96,.12);
+      border: 1px solid rgba(200,240,96,.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 800; color: var(--accent);
       margin-bottom: 16px;
     }
-    .section-sub {
-      font-size: 17px;
-      color: var(--text2);
-      text-align: center;
-      max-width: 520px;
-      margin: 0 auto 56px;
-      line-height: 1.6;
-    }
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 16px;
-    }
+    .step-icon { font-size: 28px; margin-bottom: 12px; }
+    .step-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .step-desc { font-size: 14px; color: var(--text2); line-height: 1.6; }
+
+    /* ── FEATURES ── */
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
     .feature-card {
       background: var(--bg2);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px;
+      border-radius: 20px;
+      padding: 24px;
       transition: border-color .2s, transform .2s;
     }
-    .feature-card:hover { border-color: rgba(200,240,96,.3); transform: translateY(-3px); }
-    .feature-icon { font-size: 32px; margin-bottom: 14px; }
-    .feature-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-    .feature-desc { font-size: 14px; color: var(--text2); line-height: 1.6; }
+    .feature-card:hover { border-color: rgba(200,240,96,.25); transform: translateY(-2px); }
+    .feature-icon { font-size: 28px; margin-bottom: 12px; }
+    .feature-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+    .feature-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+    /* ── COMPARISON ── */
+    .compare-section { background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 80px 24px; }
+    .compare-table { max-width: 800px; margin: 0 auto; }
+    .compare-row { display: grid; grid-template-columns: 1fr 120px 120px; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); align-items: center; }
+    .compare-row.header { font-size: 13px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 10px; }
+    .compare-row.header .col-nutriai { color: var(--accent); }
+    .compare-feature { font-size: 14px; color: var(--text2); }
+    .col-nutriai { text-align: center; }
+    .col-other { text-align: center; }
+    .check-yes { color: var(--accent); font-size: 16px; font-weight: 700; }
+    .check-no { color: var(--text3); font-size: 16px; }
+    .check-partial { color: var(--orange); font-size: 13px; }
 
     /* ── PLANS ── */
-    .plans-section { background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-    .plans-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 16px;
-      max-width: 700px;
-      margin: 0 auto;
-    }
+    .plans-section { padding: 80px 24px; }
+    .plans-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 720px; margin: 0 auto; }
     .plan-card {
-      background: var(--bg);
+      background: var(--bg2);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: 24px;
       padding: 28px;
-    }
-    .plan-card.featured {
-      border-color: rgba(200,240,96,.5);
-      background: #0d1400;
       position: relative;
     }
+    .plan-card.featured {
+      border-color: rgba(200,240,96,.4);
+      background: linear-gradient(135deg, rgba(200,240,96,.06), rgba(200,240,96,.02));
+    }
     .plan-badge {
-      position: absolute;
-      top: -12px; left: 50%; transform: translateX(-50%);
+      display: inline-block;
       background: var(--accent);
-      color: #0A0A0A;
+      color: #000;
       font-size: 11px;
       font-weight: 800;
-      padding: 4px 14px;
+      padding: 4px 12px;
       border-radius: 50px;
-      white-space: nowrap;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
-    .plan-name { font-size: 14px; font-weight: 600; color: var(--text2); margin-bottom: 8px; }
-    .plan-price { font-size: 40px; font-weight: 900; letter-spacing: -1px; }
-    .plan-price .currency { font-size: 20px; font-weight: 600; vertical-align: super; }
+    .plan-name { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+    .plan-price { font-size: 44px; font-weight: 900; letter-spacing: -2px; }
+    .plan-price .currency { font-size: 22px; font-weight: 600; vertical-align: super; }
     .plan-price.accent { color: var(--accent); }
-    .plan-period { font-size: 13px; color: var(--text2); margin-bottom: 20px; }
-    .plan-divider { height: 1px; background: var(--border); margin: 16px 0; }
-    .plan-feature {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      margin-bottom: 10px;
-      font-size: 14px;
+    .plan-period { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
+    .plan-annual-note { font-size: 12px; color: var(--teal); margin-top: -18px; margin-bottom: 24px; font-weight: 600; }
+    .plan-divider { height: 1px; background: var(--border); margin: 4px 0 20px; }
+    .plan-feature { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--text2); margin-bottom: 10px; }
+    .plan-feature .check { color: var(--accent); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+    .plan-feature .cross { color: var(--text3); flex-shrink: 0; margin-top: 1px; }
+    .plan-feature.disabled { color: var(--text3); }
+    .plan-cta {
+      display: block;
+      width: 100%;
+      text-align: center;
+      margin-top: 24px;
+      padding: 14px;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: opacity .2s, transform .2s;
     }
-    .plan-feature .check { color: var(--accent); font-weight: 700; flex-shrink: 0; }
-    .plan-feature .cross { color: var(--text3); flex-shrink: 0; }
-    .plan-feature.disabled { color: var(--text3); text-decoration: line-through; }
+    .plan-cta:hover { opacity: 0.85; transform: translateY(-1px); }
+    .plan-cta.primary { background: var(--accent); color: #000; }
+    .plan-cta.secondary { border: 1px solid var(--border2); color: var(--text2); }
+
+    /* ── TESTIMONIALS ── */
+    .testimonials-section { padding: 80px 24px; background: var(--bg2); border-top: 1px solid var(--border); }
+    .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; max-width: 1100px; margin: 0 auto; }
+    .testimonial-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+    }
+    .testimonial-stars { color: #FFB800; font-size: 14px; margin-bottom: 12px; }
+    .testimonial-text { font-size: 14px; color: var(--text2); line-height: 1.7; margin-bottom: 16px; font-style: italic; }
+    .testimonial-author { display: flex; align-items: center; gap: 10px; }
+    .testimonial-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 800; color: #000;
+    }
+    .testimonial-name { font-size: 14px; font-weight: 600; color: var(--text); }
+    .testimonial-meta { font-size: 12px; color: var(--text3); }
+
+    /* ── FAQ ── */
+    .faq-section { padding: 80px 24px; max-width: 720px; margin: 0 auto; }
+    .faq-item { border-bottom: 1px solid var(--border); padding: 20px 0; cursor: pointer; }
+    .faq-question { font-size: 16px; font-weight: 600; color: var(--text); display: flex; justify-content: space-between; align-items: center; }
+    .faq-question::after { content: '+'; font-size: 20px; color: var(--accent); font-weight: 300; flex-shrink: 0; margin-left: 16px; }
+    .faq-answer { font-size: 14px; color: var(--text2); line-height: 1.7; margin-top: 12px; display: none; }
+    .faq-item.open .faq-question::after { content: '−'; }
+    .faq-item.open .faq-answer { display: block; }
 
     /* ── DOWNLOAD ── */
     .download-section {
-      text-align: center;
       padding: 100px 24px;
+      text-align: center;
       position: relative;
       overflow: hidden;
     }
     .download-glow {
       position: absolute;
-      width: 500px; height: 500px;
-      background: radial-gradient(circle, rgba(200,240,96,.12) 0%, transparent 70%);
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
+      width: 600px; height: 400px;
+      background: radial-gradient(ellipse, rgba(200,240,96,.08), transparent 70%);
       pointer-events: none;
     }
-    .download-section h2 {
-      font-size: clamp(32px, 5vw, 52px);
-      font-weight: 900;
-      letter-spacing: -1px;
-      margin-bottom: 16px;
-    }
-    .download-section p {
-      font-size: 17px;
-      color: var(--text2);
-      margin-bottom: 48px;
-      max-width: 480px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    /* Suporte */
-    .support-section {
-      margin-top: 64px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
-      max-width: 760px;
-      margin-left: auto;
-      margin-right: auto;
-      margin-top: 64px;
-    }
-    .support-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-      text-align: left;
-      transition: border-color .2s;
-    }
-    .support-card:hover { border-color: rgba(200,240,96,.3); }
-    .support-card-icon { font-size: 28px; margin-bottom: 12px; }
-    .support-card-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
-    .support-card-desc { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 14px; }
-    .support-card-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--accent);
-      text-decoration: none;
-      transition: opacity .2s;
-    }
-    .support-card-link:hover { opacity: .75; }
+    .download-section h2 { font-size: clamp(32px, 5vw, 48px); font-weight: 900; letter-spacing: -1.5px; margin-bottom: 16px; }
+    .download-section p { font-size: 17px; color: var(--text2); max-width: 480px; margin: 0 auto 36px; }
+    .download-btn-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .download-note { font-size: 12px; color: var(--text3); }
+
+    /* ── SUPPORT ── */
+    .support-section { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 60px; max-width: 800px; margin-left: auto; margin-right: auto; }
+    .support-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 20px; text-align: center; flex: 1; min-width: 200px; max-width: 240px; }
+    .support-card-icon { font-size: 24px; margin-bottom: 10px; }
+    .support-card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .support-card-desc { font-size: 12px; color: var(--text2); line-height: 1.5; margin-bottom: 12px; }
+    .support-card-link { font-size: 12px; color: var(--accent); text-decoration: none; font-weight: 600; }
 
     /* ── FOOTER ── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 40px 24px;
-      text-align: center;
-    }
-    .footer-logo { font-size: 18px; font-weight: 900; color: var(--accent); margin-bottom: 16px; }
-    .footer-links {
-      display: flex;
-      gap: 24px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
-    }
-    .footer-links a { font-size: 14px; color: var(--text2); text-decoration: none; }
-    .footer-links a:hover { color: var(--accent); }
-    .footer-copy { font-size: 13px; color: var(--text3); }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 600px) {
-      nav { padding: 14px 20px; }
-      .hero { padding: 100px 20px 60px; }
-      .mockup-phone:not(.center) { display: none; }
-      .section { padding: 60px 20px; }
-    }
+    footer { border-top: 1px solid var(--border); padding: 40px 24px; text-align: center; }
+    .footer-logo { font-size: 18px; font-weight: 900; color: var(--accent); margin-bottom: 8px; }
+    .footer-links { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+    .footer-links a { font-size: 13px; color: var(--text3); text-decoration: none; }
+    .footer-links a:hover { color: var(--text2); }
+    .footer-copy { font-size: 12px; color: var(--text3); }
   </style>
 </head>
 <body>
 
 <!-- NAV -->
 <nav>
-  <div class="nav-logo">Nutri<span>AI</span></div>
-  <a href="#download" class="nav-cta">Baixar app</a>
+  <div class="nav-logo">🌿 NutriAI</div>
+  <div class="nav-links">
+    <a href="#como-funciona">Como funciona</a>
+    <a href="#features">Recursos</a>
+    <a href="#planos">Planos</a>
+  </div>
+  <a href="#download" class="nav-cta">Baixar grátis</a>
 </nav>
+
+<!-- TRIAL BANNER -->
+<div class="trial-banner">
+  🎁 15 dias de Premium grátis <span>— sem cartão de crédito, sem compromisso</span>
+</div>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-glow"></div>
-  <div class="hero-badge">🌿 Powered by IA · Feito para brasileiros</div>
-  <h1>Sua dieta e treino<br><span class="accent">gerados por IA</span></h1>
-  <p>Fotografe sua refeição e tenha as calorias na hora. Plano alimentar e de treino personalizados, Coach IA 24h e muito mais.</p>
-  <div class="hero-actions">
-    <a href="#download" class="btn-primary">
-      <span>📲</span> Baixar grátis
-    </a>
-    <a href="#features" class="btn-secondary">
-      <span>✦</span> Ver recursos
-    </a>
+  <div class="hero-badge">✨ Inteligência Artificial aplicada à sua saúde</div>
+  <h1>Dieta e treino feitos<br>pela <span class="highlight">IA, pra você</span></h1>
+  <p class="hero-sub">
+    Chega de planos genéricos. O NutriAI cria sua dieta e seus treinos do zero,
+    aprende com você e se adapta ao seu dia a dia.
+  </p>
+  <div class="hero-cta-row">
+    <a href="#download" class="btn-primary">📥 Baixar grátis agora</a>
+    <a href="#como-funciona" class="btn-secondary">Como funciona →</a>
   </div>
   <div class="hero-stats">
     <div class="hero-stat">
-      <div class="hero-stat-num">+50k</div>
-      <div class="hero-stat-lbl">Refeições analisadas</div>
+      <div class="hero-stat-num">IA</div>
+      <div class="hero-stat-lbl">100% personalizado</div>
     </div>
     <div class="hero-stat">
-      <div class="hero-stat-num">IA</div>
-      <div class="hero-stat-lbl">Coach disponível 24h</div>
+      <div class="hero-stat-num">15 dias</div>
+      <div class="hero-stat-lbl">Premium grátis</div>
     </div>
     <div class="hero-stat">
       <div class="hero-stat-num">R$0</div>
       <div class="hero-stat-lbl">Para começar</div>
     </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">24h</div>
+      <div class="hero-stat-lbl">Coach IA disponível</div>
+    </div>
   </div>
 </section>
 
-<!-- MOCKUP -->
+<!-- MOCKUPS -->
 <div class="mockup-section">
   <div class="mockup-wrap">
 
     <!-- Tela 1: Dieta -->
     <div class="mockup-phone">
       <div class="mockup-screen">
-        <div class="mock-header">📋 Plano do dia</div>
+        <div class="mock-header">🥗 Dieta</div>
         <div class="mock-card">
-          <div class="mock-card-label">Calorias consumidas</div>
-          <div class="mock-card-val">1.247 kcal</div>
-          <div style="font-size:11px;color:#606060;margin-top:2px;">Meta: 1.800 kcal</div>
-          <div class="mock-progress"><div class="mock-progress-fill" style="width:69%"></div></div>
+          <div class="mock-card-label">Meta do dia</div>
+          <div class="mock-card-val" style="font-size:14px;color:var(--accent)">1.800 kcal</div>
         </div>
         <div class="mock-card">
           <div class="mock-meal">
-            <div class="mock-meal-icon">🍳</div>
+            <div class="mock-meal-icon">☕</div>
             <div class="mock-meal-name">Café da manhã</div>
             <div class="mock-meal-cal">340 kcal</div>
           </div>
           <div class="mock-meal">
             <div class="mock-meal-icon">🍗</div>
             <div class="mock-meal-name">Almoço</div>
-            <div class="mock-meal-cal">520 kcal</div>
+            <div class="mock-meal-cal">620 kcal</div>
           </div>
           <div class="mock-meal">
             <div class="mock-meal-icon">🍎</div>
             <div class="mock-meal-name">Lanche</div>
-            <div class="mock-meal-cal">90 kcal</div>
+            <div class="mock-meal-cal">180 kcal</div>
           </div>
           <div class="mock-meal">
-            <div class="mock-meal-icon">🍽️</div>
+            <div class="mock-meal-icon">🐟</div>
             <div class="mock-meal-name">Jantar</div>
-            <div class="mock-meal-cal">— kcal</div>
+            <div class="mock-meal-cal" style="color:var(--text2)">pendente</div>
           </div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <div style="flex:1;background:rgba(200,240,96,.1);border-radius:6px;padding:5px;text-align:center;font-size:9px;color:var(--accent);font-weight:700">78g<br><span style="color:var(--text3)">prot</span></div>
+          <div style="flex:1;background:rgba(200,240,96,.1);border-radius:6px;padding:5px;text-align:center;font-size:9px;color:var(--accent);font-weight:700">134g<br><span style="color:var(--text3)">carbs</span></div>
+          <div style="flex:1;background:rgba(200,240,96,.1);border-radius:6px;padding:5px;text-align:center;font-size:9px;color:var(--accent);font-weight:700">42g<br><span style="color:var(--text3)">gord</span></div>
         </div>
       </div>
     </div>
@@ -502,51 +534,91 @@
     <!-- Tela 2 (central): Home -->
     <div class="mockup-phone center">
       <div class="mockup-screen">
-        <div class="mock-header">☀️ Bom dia</div>
-        <div class="mock-greeting">Olá, João 👋</div>
+        <div style="font-size:9px;color:rgba(200,240,96,.7);margin-bottom:2px">Boa tarde</div>
+        <div class="mock-greeting" style="margin-bottom:12px">Mainara 👋</div>
+
+        <!-- Rings -->
+        <div class="mock-rings">
+          <div class="mock-ring-box">
+            <div class="mock-ring-pct">68%</div>
+            <div class="mock-ring-icon">🔥</div>
+            <div class="mock-ring-label">Calorias</div>
+          </div>
+          <div class="mock-ring-box">
+            <div class="mock-ring-pct" style="color:var(--teal)">56%</div>
+            <div class="mock-ring-icon">💧</div>
+            <div class="mock-ring-label">Hidratação</div>
+          </div>
+          <div class="mock-ring-box">
+            <div class="mock-ring-pct" style="color:var(--purple)">✓</div>
+            <div class="mock-ring-icon">💪</div>
+            <div class="mock-ring-label">Treino</div>
+          </div>
+        </div>
+
+        <!-- Streak -->
         <div class="mock-card">
-          <div class="mock-xp">
-            <div class="mock-rank">🥈</div>
-            <div class="mock-xp-info">
-              <div class="mock-xp-name">Prata II · 2.840 XP</div>
-              <div class="mock-xp-sub">+160 XP para Prata III</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div>
+              <div class="mock-card-label">🔥 Sequência</div>
+              <div style="font-size:20px;font-weight:900;color:var(--accent)">14 <span style="font-size:11px;color:var(--text2);font-weight:400">dias</span></div>
+            </div>
+            <div style="font-size:10px;color:var(--text2)">Recorde: <span style="color:var(--accent);font-weight:700">21</span></div>
+          </div>
+          <div class="mock-days">
+            <div class="mock-day done"><div class="mock-day-lbl">S</div><div class="mock-day-dot"></div></div>
+            <div class="mock-day done"><div class="mock-day-lbl">T</div><div class="mock-day-dot"></div></div>
+            <div class="mock-day done"><div class="mock-day-lbl">Q</div><div class="mock-day-dot"></div></div>
+            <div class="mock-day done"><div class="mock-day-lbl">Q</div><div class="mock-day-dot"></div></div>
+            <div class="mock-day done"><div class="mock-day-lbl">S</div><div class="mock-day-dot"></div></div>
+            <div class="mock-day done"><div class="mock-day-lbl">S</div><div class="mock-day-dot"></div></div>
+            <div class="mock-day today"><div class="mock-day-lbl">D</div><div class="mock-day-dot"></div></div>
+          </div>
+        </div>
+
+        <!-- Rank -->
+        <div class="mock-card">
+          <div class="mock-rank-row">
+            <div class="mock-rank-emoji">🥈</div>
+            <div>
+              <div class="mock-rank-name">Prata II</div>
+              <div class="mock-rank-xp">2.840 XP · +160 para Prata III</div>
+              <div class="mock-progress" style="margin-top:5px"><div class="mock-progress-fill" style="width:78%"></div></div>
             </div>
           </div>
-          <div class="mock-progress" style="margin-top:10px">
-            <div class="mock-progress-fill" style="width:78%"></div>
-          </div>
-        </div>
-        <div class="mock-card">
-          <div class="mock-card-label">🔥 Streak</div>
-          <div class="mock-card-val">14 dias</div>
-        </div>
-        <div class="mock-card">
-          <div class="mock-card-label">💧 Hidratação</div>
-          <div class="mock-card-val">1,4 L</div>
-          <div class="mock-progress" style="margin-top:6px">
-            <div class="mock-progress-fill" style="width:56%;background:#4ECDC4"></div>
-          </div>
-        </div>
-        <div class="mock-card">
-          <div class="mock-card-label">💪 Treino hoje</div>
-          <div style="font-size:13px;font-weight:700;color:#C8F060;margin-top:4px">Peito · Tríceps · Ombro</div>
-          <div style="font-size:11px;color:#606060">6 exercícios · ~70 min</div>
         </div>
       </div>
     </div>
 
-    <!-- Tela 3: Coach -->
+    <!-- Tela 3: Treino -->
     <div class="mockup-phone">
       <div class="mockup-screen">
-        <div class="mock-header">🌿 Coach NutriAI</div>
-        <div class="mock-bubble ai">Oi! Notei que você atingiu 78% das calorias hoje. Quer uma sugestão de jantar leve para fechar bem a meta?</div>
-        <div class="mock-bubble user">Sim! Algo rápido de fazer, menos de 20 min</div>
-        <div class="mock-bubble ai">Perfeito! Que tal um omelete de 3 ovos com queijo cottage e uma salada de folhas? Leva 10 min, tem uns 380 kcal e fecha sua meta com folga. 🥚</div>
-        <div style="height:8px"></div>
-        <div style="font-size:11px;color:#606060;text-align:center">💙 Precisa de apoio?</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
-          <div style="font-size:11px;border:1px solid rgba(78,205,196,.3);border-radius:20px;padding:5px 10px;color:#4ECDC4">😔 Tô querendo desistir</div>
-          <div style="font-size:11px;border:1px solid rgba(78,205,196,.3);border-radius:20px;padding:5px 10px;color:#4ECDC4">🍕 Escapei da dieta</div>
+        <div class="mock-header">💪 Treino</div>
+        <div class="mock-card" style="margin-bottom:6px">
+          <div class="mock-card-label">Hoje · Peito + Tríceps</div>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <div style="font-size:10px;color:var(--accent);font-weight:700">6 exerc.</div>
+            <div style="font-size:10px;color:var(--text2)">~65 min</div>
+          </div>
+        </div>
+        <div class="mock-workout-block">
+          <div class="mock-block-name">Aquecimento</div>
+          <div class="mock-block-sub">10 min · obrigatório</div>
+        </div>
+        <div class="mock-workout-block" style="border-left-color:var(--purple)">
+          <div class="mock-block-name">Supino Reto · 4×10</div>
+          <div class="mock-block-sub">Descanso 60s · Peitoral maior</div>
+        </div>
+        <div class="mock-workout-block" style="border-left-color:var(--purple)">
+          <div class="mock-block-name">Tríceps Corda · 3×12</div>
+          <div class="mock-block-sub">Descanso 45s · Tríceps</div>
+        </div>
+        <div class="mock-workout-block" style="border-left-color:var(--purple)">
+          <div class="mock-block-name">Crucifixo · 3×12</div>
+          <div class="mock-block-sub">Descanso 60s · Peitoral</div>
+        </div>
+        <div style="margin-top:8px;background:var(--accent);border-radius:8px;padding:8px;text-align:center;font-size:10px;font-weight:800;color:#000">
+          ▶ Iniciar treino
         </div>
       </div>
     </div>
@@ -554,8 +626,42 @@
   </div>
 </div>
 
+<!-- COMO FUNCIONA -->
+<section class="section" id="como-funciona">
+  <div class="section-label">Como funciona</div>
+  <h2 class="section-title">Do zero ao plano<br>em 3 passos</h2>
+  <p class="section-sub">Sem planilhas, sem nutricionista caro, sem chute. A IA faz o trabalho.</p>
+
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-icon">👤</div>
+      <div class="step-title">Você conta quem é</div>
+      <div class="step-desc">Objetivo, nível de atividade, o que gosta de comer, orçamento e quanto tempo tem pra cozinhar. Leva 2 minutos.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-icon">🤖</div>
+      <div class="step-title">A IA monta seu plano</div>
+      <div class="step-desc">Dieta semanal e treinos adaptados ao seu perfil, gerados em segundos. Nada copiado da internet — é feito pra você.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-icon">📸</div>
+      <div class="step-title">Registre e evolua</div>
+      <div class="step-desc">Fotografe as refeições, conclua os treinos e ganhe XP. A IA aprende e ajusta o plano a cada semana com seu feedback.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">4</div>
+      <div class="step-icon">🏆</div>
+      <div class="step-title">Veja os resultados</div>
+      <div class="step-desc">Relatório semanal detalhado, sistema de ranks, sequências de dias. Consistência vira hábito e hábito vira resultado.</div>
+    </div>
+  </div>
+</section>
+
 <!-- FEATURES -->
-<section class="section" id="features">
+<section class="section" id="features" style="padding-top:20px">
   <div class="section-label">Recursos</div>
   <h2 class="section-title">Tudo que você precisa<br>para evoluir de verdade</h2>
   <p class="section-sub">Não é mais um app de contar caloria. É um sistema completo de acompanhamento.</p>
@@ -569,12 +675,12 @@
     <div class="feature-card">
       <div class="feature-icon">🤖</div>
       <div class="feature-title">Plano alimentar personalizado</div>
-      <div class="feature-desc">A IA cria uma dieta semanal baseada no seu objetivo, orçamento, tempo de preparo e os alimentos que você gosta — nada genérico.</div>
+      <div class="feature-desc">A IA cria uma dieta semanal baseada no seu objetivo, orçamento, tempo de preparo e os alimentos que você gosta. Nada genérico.</div>
     </div>
     <div class="feature-card">
       <div class="feature-icon">💪</div>
       <div class="feature-title">Treinos gerados para você</div>
-      <div class="feature-desc">Plano de treino semanal adaptado ao seu nível (iniciante, intermediário ou avançado) com guia completo de exercícios.</div>
+      <div class="feature-desc">Plano de treino semanal adaptado ao seu nível com guia completo de exercícios, séries, repetições e tempo de descanso.</div>
     </div>
     <div class="feature-card">
       <div class="feature-icon">🌿</div>
@@ -584,33 +690,91 @@
     <div class="feature-card">
       <div class="feature-icon">🏆</div>
       <div class="feature-title">Sistema de ranks e XP</div>
-      <div class="feature-desc">Do Bronze ao Diamante, cada refeição registrada e treino concluído te dá XP. Evolua de nível e mantenha a motivação alta.</div>
+      <div class="feature-desc">Do Bronze ao Lendário, cada refeição e treino te dá XP. Evolua de nível e mantenha a motivação sempre alta.</div>
     </div>
     <div class="feature-card">
-      <div class="feature-icon">🤝</div>
-      <div class="feature-title">Modo Co-op</div>
-      <div class="feature-desc">Faça a jornada com um amigo ou parceiro. Compare progresso, façam desafios juntos e ganhem XP em dupla.</div>
+      <div class="feature-icon">😊</div>
+      <div class="feature-title">Check-in emocional</div>
+      <div class="feature-desc">Registre como está se sentindo. O app adapta o treino e a dieta do dia automaticamente baseado no seu humor.</div>
     </div>
     <div class="feature-card">
       <div class="feature-icon">📊</div>
       <div class="feature-title">Relatório semanal detalhado</div>
-      <div class="feature-desc">Veja sua aderência, evolução de peso, qualidade do sono, hidratação e receba um feedback personalizado da IA.</div>
+      <div class="feature-desc">Veja sua aderência, evolução, hydratação e receba um insight personalizado da IA sobre o que melhorar.</div>
     </div>
     <div class="feature-card">
-      <div class="feature-icon">🔒</div>
-      <div class="feature-title">Privacidade e LGPD</div>
-      <div class="feature-desc">Seus dados de saúde são seus. Controle total sobre consentimentos, exportação e exclusão de dados a qualquer momento.</div>
+      <div class="feature-icon">🤝</div>
+      <div class="feature-title">Modo Co-op</div>
+      <div class="feature-desc">Faça a jornada com um amigo. Compare progresso, façam desafios juntos e ganhem +500 XP em dupla.</div>
     </div>
   </div>
 </section>
 
-<!-- PLANS -->
-<section class="plans-section">
-  <div class="section">
-    <div class="section-label">Planos</div>
-    <h2 class="section-title">Comece grátis,<br>evolua quando quiser</h2>
-    <p class="section-sub">Sem cartão de crédito para começar. Faça upgrade quando estiver pronto.</p>
+<!-- COMPARATIVO -->
+<div class="compare-section">
+  <div style="max-width:1100px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:40px">
+      <div class="section-label">Comparativo</div>
+      <h2 class="section-title">Por que o NutriAI é diferente</h2>
+    </div>
+    <div class="compare-table">
+      <div class="compare-row header">
+        <div>Recurso</div>
+        <div class="col-nutriai">NutriAI</div>
+        <div class="col-other">Outros apps</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-feature">Plano alimentar personalizado por IA</div>
+        <div class="col-nutriai"><span class="check-yes">✓</span></div>
+        <div class="col-other"><span class="check-no">✕</span></div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-feature">Treino gerado automaticamente para seu nível</div>
+        <div class="col-nutriai"><span class="check-yes">✓</span></div>
+        <div class="col-other"><span class="check-no">✕</span></div>
+      </div>
+      <div class="compare-feature compare-row">
+        <div>Análise de refeição por foto</div>
+        <div class="col-nutriai"><span class="check-yes">✓</span></div>
+        <div class="col-other"><span class="check-partial">parcial</span></div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-feature">Coach IA com contexto do seu histórico</div>
+        <div class="col-nutriai"><span class="check-yes">✓</span></div>
+        <div class="col-other"><span class="check-no">✕</span></div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-feature">Adaptação ao check-in emocional</div>
+        <div class="col-nutriai"><span class="check-yes">✓</span></div>
+        <div class="col-other"><span class="check-no">✕</span></div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-feature">Sistema de gamificação (XP e Ranks)</div>
+        <div class="col-nutriai"><span class="check-yes">✓</span></div>
+        <div class="col-other"><span class="check-no">✕</span></div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-feature">Modo Co-op com amigos</div>
+        <div class="col-nutriai"><span class="check-yes">✓</span></div>
+        <div class="col-other"><span class="check-no">✕</span></div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-feature">Preço mensal</div>
+        <div class="col-nutriai" style="color:var(--accent);font-weight:700;font-size:14px">R$29</div>
+        <div class="col-other" style="color:var(--text2);font-size:13px">R$40–120</div>
+      </div>
+    </div>
+  </div>
+</div>
 
+<!-- PLANOS -->
+<section class="plans-section" id="planos">
+  <div style="max-width:1100px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:40px">
+      <div class="section-label">Planos</div>
+      <h2 class="section-title">Comece grátis,<br>evolua quando quiser</h2>
+      <p class="section-sub" style="margin:0 auto">Sem cartão de crédito para começar. Os primeiros 15 dias são Premium grátis.</p>
+    </div>
     <div class="plans-grid">
       <div class="plan-card">
         <div class="plan-name">Grátis</div>
@@ -620,18 +784,20 @@
         <div class="plan-feature"><span class="check">✓</span> 3 análises de foto por dia</div>
         <div class="plan-feature"><span class="check">✓</span> Diário de calorias básico</div>
         <div class="plan-feature"><span class="check">✓</span> 5 mensagens Coach IA / dia</div>
+        <div class="plan-feature"><span class="check">✓</span> Rastreamento de hidratação</div>
         <div class="plan-feature"><span class="check">✓</span> Streaks e progresso</div>
         <div class="plan-feature disabled"><span class="cross">✕</span> Dieta personalizada por IA</div>
         <div class="plan-feature disabled"><span class="cross">✕</span> Treinos gerados por IA</div>
         <div class="plan-feature disabled"><span class="cross">✕</span> Relatório semanal</div>
         <div class="plan-feature disabled"><span class="cross">✕</span> Ranks e Co-op</div>
+        <a href="#download" class="plan-cta secondary">Baixar grátis</a>
       </div>
-
       <div class="plan-card featured">
-        <div class="plan-badge">Mais popular</div>
+        <div class="plan-badge">🔥 Mais popular</div>
         <div class="plan-name">Premium</div>
         <div class="plan-price accent"><span class="currency" style="color:inherit">R$</span>29</div>
-        <div class="plan-period">por mês · ou R$209/ano (−40%)</div>
+        <div class="plan-period">por mês</div>
+        <div class="plan-annual-note">💡 ou R$209/ano — economize R$139 (−40%)</div>
         <div class="plan-divider"></div>
         <div class="plan-feature"><span class="check">✓</span> Fotos ilimitadas por dia</div>
         <div class="plan-feature"><span class="check">✓</span> Dieta personalizada por IA</div>
@@ -641,86 +807,149 @@
         <div class="plan-feature"><span class="check">✓</span> Sistema de ranks completo</div>
         <div class="plan-feature"><span class="check">✓</span> Modo Co-op e desafios</div>
         <div class="plan-feature"><span class="check">✓</span> Painel de otimização metabólica</div>
+        <a href="#download" class="plan-cta primary">Começar 15 dias grátis</a>
+      </div>
+    </div>
+    <p style="text-align:center;font-size:13px;color:var(--text3);margin-top:20px">
+      ✓ Cancele quando quiser &nbsp;·&nbsp; ✓ Sem fidelidade &nbsp;·&nbsp; ✓ Suporte por e-mail
+    </p>
+  </div>
+</section>
+
+<!-- DEPOIMENTOS -->
+<div class="testimonials-section">
+  <div style="text-align:center;margin-bottom:40px;max-width:1100px;margin-left:auto;margin-right:auto">
+    <div class="section-label">Depoimentos</div>
+    <h2 class="section-title" style="margin-bottom:8px">O que nossos usuários dizem</h2>
+  </div>
+  <div class="testimonials-grid">
+    <div class="testimonial-card">
+      <div class="testimonial-stars">★★★★★</div>
+      <div class="testimonial-text">"Nunca consegui manter consistência com outros apps. O NutriAI é diferente — a gamificação me faz querer abrir todo dia. Em 3 semanas já perdi 2kg sem sofrimento."</div>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar" style="background:var(--accent)">M</div>
+        <div>
+          <div class="testimonial-name">Mariana S.</div>
+          <div class="testimonial-meta">Objetivo: perda de peso · 3 semanas de uso</div>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial-card">
+      <div class="testimonial-stars">★★★★★</div>
+      <div class="testimonial-text">"O Coach IA é incrível. Perguntei sobre suplementação e me deu uma resposta personalizada levando em conta meu histórico de treino. Parece ter um nutricionista no bolso."</div>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar" style="background:var(--purple)">R</div>
+        <div>
+          <div class="testimonial-name">Rafael T.</div>
+          <div class="testimonial-meta">Objetivo: ganho de massa · 6 semanas de uso</div>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial-card">
+      <div class="testimonial-stars">★★★★★</div>
+      <div class="testimonial-text">"Fotografar as refeições é muito mais prático do que ficar pesando tudo. A IA acerta na maioria das vezes e quando erra eu corrijo rápido. Finalmente um app que funciona."</div>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar" style="background:var(--teal)">A</div>
+        <div>
+          <div class="testimonial-name">Ana C.</div>
+          <div class="testimonial-meta">Objetivo: saúde geral · 1 mês de uso</div>
+        </div>
       </div>
     </div>
   </div>
-</section>
+</div>
+
+<!-- FAQ -->
+<div class="faq-section">
+  <div style="text-align:center;margin-bottom:40px">
+    <div class="section-label">Dúvidas</div>
+    <h2 class="section-title">Perguntas frequentes</h2>
+  </div>
+  <div class="faq-item">
+    <div class="faq-question">O app é gratuito?</div>
+    <div class="faq-answer">Sim! O plano grátis existe para sempre e inclui análise de fotos, diário de calorias, hidratação e streaks. O Premium (R$29/mês ou R$209/ano) desbloqueia a dieta e treino personalizados por IA, Coach ilimitado, relatórios e muito mais. E todo usuário novo ganha 15 dias de Premium grátis para experimentar.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-question">Como funciona a análise de foto?</div>
+    <div class="faq-answer">Você fotografa o prato e a IA identifica os alimentos, estima porções e calcula calorias e macronutrientes em segundos. Não precisa pesar nada. Se a estimativa não estiver precisa, você corrige com um toque.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-question">O plano alimentar é realmente personalizado?</div>
+    <div class="faq-answer">Sim. A IA considera seu objetivo (emagrecer, ganhar massa, manter), seu peso, altura e meta, nível de atividade física, orçamento alimentar, tempo disponível para cozinhar, alimentos que você gosta e os que evita. O resultado é uma dieta que você consegue seguir, não um plano genérico da internet.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-question">Posso cancelar quando quiser?</div>
+    <div class="faq-answer">Sim, sem burocracia. O cancelamento pode ser feito direto no app, na tela de assinatura. Não há fidelidade nem multa.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-question">O app funciona sem internet?</div>
+    <div class="faq-answer">A maioria dos recursos (diário, progresso, treino) funciona offline. A análise de fotos, o Coach IA e a geração de planos precisam de conexão, pois usam inteligência artificial na nuvem.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-question">Está disponível para iPhone (iOS)?</div>
+    <div class="faq-answer">No momento o NutriAI está disponível apenas para Android. A versão iOS está em desenvolvimento e será lançada em breve. Cadastre seu e-mail no suporte para ser avisado quando chegar.</div>
+  </div>
+</div>
 
 <!-- DOWNLOAD -->
 <section class="download-section" id="download">
   <div class="download-glow"></div>
   <h2>Pronto para<br><span style="color:var(--accent)">começar sua jornada?</span></h2>
-  <p>Baixe grátis e comece a transformar sua saúde hoje. Sem burocracia, sem desculpas.</p>
+  <p>Baixe grátis e ganhe 15 dias de Premium. Sem cartão, sem compromisso.</p>
 
-  <a href="https://github.com/JVidal021/nutriai/releases/download/v1.0.0/nutriai.apk"
-     class="btn-primary"
-     download="nutriai.apk"
-     style="font-size:18px;padding:20px 48px;border-radius:50px;text-decoration:none;display:inline-flex;align-items:center;gap:12px;">
-    <span>📥</span> Baixar APK para Android
-  </a>
-  <p style="font-size:13px;color:var(--text3);margin-top:16px;margin-bottom:0;">
-    Android 8.0+ · Gratuito · Sem conta em loja necessária<br>
-    <span style="font-size:12px;">⚙️ Após baixar, habilite "Instalar apps de fontes desconhecidas" nas configurações do Android</span>
-  </p>
+  <div class="download-btn-wrap">
+    <a href="https://expo.dev/artifacts/eas/hUePnmFSnCgLsPNYRcQuRu.apk"
+       class="btn-primary"
+       style="font-size:18px;padding:20px 48px;border-radius:50px;">
+      <span>📥</span> Baixar APK para Android
+    </a>
+    <div class="download-note">
+      Android 8.0+ · Gratuito · v1.0.2<br>
+      <span style="font-size:11px;">⚙️ Após baixar, habilite "Instalar apps de fontes desconhecidas" nas configurações do Android</span>
+    </div>
+  </div>
 
-  <!-- Suporte -->
   <div class="support-section">
     <div class="support-card">
       <div class="support-card-icon">💬</div>
       <div class="support-card-title">Suporte geral</div>
-      <div class="support-card-desc">Dúvidas sobre o app, conta, funcionalidades ou qualquer outro assunto.</div>
-      <a href="mailto:suporte.nutriai@outlook.com?subject=Suporte NutriAI" class="support-card-link">
-        ✉ suporte.nutriai@outlook.com
-      </a>
+      <div class="support-card-desc">Dúvidas sobre o app, conta ou funcionalidades.</div>
+      <a href="mailto:suporte.nutriai@outlook.com?subject=Suporte NutriAI" class="support-card-link">✉ suporte.nutriai@outlook.com</a>
     </div>
     <div class="support-card">
       <div class="support-card-icon">💳</div>
       <div class="support-card-title">Assinatura e pagamento</div>
-      <div class="support-card-desc">Problemas com cobrança, cancelamento ou ativação do Premium.</div>
-      <a href="mailto:suporte.nutriai@outlook.com?subject=Pagamento NutriAI" class="support-card-link">
-        ✉ Enviar e-mail
-      </a>
+      <div class="support-card-desc">Problemas com cobrança, cancelamento ou ativação.</div>
+      <a href="mailto:suporte.nutriai@outlook.com?subject=Pagamento NutriAI" class="support-card-link">✉ Enviar e-mail</a>
     </div>
     <div class="support-card">
       <div class="support-card-icon">🔒</div>
       <div class="support-card-title">Privacidade e dados</div>
-      <div class="support-card-desc">Solicitações de exclusão, exportação ou dúvidas sobre a LGPD.</div>
-      <a href="mailto:suporte.nutriai@outlook.com?subject=Privacidade NutriAI" class="support-card-link">
-        ✉ Enviar e-mail
-      </a>
+      <div class="support-card-desc">Exclusão, exportação ou dúvidas sobre a LGPD.</div>
+      <a href="mailto:suporte.nutriai@outlook.com?subject=Privacidade NutriAI" class="support-card-link">✉ Enviar e-mail</a>
     </div>
   </div>
 </section>
 
 <!-- FOOTER -->
 <footer>
-  <div class="footer-logo">NutriAI 🌿</div>
+  <div class="footer-logo">🌿 NutriAI</div>
   <div class="footer-links">
-    <a href="#features">Recursos</a>
-    <a href="#download">Download</a>
     <a href="mailto:suporte.nutriai@outlook.com">Suporte</a>
-    <a href="mailto:suporte.nutriai@outlook.com?subject=Privacidade NutriAI">Privacidade</a>
+    <a href="https://nutriai-e24.pages.dev/privacidade">Política de Privacidade</a>
+    <a href="https://nutriai-e24.pages.dev/termos">Termos de Uso</a>
   </div>
-  <div class="footer-copy">© 2026 NutriAI. Todos os direitos reservados.</div>
+  <div class="footer-copy">© 2026 NutriAI · Todos os direitos reservados · LGPD compliant</div>
 </footer>
 
 <script>
-  // Smooth reveal ao rolar
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.style.opacity = '1'
-        e.target.style.transform = 'translateY(0)'
-      }
-    })
-  }, { threshold: 0.1 })
-
-  document.querySelectorAll('.feature-card, .plan-card, .mockup-phone').forEach(el => {
-    el.style.opacity = '0'
-    el.style.transform = 'translateY(24px)'
-    el.style.transition = 'opacity .5s ease, transform .5s ease'
-    observer.observe(el)
-  })
+  // FAQ accordion
+  document.querySelectorAll('.faq-item').forEach(item => {
+    item.querySelector('.faq-question').addEventListener('click', () => {
+      item.classList.toggle('open');
+    });
+  });
 </script>
+
 </body>
 </html>
