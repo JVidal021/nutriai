@@ -37,7 +37,14 @@ interface RingCardProps {
 function RingCard({ label, value, percent, color, icon, centerText, hint, onPress }: RingCardProps) {
   const offset = RING_C * (1 - Math.min(percent, 100) / 100)
   return (
-    <TouchableOpacity style={s.ringCard} onPress={onPress} activeOpacity={onPress ? 0.75 : 1}>
+    <TouchableOpacity
+      style={s.ringCard}
+      onPress={onPress}
+      activeOpacity={onPress ? 0.75 : 1}
+      accessible
+      accessibilityRole={onPress ? 'button' : 'text'}
+      accessibilityLabel={`${label}: ${value}${hint ? `. ${hint}` : ''}`}
+    >
       <View style={s.ringWrap}>
         {/* SVG ring rotated so 0% starts at top */}
         <Svg width={64} height={64} style={s.ringSvg}>
@@ -216,7 +223,7 @@ export default function HomeScreen() {
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
       >
         <Text style={s.heroGreeting}>{greeting}</Text>
-        <Text style={s.heroName}>{user.name} 👋</Text>
+        <Text style={s.heroName} numberOfLines={1} ellipsizeMode="tail">{user.name} 👋</Text>
         <View style={s.heroInsightBox}>
           <Text style={s.heroInsightText}>
             <Text style={s.heroInsightLabel}>{t('home.insight_label')} </Text>

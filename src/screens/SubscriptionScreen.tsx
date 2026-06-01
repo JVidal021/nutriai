@@ -356,7 +356,7 @@ export default function SubscriptionScreen() {
                 disabled={cancelling}
               >
                 {cancelling
-                  ? <ActivityIndicator size="small" color="#ff4444" />
+                  ? <ActivityIndicator size="small" color={Colors.red} />
                   : <Text style={s.cancelBtnText}>{t('subscription.cancel_sub' as any)}</Text>
                 }
               </TouchableOpacity>
@@ -478,8 +478,8 @@ const s = StyleSheet.create({
   expiryLabel:      { fontSize: 12, color: Colors.text3 },
   expiryDate:       { fontSize: 13, fontWeight: '700', color: Colors.text },
   manageActions:    { flexDirection: 'row', gap: 8, padding: 12 },
-  cancelBtn:        { flex: 1, borderWidth: 1.5, borderColor: '#ff4444', borderRadius: Radius.md, padding: 12, alignItems: 'center' },
-  cancelBtnText:    { fontSize: 13, fontWeight: '700', color: '#ff4444' },
+  cancelBtn:        { flex: 1, borderWidth: 1.5, borderColor: Colors.red, borderRadius: Radius.md, padding: 12, alignItems: 'center' },
+  cancelBtnText:    { fontSize: 13, fontWeight: '700', color: Colors.red },
   supportBtn:       { borderWidth: 1, borderColor: Colors.border2, borderRadius: Radius.md, paddingHorizontal: 14, paddingVertical: 12, alignItems: 'center' },
   supportBtnText:   { fontSize: 13, fontWeight: '600', color: Colors.text2 },
   manageNote:       { fontSize: 11, color: Colors.text3, textAlign: 'center', paddingHorizontal: 14, paddingBottom: 12, lineHeight: 16 },

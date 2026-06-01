@@ -20,6 +20,7 @@ export const Colors = {
   teal:     '#2DD4AA',
   orange:   '#FF7A45',
   red:      '#FF4F4F',
+  gold:     '#FFD700',
 
   // Semantic
   success:  '#2DD4AA',

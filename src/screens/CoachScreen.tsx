@@ -442,6 +442,8 @@ export default function CoachScreen() {
           style={[s.sendBtn, (!input.trim() || loading) && { opacity: 0.4 }]}
           onPress={() => handleSend(input)}
           disabled={!input.trim() || loading}
+          accessibilityRole="button"
+          accessibilityLabel={t('coach.send')}
         >
           {loading
             ? <ActivityIndicator size="small" color={Colors.bg} />

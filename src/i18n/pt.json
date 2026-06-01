@@ -206,6 +206,7 @@
     "title": "Coach NutriAI",
     "online": "Online agora",
     "placeholder": "Escreva uma mensagem...",
+    "send": "Enviar mensagem",
     "apply_btn": "✅ Aplicar sugestão ao plano →",
     "applying": "Aplicando...",
     "plan_updated": "✅ Plano atualizado!",
@@ -649,6 +650,12 @@
     "language_changed": "Idioma alterado para {{lang}}",
     "theme": "Tema",
     "notifications": "Notificações"
+  },
+  "error_boundary": {
+    "title": "Ops, algo deu errado",
+    "message": "Encontramos um problema inesperado. Toque no botão abaixo para recarregar o app.",
+    "reload": "🔄 Recarregar app",
+    "report": "Se o problema continuar, contate: suporte.nutriai@outlook.com"
   },
   "errors": {
     "generic": "Algo deu errado. Tente novamente.",

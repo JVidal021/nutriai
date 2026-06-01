@@ -284,8 +284,8 @@ export default function ProfileScreen() {
           <Text style={s.avatarText}>{(user.name ?? '?').charAt(0).toUpperCase()}</Text>
         </LinearGradient>
         <View style={{ flex: 1 }}>
-          <Text style={s.name}>{user.name}</Text>
-          <Text style={s.email}>{user.email || t('profile.no_email')}</Text>
+          <Text style={s.name} numberOfLines={1} ellipsizeMode="tail">{user.name}</Text>
+          <Text style={s.email} numberOfLines={1} ellipsizeMode="tail">{user.email || t('profile.no_email')}</Text>
           <View style={s.badgeRow}>
             <View style={[s.rankBadge, { backgroundColor: 'rgba(0,0,0,0.3)' }]}>
               <Text style={s.rankBadgeText}>{rank.emoji} {rank.label}</Text>
@@ -723,7 +723,7 @@ const s = StyleSheet.create({
   rankBadge:         { borderRadius: 20, paddingHorizontal: 9, paddingVertical: 3, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
   rankBadgeText:     { fontSize: 11, fontWeight: '600', color: '#FFF' },
   premiumBadge:      { borderRadius: 20, paddingHorizontal: 9, paddingVertical: 3, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
-  premiumBadgeText:  { fontSize: 11, fontWeight: '600', color: '#FFD700' },
+  premiumBadgeText:  { fontSize: 11, fontWeight: '600', color: Colors.gold },
   totalXp:           { fontSize: 16, fontWeight: '800', color: 'rgba(255,255,255,0.9)', textAlign: 'center', lineHeight: 20 },
   card:              { backgroundColor: Colors.bg2, borderRadius: Radius.lg, padding: 14, borderWidth: 1, borderColor: Colors.border, marginBottom: 10 },
   cardTitle:         { fontSize: 14, fontWeight: '600', color: Colors.text, marginBottom: 4 },

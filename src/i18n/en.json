@@ -206,6 +206,7 @@
     "title": "NutriAI Coach",
     "online": "Online now",
     "placeholder": "Write a message...",
+    "send": "Send message",
     "apply_btn": "✅ Apply suggestion to plan →",
     "applying": "Applying...",
     "plan_updated": "✅ Plan updated!",
@@ -649,6 +650,12 @@
     "language_changed": "Language changed to {{lang}}",
     "theme": "Theme",
     "notifications": "Notifications"
+  },
+  "error_boundary": {
+    "title": "Oops, something went wrong",
+    "message": "We hit an unexpected problem. Tap the button below to reload the app.",
+    "reload": "🔄 Reload app",
+    "report": "If the problem persists, contact: suporte.nutriai@outlook.com"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",

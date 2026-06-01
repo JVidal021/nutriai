@@ -26,6 +26,7 @@ import {
   DMSans_500Medium,
 } from '@expo-google-fonts/dm-sans'
 import i18n, { initI18n } from '@/i18n/index'
+import { ErrorBoundary } from '@components/ErrorBoundary'
 
 // Mantém o splash screen enquanto as fontes carregam
 SplashScreen.preventAutoHideAsync()
@@ -118,6 +119,7 @@ export default function RootLayout() {
   if (!i18nReady) return null
 
   return (
+    <ErrorBoundary>
     <I18nextProvider i18n={i18n}>
     <SafeAreaProvider>
     <GestureHandlerRootView style={s.root}>
@@ -132,6 +134,14 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
           name="profile/delete-account"
+          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+        />
+        <Stack.Screen
+          name="profile/export"
+          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+        />
+        <Stack.Screen
+          name="profile/privacy"
           options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
         />
         <Stack.Screen
@@ -150,6 +160,7 @@ export default function RootLayout() {
     </GestureHandlerRootView>
     </SafeAreaProvider>
     </I18nextProvider>
+    </ErrorBoundary>
   )
 }
 

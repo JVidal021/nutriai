@@ -223,13 +223,16 @@ export default function ScanScreen() {
           <Text style={s.cameraHint}>{t('scan.camera_hint')}</Text>
         </View>
         <View style={s.cameraControls}>
-          <TouchableOpacity style={s.cameraCancelBtn} onPress={reset}>
+          <TouchableOpacity style={s.cameraCancelBtn} onPress={reset}
+            accessibilityRole="button" accessibilityLabel={t('common.cancel')}>
             <Text style={s.cameraCancelText}>✕</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={s.shutterBtn} onPress={takePicture}>
+          <TouchableOpacity style={s.shutterBtn} onPress={takePicture}
+            accessibilityRole="button" accessibilityLabel={t('scan.take_photo')}>
             <View style={s.shutterInner} />
           </TouchableOpacity>
-          <TouchableOpacity style={s.galleryBtn} onPress={pickFromGallery}>
+          <TouchableOpacity style={s.galleryBtn} onPress={pickFromGallery}
+            accessibilityRole="button" accessibilityLabel={t('scan.gallery_label')}>
             <Text style={s.galleryText}>🖼️</Text>
           </TouchableOpacity>
         </View>
@@ -302,11 +305,13 @@ export default function ScanScreen() {
                 </View>
                 {/* Botões de ajuste de porção */}
                 <View style={s.qtyRow}>
-                  <TouchableOpacity style={s.qtyBtn} onPress={() => adjustQty(i, -10)}>
+                  <TouchableOpacity style={s.qtyBtn} onPress={() => adjustQty(i, -10)}
+                    accessibilityRole="button" accessibilityLabel={`−10g ${food.name}`}>
                     <Text style={s.qtyBtnTxt}>−</Text>
                   </TouchableOpacity>
-                  <Text style={s.qtyVal}>{qty}g</Text>
-                  <TouchableOpacity style={s.qtyBtn} onPress={() => adjustQty(i, +10)}>
+                  <Text style={s.qtyVal} accessibilityLabel={`${qty} ${t('scan_adjust.adjust_label' as any)}`}>{qty}g</Text>
+                  <TouchableOpacity style={s.qtyBtn} onPress={() => adjustQty(i, +10)}
+                    accessibilityRole="button" accessibilityLabel={`+10g ${food.name}`}>
                     <Text style={s.qtyBtnTxt}>+</Text>
                   </TouchableOpacity>
                 </View>
