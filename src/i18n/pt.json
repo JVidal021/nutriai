@@ -89,6 +89,8 @@
     "rank_xp_to": "para",
     "mood_tired": "Treino adaptado para você hoje. Cuide-se! 💚",
     "mood_default": "Ótimo! Plano mantido. Você está pronte para o dia! 🔥",
+    "see_month": "Ver mês ↓",
+    "see_week": "Ver semana ↑",
     "insight_streak_max": "{{streak}} dias seguidos! 🎉 Amanhã considere descanso ativo — caminhada leve ajuda na recuperação.",
     "insight_streak_good": "{{streak}} dias de sequência! Continue assim, você está construindo um hábito sólido. 💪",
     "insight_workout_cal": "Treino feito e alimentação no ponto! Dia produtivo. Não esqueça de hidratar. 💧",

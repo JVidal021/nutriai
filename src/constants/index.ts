@@ -9,7 +9,7 @@ export const Colors = {
   bg2:      '#111111',
   bg3:      '#1A1A1A',
   bg4:      '#222222',
-  border:   '#2A2A2A',
+  border:   '#1C1C1C',
   border2:  '#333333',
   text:     '#F0F0F0',
   text2:    '#888888',

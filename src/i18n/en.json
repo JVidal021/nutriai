@@ -89,6 +89,8 @@
     "rank_xp_to": "to",
     "mood_tired": "Workout adapted for you today. Take care! 💚",
     "mood_default": "Great! Plan maintained. You're ready for the day! 🔥",
+    "see_month": "View month ↓",
+    "see_week": "View week ↑",
     "insight_streak_max": "{{streak}} days in a row! 🎉 Tomorrow, consider active rest — a light walk helps recovery.",
     "insight_streak_good": "{{streak}}-day streak! Keep going, you're building a solid habit. 💪",
     "insight_workout_cal": "Workout done and nutrition on track! Productive day. Don't forget to hydrate. 💧",

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from 'react'
+import React, { useEffect, useRef, useMemo, useState } from 'react'
 import {
   View, Text, StyleSheet, ScrollView,
   TouchableOpacity, Animated,
@@ -89,6 +89,24 @@ function buildCurrentWeek(streak: number, checkedInToday: boolean) {
   })
 }
 
+// Grade do mês atual: células null = espaços antes do dia 1 (alinhamento seg→dom)
+type MonthCell = { d: number; dStr: string; isToday: boolean; isFuture: boolean } | null
+function buildMonthGrid(ref: Date): MonthCell[] {
+  const year = ref.getFullYear()
+  const month = ref.getMonth()
+  const first = new Date(year, month, 1)
+  const startDow = (first.getDay() + 6) % 7 // segunda = 0
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const todayStr = new Date().toISOString().split('T')[0]
+  const cells: MonthCell[] = []
+  for (let i = 0; i < startDow; i++) cells.push(null)
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+    cells.push({ d, dStr, isToday: dStr === todayStr, isFuture: dStr > todayStr })
+  }
+  return cells
+}
+
 function getMuscleChips(workout: WorkoutSession | undefined): string[] {
   if (!workout) return []
   if (workout.muscleGroups?.length)
@@ -103,7 +121,7 @@ export default function HomeScreen() {
   const { t } = useT()
   const { user, isLoading }           = useUserStore()
   const { getTodayTotals, weekPlan }  = useNutritionStore()
-  const { progress, getRankProgress, logCheckin, getTodayCheckin, addXp } = useProgressStore()
+  const { progress, xpHistory, getRankProgress, logCheckin, getTodayCheckin, addXp } = useProgressStore()
   const { weekWorkouts }              = useWorkoutStore()
   const { hydrationMl, addHydration, resetIfNewDay } = useDailyStore()
 
@@ -141,6 +159,15 @@ export default function HomeScreen() {
 
   const muscleChips = useMemo(() => getMuscleChips(todayWorkout), [todayWorkout])
   const last7Days   = useMemo(() => buildCurrentWeek(streak, !!checkin), [streak, checkin])
+
+  // Sequência: alternar entre semana e mês (estilo calendário de hábitos)
+  const [showMonth, setShowMonth] = useState(false)
+  const activeDates = useMemo(
+    () => new Set((xpHistory ?? []).filter((x: any) => x?.date).map((x: any) => x.date.split('T')[0])),
+    [xpHistory]
+  )
+  const monthCells = useMemo(() => buildMonthGrid(new Date()), [])
+  const monthLabel = new Date().toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
   const aiInsight   = useMemo(() => {
     if (streak >= 7 && workoutDone) return t('home.insight_streak_max' as any, { streak })
     if (streak >= 3)                return t('home.insight_streak_good' as any, { streak })
@@ -278,27 +305,71 @@ export default function HomeScreen() {
             {t('home.streak_record')} <Text style={s.streakRecordVal}>{(progress as any).bestStreak ?? streak} {t('home.streak_unit')}</Text>
           </Text>
         </View>
-        <View style={s.daysRow}>
-          {last7Days.map((day, i) => (
-            <View
-              key={i}
-              style={[
-                s.dayBox,
-                day.isToday ? s.dayToday : day.done ? s.dayDone : day.isFuture ? s.dayFuture : s.dayMissed,
-              ]}
-            >
-              <Text style={[
-                s.dayLbl,
-                day.isToday && s.dayLblToday,
-                !day.isToday && !day.done && !day.isFuture && s.dayLblMissed,
-                day.isFuture && s.dayLblFuture,
-              ]}>
-                {t(day.labelKey as any)}
-              </Text>
-              <View style={[s.dayDot, day.isToday && s.dayDotToday, day.done && !day.isToday && s.dayDotDone]} />
+        {!showMonth ? (
+          // ── Visão SEMANA ──
+          <View style={s.daysRow}>
+            {last7Days.map((day, i) => (
+              <View
+                key={i}
+                style={[
+                  s.dayBox,
+                  day.isToday ? s.dayToday : day.done ? s.dayDone : day.isFuture ? s.dayFuture : s.dayMissed,
+                ]}
+              >
+                <Text style={[
+                  s.dayLbl,
+                  day.isToday && s.dayLblToday,
+                  !day.isToday && !day.done && !day.isFuture && s.dayLblMissed,
+                  day.isFuture && s.dayLblFuture,
+                ]}>
+                  {t(day.labelKey as any)}
+                </Text>
+                <View style={[s.dayDot, day.isToday && s.dayDotToday, day.done && !day.isToday && s.dayDotDone]} />
+              </View>
+            ))}
+          </View>
+        ) : (
+          // ── Visão MÊS (calendário de hábitos) ──
+          <View style={s.monthWrap}>
+            <Text style={s.monthLabel}>{monthLabel}</Text>
+            <View style={s.monthHeaderRow}>
+              {WEEK_DAY_KEYS.map(k => (
+                <Text key={k} style={s.monthHeaderCell}>{t(k as any)}</Text>
+              ))}
             </View>
-          ))}
-        </View>
+            <View style={s.monthGrid}>
+              {monthCells.map((cell, i) => (
+                <View key={i} style={s.monthCell}>
+                  {cell && (
+                    <View style={[
+                      s.monthDay,
+                      cell.isToday ? s.monthDayToday
+                        : activeDates.has(cell.dStr) ? s.monthDayActive
+                        : cell.isFuture ? s.monthDayFuture : s.monthDayEmpty,
+                    ]}>
+                      <Text style={[
+                        s.monthDayTxt,
+                        cell.isToday && s.monthDayTxtToday,
+                        activeDates.has(cell.dStr) && !cell.isToday && s.monthDayTxtActive,
+                        cell.isFuture && s.monthDayTxtFuture,
+                      ]}>
+                        {cell.d}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        <TouchableOpacity
+          style={s.toggleBtn}
+          activeOpacity={0.7}
+          onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowMonth(v => !v) }}
+        >
+          <Text style={s.toggleBtnTxt}>{showMonth ? t('home.see_week') : t('home.see_month')}</Text>
+        </TouchableOpacity>
       </View>
 
       {/* ── RANK ──────────────────────────────────────────── */}
@@ -472,18 +543,37 @@ const s = StyleSheet.create({
   streakRecord:    { fontSize: 12, color: Colors.text2, textAlign: 'right', marginTop: 4 },
   streakRecordVal: { color: Colors.accent, fontWeight: '700' },
   daysRow:         { flexDirection: 'row', gap: 6 },
-  dayBox:          { flex: 1, aspectRatio: 1, borderRadius: 7, alignItems: 'center', justifyContent: 'center', gap: 2 },
-  dayDone:         { backgroundColor: 'rgba(200,240,96,.2)', borderWidth: 1, borderColor: 'rgba(200,240,96,.4)' },
+  dayBox:          { flex: 1, aspectRatio: 1, borderRadius: 10, alignItems: 'center', justifyContent: 'center', gap: 2 },
+  dayDone:         { backgroundColor: 'rgba(200,240,96,.18)' },
   dayToday:        { backgroundColor: Colors.accent },
-  dayMissed:       { backgroundColor: Colors.bg3, borderWidth: 1, borderColor: Colors.border },
-  dayFuture:       { backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.border, opacity: 0.4 },
-  dayLbl:          { fontSize: 9, fontWeight: '700', color: Colors.accent },
+  dayMissed:       { backgroundColor: Colors.bg3 },
+  dayFuture:       { backgroundColor: Colors.bg3, opacity: 0.4 },
+  dayLbl:          { fontSize: 10, fontWeight: '700', color: Colors.accent },
   dayLblToday:     { color: Colors.bg },
-  dayLblMissed:    { color: Colors.text3 },
+  dayLblMissed:    { color: Colors.text2 },
   dayLblFuture:    { color: Colors.text3 },
   dayDot:          { width: 5, height: 5, borderRadius: 3, backgroundColor: 'transparent' },
   dayDotDone:      { backgroundColor: Colors.accent },
   dayDotToday:     { backgroundColor: Colors.bg },
+
+  // Streak — visão mês (calendário de hábitos)
+  monthWrap:        { marginTop: 2 },
+  monthLabel:       { fontSize: 13, fontWeight: '700', color: Colors.text, textAlign: 'center', marginBottom: 10, textTransform: 'capitalize' },
+  monthHeaderRow:   { flexDirection: 'row', marginBottom: 6 },
+  monthHeaderCell:  { flex: 1, textAlign: 'center', fontSize: 9, fontWeight: '700', color: Colors.text3 },
+  monthGrid:        { flexDirection: 'row', flexWrap: 'wrap' },
+  monthCell:        { width: '14.2857%', aspectRatio: 1, padding: 3 },
+  monthDay:         { flex: 1, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  monthDayEmpty:    { backgroundColor: Colors.bg3 },
+  monthDayActive:   { backgroundColor: 'rgba(200,240,96,.18)' },
+  monthDayToday:    { backgroundColor: Colors.accent },
+  monthDayFuture:   { backgroundColor: 'transparent' },
+  monthDayTxt:      { fontSize: 11, fontWeight: '600', color: Colors.text2 },
+  monthDayTxtToday: { color: Colors.bg, fontWeight: '800' },
+  monthDayTxtActive:{ color: Colors.accent, fontWeight: '700' },
+  monthDayTxtFuture:{ color: Colors.text3, opacity: 0.6 },
+  toggleBtn:        { marginTop: 12, alignSelf: 'center', paddingVertical: 6, paddingHorizontal: 16, borderRadius: 20, backgroundColor: Colors.bg3 },
+  toggleBtnTxt:     { fontSize: 12, fontWeight: '600', color: Colors.accent },
 
   // Rank
   rankCard:    { flexDirection: 'row', alignItems: 'center', gap: 14, borderColor: 'rgba(155,89,182,.25)' },
