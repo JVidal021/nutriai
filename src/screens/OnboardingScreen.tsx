@@ -82,6 +82,7 @@ export default function OnboardingScreen() {
   const [name, setName]         = useState('')
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [goal, setGoal]         = useState<Goal>('lose_weight')
   const [gender, setGender]     = useState<Gender>('masc')
   const [profile, setProfile]   = useState<Profile>('escultura')
@@ -453,14 +454,27 @@ export default function OnboardingScreen() {
 
             <View style={s.inputWrap}>
               <Text style={s.inputLabel}>{t('onboarding.password_input_label' as any)}</Text>
-              <TextInput
-                style={s.input}
-                value={password}
-                onChangeText={setPassword}
-                placeholder={t('onboarding.password_input_placeholder' as any)}
-                placeholderTextColor={Colors.text3}
-                secureTextEntry
-              />
+              <View style={s.pwdWrap}>
+                <TextInput
+                  style={[s.input, s.pwdInput]}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder={t('onboarding.password_input_placeholder' as any)}
+                  placeholderTextColor={Colors.text3}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                <TouchableOpacity
+                  style={s.pwdToggle}
+                  onPress={() => setShowPassword(v => !v)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t((showPassword ? 'onboarding.hide_password' : 'onboarding.show_password') as any)}
+                >
+                  <Text style={s.pwdToggleIcon}>{showPassword ? '🙈' : '👁️'}</Text>
+                </TouchableOpacity>
+              </View>
               {/* Indicador de força — só no cadastro */}
               {!isLoginMode && <PasswordStrength password={password} />}
             </View>
@@ -760,6 +774,10 @@ const s = StyleSheet.create({
   inputWrap:      { marginTop: Spacing[1], marginBottom: 4 },
   inputLabel:     { fontSize: 12, color: Colors.text2, marginBottom: 6 },
   input:          { backgroundColor: Colors.bg3, borderRadius: Radius.md, padding: Spacing[4], fontSize: 16, color: Colors.text, borderWidth: 1, borderColor: Colors.border2 },
+  pwdWrap:        { position: 'relative', justifyContent: 'center' },
+  pwdInput:       { paddingRight: 52 },
+  pwdToggle:      { position: 'absolute', right: 6, top: 0, bottom: 0, width: 44, alignItems: 'center', justifyContent: 'center' },
+  pwdToggleIcon:  { fontSize: 18 },
   toggleModeBtn:    { marginTop: 12, alignItems: 'center', paddingVertical: 10 },
   toggleModeText:   { color: Colors.accent, fontSize: 14, fontWeight: '600' },
   consentRow:       { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginTop: 16, paddingHorizontal: 2 },

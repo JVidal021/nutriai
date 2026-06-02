@@ -413,6 +413,8 @@
     "email_input_label": "Your email",
     "email_input_placeholder": "example@email.com",
     "password_input_label": "Password",
+    "show_password": "Show password",
+    "hide_password": "Hide password",
     "password_input_placeholder": "Min. 8 chars, with uppercase, number and symbol",
     "promo_input_label": "🎁 Invite code",
     "promo_input_placeholder": "Ex: NUTRI15",

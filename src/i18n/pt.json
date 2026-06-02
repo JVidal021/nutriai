@@ -413,6 +413,8 @@
     "email_input_label": "Seu e-mail",
     "email_input_placeholder": "exemplo@email.com",
     "password_input_label": "Senha",
+    "show_password": "Mostrar senha",
+    "hide_password": "Ocultar senha",
     "password_input_placeholder": "Mín. 8 caracteres, com maiúscula, número e símbolo",
     "promo_input_label": "🎁 Código de convite",
     "promo_input_placeholder": "Ex: NUTRI15",
