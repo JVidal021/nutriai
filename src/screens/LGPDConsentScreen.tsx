@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  ScrollView, Alert, Linking,
+  ScrollView, Alert, Linking, Image,
 } from 'react-native'
 import { Colors, Spacing, Radius } from '@constants/index'
 import { supabase } from '@services/supabase'
@@ -125,7 +125,7 @@ export default function LGPDConsentScreen({ onAccept, onDecline }: Props) {
     <View style={s.root}>
       {/* Header */}
       <View style={[s.header, { paddingTop: insets.top + 12 }]}>
-        <View style={s.logoMark}><Text style={s.logoLeaf}>🌿</Text></View>
+        <Image source={require('../../assets/logo.png')} style={s.logoMark} resizeMode="contain" />
         <View style={s.headerText}>
           <Text style={s.title}>{t('lgpd_consent.header_title' as any)}</Text>
           <Text style={s.subtitle}>{t('lgpd_consent.header_sub' as any)}</Text>
@@ -230,8 +230,7 @@ export default function LGPDConsentScreen({ onAccept, onDecline }: Props) {
 const s = StyleSheet.create({
   root:              { flex: 1, backgroundColor: Colors.bg },
   header:            { flexDirection: 'row', gap: 12, padding: Spacing[5], alignItems: 'flex-start' },
-  logoMark:          { width: 40, height: 40, borderRadius: 11, backgroundColor: Colors.accent, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 },
-  logoLeaf:          { fontSize: 20 },
+  logoMark:          { width: 44, height: 44, flexShrink: 0, marginTop: 2 },
   headerText:        { flex: 1 },
   title:             { fontSize: 20, fontWeight: '800', color: Colors.text },
   subtitle:          { fontSize: 13, color: Colors.text2, marginTop: 3, lineHeight: 18 },

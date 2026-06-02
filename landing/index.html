@@ -53,7 +53,8 @@
       backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
     }
-    .nav-logo { font-size: 20px; font-weight: 900; color: var(--accent); letter-spacing: -0.5px; }
+    .nav-logo { font-size: 20px; font-weight: 900; color: var(--accent); letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; }
+    .nav-logo-img { width: 28px; height: 28px; object-fit: contain; }
     .nav-links { display: flex; gap: 32px; }
     .nav-links a { color: var(--text2); text-decoration: none; font-size: 14px; font-weight: 500; transition: color .2s; }
     .nav-links a:hover { color: var(--text); }
@@ -432,7 +433,8 @@
 
     /* ── FOOTER ── */
     footer { border-top: 1px solid var(--border); padding: 40px 24px; text-align: center; }
-    .footer-logo { font-size: 18px; font-weight: 900; color: var(--accent); margin-bottom: 8px; }
+    .footer-logo { font-size: 18px; font-weight: 900; color: var(--accent); margin-bottom: 8px; display: inline-flex; align-items: center; gap: 8px; }
+    .footer-logo-img { width: 24px; height: 24px; object-fit: contain; vertical-align: middle; }
     .footer-links { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
     .footer-links a { font-size: 13px; color: var(--text3); text-decoration: none; }
     .footer-links a:hover { color: var(--text2); }
@@ -443,7 +445,7 @@
 
 <!-- NAV -->
 <nav>
-  <div class="nav-logo">🌿 NutriAI</div>
+  <div class="nav-logo"><img src="logo.png" alt="NutriAI" class="nav-logo-img" /> NutriAI</div>
   <div class="nav-links">
     <a href="#como-funciona">Como funciona</a>
     <a href="#features">Recursos</a>
@@ -933,7 +935,7 @@
 
 <!-- FOOTER -->
 <footer>
-  <div class="footer-logo">🌿 NutriAI</div>
+  <div class="footer-logo"><img src="logo.png" alt="NutriAI" class="footer-logo-img" /> NutriAI</div>
   <div class="footer-links">
     <a href="mailto:suporte.nutriai@outlook.com">Suporte</a>
     <a href="https://nutriai-e24.pages.dev/privacidade">Política de Privacidade</a>

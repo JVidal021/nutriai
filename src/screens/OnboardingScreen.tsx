@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   Dimensions, TextInput, Animated, Alert, ActivityIndicator,
-  KeyboardAvoidingView, Platform,
+  KeyboardAvoidingView, Platform, Image,
 } from 'react-native'
 import { router } from 'expo-router'
 import { Linking } from 'react-native'
@@ -378,9 +378,7 @@ export default function OnboardingScreen() {
 
       <View style={[s.header, { paddingTop: insets.top + 12 }]}>
         <View style={s.logoRow}>
-          <View style={s.logoMark}>
-            <Text style={s.logoLeaf}>🌿</Text>
-          </View>
+          <Image source={require('../../assets/logo.png')} style={s.logoMark} resizeMode="contain" />
           <Text style={s.logoText}>Nutri<Text style={{ color: Colors.accent }}>AI</Text></Text>
         </View>
         {!isLoginMode && (
@@ -738,8 +736,7 @@ const s = StyleSheet.create({
   root:           { flex: 1, backgroundColor: Colors.bg },
   header:         { paddingHorizontal: Spacing[6], paddingBottom: Spacing[4] },
   logoRow:        { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20 },
-  logoMark:       { width: 34, height: 34, borderRadius: 9, backgroundColor: Colors.accent, alignItems: 'center', justifyContent: 'center' },
-  logoLeaf:       { fontSize: 18 },
+  logoMark:       { width: 38, height: 38 },
   logoText:       { fontSize: 20, fontWeight: '800', color: Colors.text },
   progressBar:    { height: 3, backgroundColor: Colors.border, borderRadius: 2, overflow: 'hidden' },
   progressFill:   { height: '100%', backgroundColor: Colors.accent, borderRadius: 2 },
