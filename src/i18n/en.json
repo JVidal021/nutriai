@@ -216,6 +216,8 @@
     "see_diet": "See Diet →",
     "workout_updated": "✅ Workout updated!",
     "workout_updated_msg": "Coach generated and applied a new workout for today.",
+    "no_workout_base_title": "Generate a workout first",
+    "no_workout_base_msg": "You don't have a workout plan this week yet. Generate it in the Workout tab, then ask the Coach for adjustments.",
     "apply_workout": "Apply to workout →",
     "gen_workout_prompt": "💪 Want the Coach to apply the workout to your plan today?",
     "nav_workout": "💪 Want to see today's workout?",

@@ -83,6 +83,9 @@ export default function OnboardingScreen() {
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  // Edição livre dos campos numéricos (permite apagar sem travar)
+  const [editingField, setEditingField] = useState<string | null>(null)
+  const [draftValue, setDraftValue]      = useState('')
   const [goal, setGoal]         = useState<Goal>('lose_weight')
   const [gender, setGender]     = useState<Gender>('masc')
   const [profile, setProfile]   = useState<Profile>('escultura')
@@ -601,10 +604,23 @@ export default function OnboardingScreen() {
                   </TouchableOpacity>
                   <TextInput
                     style={s.numericInput}
-                    value={String(field.value)}
+                    value={editingField === field.labelKey ? draftValue : String(field.value)}
+                    onFocus={() => { setEditingField(field.labelKey); setDraftValue(String(field.value)) }}
                     onChangeText={(v) => {
-                      const n = parseInt(v.replace(/[^0-9]/g, ''), 10)
-                      if (!isNaN(n)) field.setter(Math.min(field.max, Math.max(field.min, n)))
+                      // Permite campo vazio e digitação livre enquanto edita (sem travar o apagar)
+                      const clean = v.replace(/[^0-9]/g, '')
+                      setDraftValue(clean)
+                      const n = parseInt(clean, 10)
+                      if (!isNaN(n)) field.setter(n)
+                    }}
+                    onBlur={() => {
+                      // Aplica os limites só ao sair do campo
+                      const n = parseInt(draftValue, 10)
+                      const clamped = isNaN(n)
+                        ? field.value
+                        : Math.min(field.max, Math.max(field.min, n))
+                      field.setter(clamped)
+                      setEditingField(null)
                     }}
                     keyboardType="number-pad"
                     maxLength={3}

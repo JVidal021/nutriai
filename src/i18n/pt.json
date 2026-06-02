@@ -216,6 +216,8 @@
     "see_diet": "Ver Dieta →",
     "workout_updated": "✅ Treino atualizado!",
     "workout_updated_msg": "O Coach gerou e aplicou um novo treino para hoje.",
+    "no_workout_base_title": "Gere um treino primeiro",
+    "no_workout_base_msg": "Você ainda não tem um plano de treino nesta semana. Gere o plano na aba Treino e depois peça ajustes ao Coach.",
     "apply_workout": "Aplicar ao treino →",
     "gen_workout_prompt": "💪 Quer que o Coach aplique o treino ao seu plano de hoje?",
     "nav_workout": "💪 Quer ver o treino de hoje?",

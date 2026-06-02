@@ -17,13 +17,16 @@ import { useT, resolveErrorMessage } from '@/i18n/useT'
 type NavIntent = 'diet' | 'workout' | null
 
 const DIET_KEYWORDS    = ['dieta','caloria','alimenta','refeição','refeicao','comer','macros','proteína','proteina','carbo','gordura','plano alimentar','café da manhã','almoço','jantar','lanche']
-const WORKOUT_KEYWORDS = ['treino','exercício','exercicio','série','serie','musculação','musculacao','academia','malhar','peito','costas','perna','ombro','bíceps','biceps','tríceps','triceps']
+const WORKOUT_KEYWORDS = ['treino','exercício','exercicio','série','serie','musculação','musculacao','academia','malhar','peito','costas','perna','ombro','bíceps','biceps','tríceps','triceps','agachamento','supino','leg press','rosca','remada','abdômen','abdomen','glúteo','gluteo','panturrilha','cardio','aeróbico','aerobico','levantamento','terra','crucifixo','desenvolvimento']
 
-// Palavras que indicam intenção de GERAR/MUDAR treino (não apenas conversar sobre ele)
-const WORKOUT_GEN_KEYWORDS = [
-  'gera','cria','monta','faz um treino','novo treino','treino novo','refaz','troca o treino',
-  'mude o treino','muda o treino','altere','modifica','substitui','me passa um treino',
-  'quero um treino','me dá um treino','adapta o treino','atualiza o treino',
+// Verbos de ação que indicam intenção de GERAR/MUDAR algo (treino ou dieta)
+const GEN_VERBS = [
+  'gera','gere','gerar','cria','crie','criar','monta','monte','montar','faz','faça','fazer',
+  'refaz','refaça','refazer','troca','troque','trocar','muda','mude','mudar','altera','altere','alterar',
+  'modifica','modifique','modificar','substitui','substitua','substituir','adapta','adapte','adaptar',
+  'atualiza','atualize','atualizar','ajusta','ajuste','ajustar','novo','nova','quero','queria',
+  'me passa','me dá','me da','me manda','poderia','pode','consegue','foca','foque','focar',
+  'tira','tire','tirar','põe','poe','coloca','coloque','adiciona','adicione','aumenta','diminui','reduz',
 ]
 
 function detectIntent(text: string): NavIntent {
@@ -33,9 +36,13 @@ function detectIntent(text: string): NavIntent {
   return null
 }
 
+// Detecta intenção de gerar/mudar TREINO: precisa mencionar treino E um verbo de ação.
+// Mais robusto que a lista de frases fixas anterior (que falhava em frases livres).
 function detectWorkoutGenIntent(text: string): boolean {
   const t = text.toLowerCase()
-  return WORKOUT_GEN_KEYWORDS.some(k => t.includes(k))
+  const mentionsWorkout = WORKOUT_KEYWORDS.some(k => t.includes(k))
+  const hasActionVerb   = GEN_VERBS.some(k => t.includes(k))
+  return mentionsWorkout && hasActionVerb
 }
 
 const QUICK_MSG_KEYS = [
@@ -93,9 +100,10 @@ export default function CoachScreen() {
     setNavSuggestion(null)
     setPendingGenMsg(null)
 
-    // Detecta intenção de navegação e de geração de treino
+    // Detecta intenção de navegação e de geração de treino.
+    // Não exige mais todayWorkout aqui — o botão de aplicar resolve a base depois.
     const intent    = detectIntent(msg)
-    const isGenReq  = !planContext && detectWorkoutGenIntent(msg) && !!todayWorkout
+    const isGenReq  = !planContext && detectWorkoutGenIntent(msg)
 
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
@@ -235,16 +243,32 @@ export default function CoachScreen() {
 
   // Aplica treino gerado pelo coach via chat livre (sem planContext)
   const handleApplyGenerated = async () => {
-    if (!pendingGenMsg || !todayWorkout) return
+    if (!pendingGenMsg) return
+    // Base: treino de hoje; se não houver, usa o mais próximo da semana (>= hoje)
+    const baseWorkout = todayWorkout
+      ?? [...weekWorkouts].filter(w => w.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date))[0]
+      ?? weekWorkouts[0]
+
+    if (!baseWorkout) {
+      // Sem nenhum treino na semana — orienta o usuário a gerar primeiro
+      Alert.alert(t('coach.no_workout_base_title'), t('coach.no_workout_base_msg'), [
+        { text: t('common.close'), style: 'cancel' },
+        { text: t('coach.see_workout'), onPress: () => router.push('/(tabs)/workout') },
+      ])
+      setPendingGenMsg(null)
+      return
+    }
+
+    const targetDate = baseWorkout.date
     setApplying(true)
     try {
       const newWorkout = await swapPlanItem(
         'workout',
-        todayWorkout as unknown as Record<string, unknown>,
-        todayStr,
+        baseWorkout as unknown as Record<string, unknown>,
+        targetDate,
         pendingGenMsg,
       )
-      swapWorkoutDay(todayStr, newWorkout as unknown as WorkoutSession)
+      swapWorkoutDay(targetDate, newWorkout as unknown as WorkoutSession)
       setPendingGenMsg(null)
       Alert.alert(
         t('coach.workout_updated'),

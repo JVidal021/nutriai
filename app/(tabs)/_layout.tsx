@@ -50,9 +50,12 @@ const HIDDEN = ['ranks','coach','coop','optimize','routine','subscription','repo
 export default function TabsLayout() {
   const insets = useSafeAreaInsets()
   const { t } = useT()
-  // paddingBottom dinâmico: respeita a barra de navegação do Android (soft buttons)
-  const tabBarPaddingBottom = Platform.OS === 'ios' ? 24 : Math.max(insets.bottom, 8)
-  const tabBarHeight = Platform.OS === 'ios' ? 88 : 56 + tabBarPaddingBottom
+  // paddingBottom dinâmico: respeita a barra de navegação do Android.
+  // Navegação por 3 botões reporta insets.bottom pequeno/zero → respiro mínimo de 16.
+  const tabBarPaddingBottom = Platform.OS === 'ios'
+    ? 24
+    : Math.max(insets.bottom, 16) + 6
+  const tabBarHeight = Platform.OS === 'ios' ? 88 : 62 + tabBarPaddingBottom
 
   return (
     <Tabs
