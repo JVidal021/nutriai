@@ -5,6 +5,8 @@
 
 import * as Notifications from 'expo-notifications'
 import { Platform } from 'react-native'
+import i18n from '@/i18n/index'
+import { useNotificationStore, type ReminderId } from '@store/notificationStore'
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -43,21 +45,29 @@ export async function cancelAllNotifications(): Promise<void> {
 }
 
 // ─── LEMBRETES DIÁRIOS ────────────────────────────────────────────────────
+/**
+ * Reagenda todos os lembretes conforme as preferências do usuário.
+ * Mensagens vêm do i18n (PT/EN). Cada lembrete só é agendado se estiver ligado
+ * e o master switch estiver ativo. Chamar sempre que as preferências mudarem.
+ */
 export async function scheduleDailyReminders(): Promise<void> {
   await cancelAllNotifications()
 
-  const reminders = [
-    { hour: 8,  title: 'Bom dia! ☀️',         body: 'Já registrou o café da manhã? Fotografe e ganhe +15 XP!',    screen: 'scan' },
-    { hour: 12, title: 'Hora do almoço 📸',    body: 'Fotografe seu prato e deixe a IA calcular as calorias.',     screen: 'scan' },
-    { hour: 19, title: 'Check-in do dia 🌿',   body: 'Como você está? Registre o humor e otimize seu treino.',     screen: 'home' },
-    { hour: 21, title: 'Não perca o streak! 🔥', body: 'Você ainda não registrou nada hoje. Mantenha o streak!', screen: 'home' },
-  ]
+  const { enabled, reminders } = useNotificationStore.getState()
+  if (!enabled) return // master switch desligado → nenhum lembrete
+
+  const t = (key: string) => i18n.t(key)
 
   for (const r of reminders) {
+    if (!r.enabled) continue
     try {
       await Notifications.scheduleNotificationAsync({
-        content: { title: r.title, body: r.body, data: { screen: r.screen } },
-        trigger:  { hour: r.hour, minute: 0, repeats: true } as Notifications.NotificationTriggerInput,
+        content: {
+          title: t(`reminders.${r.id}_title`),
+          body:  t(`reminders.${r.id}_body`),
+          data:  { screen: r.screen },
+        },
+        trigger: { hour: r.hour, minute: 0, repeats: true } as Notifications.NotificationTriggerInput,
       })
     } catch {
       // Silencia erros por diferenças de API entre versões

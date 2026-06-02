@@ -651,6 +651,26 @@
     "theme": "Tema",
     "notifications": "Notificações"
   },
+  "reminders": {
+    "screen_title": "🔔 Lembretes diários",
+    "screen_sub": "Escolha quais lembretes quer receber e em qual horário.",
+    "master_label": "Ativar lembretes",
+    "master_sub": "Desligue para pausar todos os lembretes.",
+    "permission_needed": "Ative as notificações nas configurações do celular para receber lembretes.",
+    "time_label": "Horário",
+    "breakfast_name": "Café da manhã",
+    "breakfast_title": "Bom dia! ☀️",
+    "breakfast_body": "Já registrou o café da manhã? Fotografe e ganhe +15 XP!",
+    "lunch_name": "Almoço",
+    "lunch_title": "Hora do almoço 📸",
+    "lunch_body": "Fotografe seu prato e deixe a IA calcular as calorias.",
+    "checkin_name": "Check-in do dia",
+    "checkin_title": "Check-in do dia 🌿",
+    "checkin_body": "Como você está? Registre o humor e otimize seu treino.",
+    "streak_name": "Manter sequência",
+    "streak_title": "Não perca o streak! 🔥",
+    "streak_body": "Você ainda tem tempo de registrar algo hoje. Mantenha sua sequência!"
+  },
   "error_boundary": {
     "title": "Ops, algo deu errado",
     "message": "Encontramos um problema inesperado. Toque no botão abaixo para recarregar o app.",

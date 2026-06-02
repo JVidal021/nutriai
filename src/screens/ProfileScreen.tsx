@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Alert, Switch, Modal, TextInput, KeyboardAvoidingView, Platform,
+  Alert, Modal, TextInput, KeyboardAvoidingView, Platform,
   ActivityIndicator,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -14,6 +14,7 @@ import { auth, db, supabase } from '@services/supabase'
 import { calcBMI, getBMICategory } from '@utils/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useT, changeLanguage, getCurrentLanguage } from '@/i18n/useT'
+import { scheduleDailyReminders } from '@services/notifications'
 import type { AppLanguage } from '@/i18n/index'
 import type { Goal, ActivityLevel, FitnessLevel } from '@/types/index'
 
@@ -60,7 +61,6 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets()
   const { t } = useT()
   const [language, setLanguage] = useState<AppLanguage>(getCurrentLanguage())
-  const [notificationsOn, setNotificationsOn] = useState(true)
   const [weightModal, setWeightModal]         = useState(false)
   const [newWeight, setNewWeight]             = useState('')
   const [saving, setSaving]                   = useState(false)
@@ -431,6 +431,8 @@ export default function ProfileScreen() {
                 onPress={async () => {
                   setLanguage(lang)
                   await changeLanguage(lang)
+                  // Reagenda lembretes no novo idioma
+                  scheduleDailyReminders()
                 }}
               >
                 <Text style={[s.langBtnText, language === lang && s.langBtnTextActive]}>
@@ -441,11 +443,10 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <View style={s.settingRow}>
+        <TouchableOpacity style={s.settingRow} onPress={() => router.push('/profile/notifications' as any)}>
           <Text style={s.settingLabel}>🔔 {t('profile.notifications')}</Text>
-          <Switch value={notificationsOn} onValueChange={setNotificationsOn}
-            trackColor={{ false: Colors.border2, true: Colors.accent }} thumbColor={Colors.bg} />
-        </View>
+          <Text style={s.settingArrow}>›</Text>
+        </TouchableOpacity>
         {[
           { icon: '📊', labelKey: 'profile.report_btn',   route: '/(tabs)/report'        },
           { icon: '👑', labelKey: 'profile.subscription', route: '/(tabs)/subscription'  },

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NutriAI — Visão geral das interfaces</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0A0A0A; --bg2:#111111; --bg3:#1A1A1A; --border:#1C1C1C; --border2:#2A2A2A;
+    --text:#F0F0F0; --text2:#888; --text3:#555; --accent:#C8F060; --accent2:#A8D040;
+    --purple:#8B7FFF; --teal:#2DD4AA; --orange:#FF7A45; --red:#FF4F4F; --gold:#FFD700;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:#050505;color:var(--text);padding:32px 16px;line-height:1.5}
+  .page-head{max-width:1200px;margin:0 auto 36px;text-align:center}
+  .page-head h1{font-size:30px;font-weight:900;letter-spacing:-1px}
+  .page-head h1 span{color:var(--accent)}
+  .page-head p{color:var(--text2);font-size:14px;margin-top:6px}
+  .legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+  .legend div{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
+  .dot{width:12px;height:12px;border-radius:3px}
+  .grid{max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;gap:32px;justify-content:center}
+  .device{width:300px}
+  .device-title{text-align:center;font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px}
+  .phone{background:#000;border:2px solid #222;border-radius:34px;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+  .screen{background:var(--bg);border-radius:26px;height:600px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+  .statusbar{display:flex;justify-content:space-between;align-items:center;padding:10px 18px 4px;font-size:11px;color:var(--text2);font-weight:600}
+  .scroll{flex:1;overflow:hidden;padding:8px 14px}
+  .tabbar{display:flex;justify-content:space-around;align-items:center;padding:8px 0 12px;border-top:1px solid var(--border);background:var(--bg2)}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9px;color:var(--text3)}
+  .tab.active{color:var(--accent)}
+  .tab .ic{font-size:17px}
+  .tab.cam{background:var(--accent);width:46px;height:46px;border-radius:23px;justify-content:center;margin-top:-18px;box-shadow:0 6px 16px rgba(200,240,96,.4)}
+  .tab.cam .ic{color:#000}
+  /* generic cards */
+  .card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:12px;margin-bottom:9px}
+  .ttl{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+  .h2{font-size:18px;font-weight:800}
+  .muted{color:var(--text2);font-size:11px}
+  .pill{display:inline-block;background:rgba(200,240,96,.12);color:var(--accent);border:1px solid rgba(200,240,96,.3);border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700}
+  .btn{background:var(--accent);color:#000;border-radius:12px;padding:11px;text-align:center;font-weight:800;font-size:13px}
+  .btn-ghost{border:1px solid var(--border2);color:var(--text2);border-radius:12px;padding:11px;text-align:center;font-weight:600;font-size:13px}
+  .row{display:flex;align-items:center;gap:8px}
+  .between{display:flex;justify-content:space-between;align-items:center}
+  /* rings */
+  .rings{display:flex;gap:8px;margin-bottom:9px}
+  .ring{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:10px 6px;text-align:center}
+  .ring .pct{font-size:15px;font-weight:800}
+  .ring .lbl{font-size:8px;color:var(--text2);margin-top:2px}
+  .ring .val{font-size:9px;font-weight:700;margin-top:1px}
+  /* progress */
+  .track{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:6px}
+  .fill{height:100%;background:var(--accent);border-radius:3px}
+  /* days */
+  .days{display:flex;gap:4px;margin-top:8px}
+  .day{flex:1;aspect-ratio:1;border-radius:9px;background:var(--bg3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .day.done{background:rgba(200,240,96,.18)}
+  .day.today{background:var(--accent)}
+  .day .dl{font-size:8px;font-weight:700;color:var(--text3)}
+  .day.done .dl{color:var(--accent)} .day.today .dl{color:#000}
+  .meal{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
+  .meal:last-child{border-bottom:none}
+  .bubble{font-size:11px;line-height:1.5;padding:8px 11px;border-radius:13px;margin-bottom:7px;max-width:85%}
+  .bubble.ai{background:var(--bg3);border-bottom-left-radius:4px}
+  .bubble.me{background:rgba(200,240,96,.15);color:var(--accent);border-bottom-right-radius:4px;margin-left:auto;border-bottom-right-radius:4px}
+  .logo-leaf{width:30px;height:30px}
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1>🌿 Nutri<span>AI</span> — Interfaces do App</h1>
+  <p>Visão geral das principais telas · identidade visual real (v1.0.4)</p>
+  <div class="legend">
+    <div><span class="dot" style="background:#C8F060"></span>Accent</div>
+    <div><span class="dot" style="background:#2DD4AA"></span>Teal</div>
+    <div><span class="dot" style="background:#8B7FFF"></span>Roxo</div>
+    <div><span class="dot" style="background:#FF7A45"></span>Laranja</div>
+    <div><span class="dot" style="background:#0A0A0A;border:1px solid #333"></span>Fundo</div>
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- ════ HOME ════ -->
+  <div class="device">
+    <div class="device-title">🏠 Home</div>
+    <div class="phone"><div class="screen">
+      <div class="statusbar"><span>19:43</span><span>📶 🔋97%</span></div>
+      <div class="scroll">
+        <!-- hero -->
+        <div class="card" style="background:linear-gradient(135deg,#0d1f00,#162800,#1a3300);border-color:rgba(200,240,96,.2)">
+          <div style="font-size:11px;color:rgba(200,240,96,.7)">Boa noite</div>
+          <div class="h2" style="margin:2px 0 10px">Mainara 👋</div>
+          <div style="background:rgba(200,240,96,.08);border-left:3px solid var(--accent);border-radius:8px;padding:8px;font-size:10px;color:rgba(200,240,96,.85);line-height:1.5">
+            💡 <b>Insight do dia:</b> Você mal começou a se alimentar hoje. Nutrição é tão importante quanto o treino. 🥗
+          </div>
+        </div>
+        <!-- rings -->
+        <div class="rings">
+          <div class="ring"><div class="pct" style="color:var(--accent)">0%</div><div>🔥</div><div class="lbl">Calorias</div><div class="val">0 kcal</div></div>
+          <div class="ring"><div class="pct" style="color:var(--teal)">16%</div><div>💧</div><div class="lbl">Hidratação</div><div class="val">0.4/2.5L</div></div>
+          <div class="ring"><div class="pct" style="color:var(--purple)">–</div><div>💪</div><div class="lbl">Treino</div><div class="val">Pendente</div></div>
+        </div>
+        <!-- streak -->
+        <div class="card">
+          <div class="between"><div class="ttl">🔥 Sequência</div><div class="muted">Recorde: <b style="color:var(--accent)">2 dias</b></div></div>
+          <div style="font-size:24px;font-weight:900;color:var(--accent);margin:2px 0">2 <span style="font-size:11px;color:var(--text2);font-weight:400">dias</span></div>
+          <div class="days">
+            <div class="day"><div class="dl">Seg</div></div>
+            <div class="day"><div class="dl">Ter</div></div>
+            <div class="day"><div class="dl">Qua</div></div>
+            <div class="day"><div class="dl">Qui</div></div>
+            <div class="day done"><div class="dl">Sex</div></div>
+            <div class="day done"><div class="dl">Sáb</div></div>
+            <div class="day today"><div class="dl">Dom</div></div>
+          </div>
+        </div>
+        <!-- rank -->
+        <div class="card" style="background:linear-gradient(135deg,#100D20,#0A0A0A);border-color:rgba(139,127,255,.25)">
+          <div class="row">
+            <div style="font-size:30px">🥉</div>
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:800">Bronze I</div>
+              <div class="muted">25 XP · +309 para Bronze II</div>
+              <div class="track"><div class="fill" style="width:8%"></div></div>
+            </div>
+            <div style="color:rgba(139,127,255,.7);font-size:18px">›</div>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div class="tab active"><span class="ic">🏠</span>Home</div>
+        <div class="tab"><span class="ic">🥗</span>Dieta</div>
+        <div class="tab cam"><span class="ic">📷</span></div>
+        <div class="tab"><span class="ic">💪</span>Treino</div>
+        <div class="tab"><span class="ic">👤</span>Perfil</div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ════ DIETA ════ -->
+  <div class="device">
+    <div class="device-title">🥗 Dieta</div>
+    <div class="phone"><div class="screen">
+      <div class="statusbar"><span>19:43</span><span>📶 🔋97%</span></div>
+      <div class="scroll">
+        <div class="between" style="margin-bottom:8px">
+          <div><div class="h2">🥗 Dieta</div><div class="muted">Semana atual · Gerado por IA</div></div>
+          <div class="pill">✨ Gerar</div>
+        </div>
+        <!-- day selector -->
+        <div class="row" style="gap:5px;margin-bottom:9px">
+          <div class="day done" style="flex:0 0 32px"><div class="dl">Seg</div></div>
+          <div class="day today" style="flex:0 0 32px"><div class="dl">Ter</div></div>
+          <div class="day" style="flex:0 0 32px"><div class="dl">Qua</div></div>
+          <div class="day" style="flex:0 0 32px"><div class="dl">Qui</div></div>
+          <div class="day" style="flex:0 0 32px"><div class="dl">Sex</div></div>
+        </div>
+        <div class="card">
+          <div class="between"><div class="ttl">Meta do dia</div><div style="font-size:14px;font-weight:800;color:var(--accent)">1.800 kcal</div></div>
+          <div class="row" style="gap:6px;margin-top:8px">
+            <div style="flex:1;background:rgba(200,240,96,.1);border-radius:7px;padding:5px;text-align:center;font-size:9px;color:var(--accent);font-weight:700">78g<br><span style="color:var(--text3)">prot</span></div>
+            <div style="flex:1;background:rgba(200,240,96,.1);border-radius:7px;padding:5px;text-align:center;font-size:9px;color:var(--accent);font-weight:700">134g<br><span style="color:var(--text3)">carb</span></div>
+            <div style="flex:1;background:rgba(200,240,96,.1);border-radius:7px;padding:5px;text-align:center;font-size:9px;color:var(--accent);font-weight:700">42g<br><span style="color:var(--text3)">gord</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="meal"><span style="font-size:16px">☕</span><div style="flex:1"><div style="font-size:11px;font-weight:600">Café da manhã</div><div class="muted">Omelete · pão francês</div></div><span style="font-size:10px;font-weight:700;color:var(--accent)">340</span></div>
+          <div class="meal"><span style="font-size:16px">🍗</span><div style="flex:1"><div style="font-size:11px;font-weight:600">Almoço</div><div class="muted">Frango grelhado · arroz · feijão</div></div><span style="font-size:10px;font-weight:700;color:var(--accent)">620</span></div>
+          <div class="meal"><span style="font-size:16px">🍎</span><div style="flex:1"><div style="font-size:11px;font-weight:600">Lanche</div><div class="muted">Iogurte com banana</div></div><span style="font-size:10px;font-weight:700;color:var(--accent)">180</span></div>
+          <div class="meal"><span style="font-size:16px">🐟</span><div style="flex:1"><div style="font-size:11px;font-weight:600">Jantar</div><div class="muted">Tilápia · legumes</div></div><span style="font-size:10px;color:var(--text2)">pendente</span></div>
+        </div>
+        <div class="row" style="gap:6px">
+          <div class="btn" style="flex:1;font-size:11px;padding:9px">📸 Foto</div>
+          <div class="btn-ghost" style="flex:1;font-size:11px;padding:9px">↺ Trocar</div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div class="tab"><span class="ic">🏠</span>Home</div>
+        <div class="tab active"><span class="ic">🥗</span>Dieta</div>
+        <div class="tab cam"><span class="ic">📷</span></div>
+        <div class="tab"><span class="ic">💪</span>Treino</div>
+        <div class="tab"><span class="ic">👤</span>Perfil</div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ════ TREINO ════ -->
+  <div class="device">
+    <div class="device-title">💪 Treino</div>
+    <div class="phone"><div class="screen">
+      <div class="statusbar"><span>19:43</span><span>📶 🔋97%</span></div>
+      <div class="scroll">
+        <div class="between" style="margin-bottom:8px">
+          <div><div class="h2">💪 Treinos</div><div class="muted">Semana atual · Gerado por IA</div></div>
+        </div>
+        <div class="card">
+          <div class="ttl">Hoje · Peito + Tríceps</div>
+          <div class="row" style="gap:10px;margin-top:4px">
+            <span style="font-size:10px;color:var(--accent);font-weight:700">6 exercícios</span>
+            <span class="muted">~65 min</span>
+            <span class="muted">420 kcal</span>
+          </div>
+        </div>
+        <div class="card" style="border-left:3px solid var(--teal)">
+          <div style="font-size:11px;font-weight:700">Aquecimento</div>
+          <div class="muted">10 min · obrigatório</div>
+        </div>
+        <div class="card" style="border-left:3px solid var(--purple)">
+          <div style="font-size:11px;font-weight:700">Supino Reto · 4×10</div>
+          <div class="muted">Descanso 60s · 💡 Desça a barra controladamente</div>
+        </div>
+        <div class="card" style="border-left:3px solid var(--purple)">
+          <div style="font-size:11px;font-weight:700">Tríceps Corda · 3×12</div>
+          <div class="muted">Descanso 45s · ▶ Ver demonstração</div>
+        </div>
+        <div class="card" style="border-left:3px solid var(--purple)">
+          <div style="font-size:11px;font-weight:700">Crucifixo · 3×12</div>
+          <div class="muted">Descanso 60s · Peitoral</div>
+        </div>
+        <div class="btn" style="margin-top:2px">🏁 Finalizar treino · +40 XP</div>
+      </div>
+      <div class="tabbar">
+        <div class="tab"><span class="ic">🏠</span>Home</div>
+        <div class="tab"><span class="ic">🥗</span>Dieta</div>
+        <div class="tab cam"><span class="ic">📷</span></div>
+        <div class="tab active"><span class="ic">💪</span>Treino</div>
+        <div class="tab"><span class="ic">👤</span>Perfil</div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ════ COACH ════ -->
+  <div class="device">
+    <div class="device-title">🌿 Coach IA</div>
+    <div class="phone"><div class="screen">
+      <div class="statusbar"><span>19:43</span><span>📶 🔋97%</span></div>
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border)">
+        <div style="font-size:14px;font-weight:800">🌿 NutriAI Coach</div>
+        <div style="font-size:10px;color:var(--teal)">● Online agora</div>
+      </div>
+      <div class="scroll">
+        <div class="bubble ai">Oi Mainara! Notei que você atingiu 78% das calorias hoje. Quer uma sugestão de jantar leve para fechar bem a meta? 🌿</div>
+        <div class="bubble me">Sim! Algo rápido, menos de 20 min</div>
+        <div class="bubble ai">Perfeito! Que tal um omelete de 3 ovos com queijo cottage e salada de folhas? Leva 10 min, ~380 kcal e fecha sua meta com folga. 🥚</div>
+        <div style="text-align:center;font-size:9px;color:var(--text3);margin:8px 0 6px">💙 Precisa de apoio?</div>
+        <div class="row" style="gap:5px;flex-wrap:wrap;justify-content:center">
+          <span style="font-size:9px;border:1px solid rgba(45,212,170,.3);border-radius:20px;padding:4px 8px;color:var(--teal)">😔 Tô querendo desistir</span>
+          <span style="font-size:9px;border:1px solid rgba(45,212,170,.3);border-radius:20px;padding:4px 8px;color:var(--teal)">🍕 Escapei da dieta</span>
+        </div>
+      </div>
+      <div style="padding:10px 14px;border-top:1px solid var(--border)">
+        <div class="row" style="gap:8px">
+          <div style="flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:9px 12px;font-size:11px;color:var(--text3)">Escreva uma mensagem...</div>
+          <div style="width:36px;height:36px;border-radius:18px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#000;font-weight:800">↑</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ════ SCAN / CÂMERA ════ -->
+  <div class="device">
+    <div class="device-title">📷 Análise de Foto</div>
+    <div class="phone"><div class="screen">
+      <div class="statusbar"><span>19:43</span><span>📶 🔋97%</span></div>
+      <div class="scroll">
+        <div class="h2" style="margin-bottom:2px">✅ Análise concluída</div>
+        <div class="muted" style="margin-bottom:9px">Resultado da análise</div>
+        <div style="background:var(--bg3);border-radius:12px;height:90px;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:9px">🍽️</div>
+        <div class="card">
+          <div class="ttl">Total da refeição</div>
+          <div class="row" style="gap:6px;margin-top:8px">
+            <div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:var(--accent)">512</div><div style="font-size:8px;color:var(--text2)">kcal</div></div>
+            <div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:var(--purple)">38</div><div style="font-size:8px;color:var(--text2)">prot</div></div>
+            <div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:var(--teal)">45</div><div style="font-size:8px;color:var(--text2)">carb</div></div>
+            <div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:var(--orange)">18</div><div style="font-size:8px;color:var(--text2)">gord</div></div>
+          </div>
+          <div class="muted" style="margin-top:8px">💬 78% validado pela tabela TACO</div>
+        </div>
+        <div class="card">
+          <div class="row between" style="margin-bottom:6px">
+            <div class="row" style="gap:5px"><span style="font-size:11px;font-weight:600">Arroz branco</span><span style="font-size:8px;background:rgba(45,212,170,.15);color:var(--teal);border:1px solid rgba(45,212,170,.3);border-radius:6px;padding:1px 5px;font-weight:700">TACO</span></div>
+            <span style="font-size:11px;font-weight:700;color:var(--accent)">192 kcal</span>
+          </div>
+          <div class="row" style="gap:8px">
+            <div style="width:24px;height:24px;border-radius:12px;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;color:var(--accent);font-weight:700">−</div>
+            <span style="font-size:12px;font-weight:700">150g</span>
+            <div style="width:24px;height:24px;border-radius:12px;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;color:var(--accent);font-weight:700">+</div>
+          </div>
+        </div>
+        <div class="btn">+ Adicionar ao diário · +15 XP</div>
+      </div>
+      <div class="tabbar">
+        <div class="tab"><span class="ic">🏠</span>Home</div>
+        <div class="tab"><span class="ic">🥗</span>Dieta</div>
+        <div class="tab cam"><span class="ic">📷</span></div>
+        <div class="tab"><span class="ic">💪</span>Treino</div>
+        <div class="tab"><span class="ic">👤</span>Perfil</div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ════ RANKS ════ -->
+  <div class="device">
+    <div class="device-title">🏆 Ranks & XP</div>
+    <div class="phone"><div class="screen">
+      <div class="statusbar"><span>19:43</span><span>📶 🔋97%</span></div>
+      <div class="scroll">
+        <div class="h2" style="margin-bottom:9px">🏆 Ranks & XP</div>
+        <div class="card" style="background:linear-gradient(135deg,#5a4a1a,#2a2208);border:none">
+          <div class="row">
+            <div style="font-size:36px">🥉</div>
+            <div style="flex:1">
+              <div style="font-size:20px;font-weight:800;color:#FFD98A">Bronze I</div>
+              <div style="font-size:10px;color:rgba(255,217,138,.8)">25 XP / 334</div>
+            </div>
+            <div style="background:rgba(0,0,0,.25);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:700;color:#FFD98A">🔥 2</div>
+          </div>
+          <div class="track" style="background:rgba(0,0,0,.25);margin-top:10px"><div class="fill" style="width:8%;background:#FFD98A"></div></div>
+          <div class="row" style="gap:6px;margin-top:10px">
+            <div style="flex:1;background:rgba(0,0,0,.25);border-radius:9px;padding:7px;text-align:center"><div style="font-size:14px;font-weight:700;color:#FFD98A">2</div><div style="font-size:8px;color:rgba(255,217,138,.7)">dias ativos</div></div>
+            <div style="flex:1;background:rgba(0,0,0,.25);border-radius:9px;padding:7px;text-align:center"><div style="font-size:14px;font-weight:700;color:#FFD98A">0%</div><div style="font-size:8px;color:rgba(255,217,138,.7)">aderência</div></div>
+            <div style="flex:1;background:rgba(0,0,0,.25);border-radius:9px;padding:7px;text-align:center"><div style="font-size:14px;font-weight:700;color:#FFD98A">0</div><div style="font-size:8px;color:rgba(255,217,138,.7)">treinos</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ttl" style="margin-bottom:8px">Como ganhar XP</div>
+          <div class="meal"><span>📸</span><div style="flex:1"><div style="font-size:11px;font-weight:500">Registrar refeição</div></div><span class="pill">+15 XP</span></div>
+          <div class="meal"><span>💪</span><div style="flex:1"><div style="font-size:11px;font-weight:500">Completar treino</div></div><span class="pill">+40 XP</span></div>
+          <div class="meal"><span>🔥</span><div style="flex:1"><div style="font-size:11px;font-weight:500">7 dias seguidos</div></div><span class="pill">+100 XP</span></div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div class="tab"><span class="ic">🏠</span>Home</div>
+        <div class="tab"><span class="ic">🥗</span>Dieta</div>
+        <div class="tab cam"><span class="ic">📷</span></div>
+        <div class="tab"><span class="ic">💪</span>Treino</div>
+        <div class="tab"><span class="ic">👤</span>Perfil</div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ════ ONBOARDING ════ -->
+  <div class="device">
+    <div class="device-title">✨ Onboarding</div>
+    <div class="phone"><div class="screen">
+      <div class="statusbar"><span>19:43</span><span>📶 🔋97%</span></div>
+      <div class="scroll" style="display:flex;flex-direction:column">
+        <div class="row" style="gap:8px;margin:6px 0 16px">
+          <div style="width:34px;height:34px;border-radius:9px;background:radial-gradient(circle,#1a3300,#0A0A0A);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px">🌿</div>
+          <div style="font-size:18px;font-weight:900">Nutri<span style="color:var(--accent)">AI</span></div>
+        </div>
+        <div class="track" style="margin-bottom:16px"><div class="fill" style="width:40%"></div></div>
+        <div style="font-size:20px;font-weight:900;line-height:1.2;margin-bottom:16px">Qual é o<br>seu objetivo?</div>
+        <div class="card" style="border-color:var(--accent);background:#0D1400"><div class="row"><span style="font-size:22px">📉</span><div><div style="font-size:13px;font-weight:700">Perder peso</div><div class="muted">Déficit calórico inteligente</div></div></div></div>
+        <div class="card"><div class="row"><span style="font-size:22px">💪</span><div><div style="font-size:13px;font-weight:700">Ganhar massa</div><div class="muted">Superávit + treino de força</div></div></div></div>
+        <div class="card"><div class="row"><span style="font-size:22px">❤️</span><div><div style="font-size:13px;font-weight:700">Manter saúde</div><div class="muted">Equilíbrio e bem-estar</div></div></div></div>
+        <div class="card"><div class="row"><span style="font-size:22px">🏃</span><div><div style="font-size:13px;font-weight:700">Melhorar performance</div><div class="muted">Foco em esporte</div></div></div></div>
+        <div style="flex:1"></div>
+        <div class="btn">Continuar →</div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ════ PERFIL ════ -->
+  <div class="device">
+    <div class="device-title">👤 Perfil</div>
+    <div class="phone"><div class="screen">
+      <div class="statusbar"><span>19:43</span><span>📶 🔋97%</span></div>
+      <div class="scroll">
+        <div class="card" style="background:linear-gradient(135deg,#5a4a1a,#0A0A0A);border:none;text-align:center;padding:16px">
+          <div style="width:54px;height:54px;border-radius:27px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;margin:0 auto 8px">M</div>
+          <div style="font-size:16px;font-weight:800">Mainara Ferreira da Silva</div>
+          <div class="muted">mainaraferrero@gmail.com</div>
+          <div class="row" style="gap:6px;justify-content:center;margin-top:8px">
+            <span style="background:rgba(0,0,0,.3);border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700">🥉 Bronze I</span>
+            <span style="background:rgba(0,0,0,.3);border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;color:var(--gold)">👑 Premium</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ttl" style="margin-bottom:8px">Dados físicos</div>
+          <div class="between" style="padding:5px 0"><span class="muted">Peso atual</span><span style="font-size:11px;font-weight:600">68 kg</span></div>
+          <div class="between" style="padding:5px 0;border-top:1px solid var(--border)"><span class="muted">Meta</span><span style="font-size:11px;font-weight:600">62 kg</span></div>
+          <div class="between" style="padding:5px 0;border-top:1px solid var(--border)"><span class="muted">IMC</span><span style="font-size:11px;font-weight:600;color:var(--teal)">24.2 · Normal</span></div>
+        </div>
+        <div class="card"><div class="row"><span>📊</span><div style="flex:1;font-size:12px;font-weight:600">Relatório semanal</div><span class="muted">›</span></div></div>
+        <div class="card"><div class="row"><span>🏆</span><div style="flex:1;font-size:12px;font-weight:600">Rankings & conquistas</div><span class="muted">›</span></div></div>
+        <div class="card"><div class="row"><span>🌐</span><div style="flex:1;font-size:12px;font-weight:600">Idioma do app</div><span class="muted">Português ›</span></div></div>
+      </div>
+      <div class="tabbar">
+        <div class="tab"><span class="ic">🏠</span>Home</div>
+        <div class="tab"><span class="ic">🥗</span>Dieta</div>
+        <div class="tab cam"><span class="ic">📷</span></div>
+        <div class="tab"><span class="ic">💪</span>Treino</div>
+        <div class="tab active"><span class="ic">👤</span>Perfil</div>
+      </div>
+    </div></div>
+  </div>
+
+</div>
+
+<div style="text-align:center;color:var(--text3);font-size:12px;margin-top:40px">
+  🌿 NutriAI · Mockup de referência das interfaces · gerado a partir da identidade visual real
+</div>
+
+</body>
+</html>

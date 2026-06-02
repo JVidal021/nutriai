@@ -157,6 +157,10 @@ export default function RootLayout() {
           options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
         />
         <Stack.Screen
+          name="profile/notifications"
+          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+        />
+        <Stack.Screen
           name="profile/privacy"
           options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
         />

@@ -651,6 +651,26 @@
     "theme": "Theme",
     "notifications": "Notifications"
   },
+  "reminders": {
+    "screen_title": "🔔 Daily reminders",
+    "screen_sub": "Choose which reminders you want and at what time.",
+    "master_label": "Enable reminders",
+    "master_sub": "Turn off to pause all reminders.",
+    "permission_needed": "Enable notifications in your phone settings to receive reminders.",
+    "time_label": "Time",
+    "breakfast_name": "Breakfast",
+    "breakfast_title": "Good morning! ☀️",
+    "breakfast_body": "Logged your breakfast yet? Snap a photo and earn +15 XP!",
+    "lunch_name": "Lunch",
+    "lunch_title": "Lunch time 📸",
+    "lunch_body": "Photograph your plate and let AI calculate the calories.",
+    "checkin_name": "Daily check-in",
+    "checkin_title": "Daily check-in 🌿",
+    "checkin_body": "How are you? Log your mood and optimize your workout.",
+    "streak_name": "Keep your streak",
+    "streak_title": "Don't lose your streak! 🔥",
+    "streak_body": "You still have time to log something today. Keep your streak going!"
+  },
   "error_boundary": {
     "title": "Oops, something went wrong",
     "message": "We hit an unexpected problem. Tap the button below to reload the app.",
