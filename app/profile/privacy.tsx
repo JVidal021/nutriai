@@ -9,6 +9,7 @@ import { supabase } from '@services/supabase'
 import { useUserStore } from '@store/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useT } from '@/i18n/useT'
+import { setAnalyticsConsent, identifyUser } from '@services/analytics'
 
 interface Consents {
   health_data:     boolean
@@ -70,6 +71,9 @@ export default function PrivacyScreen() {
         version:  '1.0',
         updated_at: new Date().toISOString(),
       })
+      // Reflete o consentimento de analytics imediatamente no PostHog
+      setAnalyticsConsent(consents.analytics)
+      if (consents.analytics) identifyUser(user.id)
       Alert.alert(t('privacy_consent.saved_title' as any), t('privacy_consent.saved_msg' as any))
     } catch {
       Alert.alert(t('common.error' as any), t('privacy_consent.save_error' as any))

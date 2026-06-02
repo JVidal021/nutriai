@@ -2,6 +2,7 @@ import * as FileSystem from 'expo-file-system/legacy'
 import * as ImageManipulator from 'expo-image-manipulator'
 import { supabase } from './supabase'
 import type { ScanResult, ChatMessage, DailyDietPlan, WorkoutSession, PlanContext } from '../types'
+import { track, Events } from './analytics'
 
 // ─── URL das Edge Functions ───────────────────────────────────────────────
 function edgeFunctionUrl(name: string): string {
@@ -85,10 +86,12 @@ export async function analyzeMealPhoto(photoUri: string): Promise<ScanResult> {
     throw new Error('Imagem ainda muito grande após compressão. Tente com melhor iluminação.')
   }
 
-  return callEdgeFunction('analyze-meal', {
+  const res = await callEdgeFunction('analyze-meal', {
     imageBase64: base64,
     mimeType:    'image/jpeg',
-  }) as Promise<ScanResult>
+  }) as ScanResult
+  track(Events.mealScanned, { method: 'photo', foods: res?.foods?.length ?? 0, taco_validated: !!res?.tacoValidated })
+  return res
 }
 
 // ─── GERAÇÃO DE PLANO ALIMENTAR ───────────────────────────────────────────
@@ -98,6 +101,7 @@ export async function generateDietPlan(moodAdjust = 0, previousFeedback = ''): P
     moodAdjust,
     previousFeedback,
   }) as { days?: DailyDietPlan[] }
+  track(Events.dietGenerated, { days: result?.days?.length ?? 0, with_feedback: !!previousFeedback })
   return result?.days ?? []
 }
 
@@ -108,6 +112,7 @@ export async function generateWorkoutPlan(moodAdjust = 0, previousFeedback = '')
     moodAdjust,
     previousFeedback,
   }) as { days?: WorkoutSession[] }
+  track(Events.workoutGenerated, { days: result?.days?.length ?? 0, with_feedback: !!previousFeedback })
   return result?.days ?? []
 }
 
@@ -194,6 +199,8 @@ export async function sendCoachMessage(
 
   const json = await res.json()
 
+  track(Events.coachMessageSent, { has_plan_context: !!planContext })
+
   // Suporta diferentes formatos de resposta
   if (typeof json.response === 'string') return json.response
   if (json.choices?.[0]?.message?.content) return json.choices[0].message.content
@@ -203,8 +210,10 @@ export async function sendCoachMessage(
 }
 // ─── ANÁLISE POR TEXTO ────────────────────────────────────────────────────
 export async function analyzeMealText(description: string): Promise<ScanResult> {
-  return callEdgeFunction('analyze-meal', {
+  const res = await callEdgeFunction('analyze-meal', {
     textDescription: description.trim(),
     mimeType:        'text',
-  }) as Promise<ScanResult>
+  }) as ScanResult
+  track(Events.mealScanned, { method: 'text', foods: res?.foods?.length ?? 0, taco_validated: !!res?.tacoValidated })
+  return res
 }

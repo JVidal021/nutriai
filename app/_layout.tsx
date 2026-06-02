@@ -28,9 +28,11 @@ import {
 import i18n, { initI18n } from '@/i18n/index'
 import { ErrorBoundary } from '@components/ErrorBoundary'
 import { initSentry } from '@services/sentry'
+import { initAnalytics, setAnalyticsConsent, identifyUser, resetAnalytics } from '@services/analytics'
 
-// Inicializa crash reporting o quanto antes (no-op se sem DSN)
+// Inicializa crash reporting + analytics o quanto antes (no-op se sem key)
 initSentry()
+initAnalytics()
 
 // Mantém o splash screen enquanto as fontes carregam
 SplashScreen.preventAutoHideAsync()
@@ -77,6 +79,15 @@ export default function RootLayout() {
               const mappedUser = dbUserToUser(data)
               setUser(mappedUser)
 
+              // ── Analytics: respeita consentimento LGPD (opt-in) ─────
+              try {
+                const { data: consentRow } = await supabase
+                  .from('consents').select('consents').eq('user_id', session.user.id).maybeSingle()
+                const analyticsOk = consentRow?.consents?.analytics === true
+                setAnalyticsConsent(analyticsOk)
+                if (analyticsOk) identifyUser(session.user.id)
+              } catch { /* sem consentimento acessível → analytics permanece off */ }
+
               // ── Verificar expiração do trial ────────────────────────
               if (
                 mappedUser.premiumPlan === 'trial' &&
@@ -96,6 +107,7 @@ export default function RootLayout() {
           }
           finish()
         } else if (event === 'SIGNED_OUT') {
+          resetAnalytics()
           clearUser()
           router.replace('/onboarding')
         }

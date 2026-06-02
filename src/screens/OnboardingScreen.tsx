@@ -18,6 +18,7 @@ import { dbUserToUser } from '@utils/index'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useT } from '@/i18n/useT'
 import { PasswordStrength } from '@components/ui/PasswordStrength'
+import { track, Events } from '@services/analytics'
 
 const { width } = Dimensions.get('window')
 
@@ -348,6 +349,15 @@ export default function OnboardingScreen() {
         createdAt:     new Date().toISOString(),
         ...trialData,
       }
+
+      // Analytics: cadastro concluído. track() é no-op se o usuário não consentiu (LGPD).
+      track(Events.onboardingCompleted, {
+        goal,
+        gender,
+        profile,
+        fitness_level: fitnessLevel,
+        used_promo: !!promoCode.trim(),
+      })
 
       completeOnboarding(userObj)
       router.replace('/(tabs)/home')
