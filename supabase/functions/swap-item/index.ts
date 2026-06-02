@@ -134,6 +134,24 @@ function buildMealSwapPrompt(
   reason: string
 ) {
   const currentJson = JSON.stringify(currentMeal, null, 2)
+
+  // Mesmos mapas de contexto do generate-plan — mantém consistência: a refeição
+  // substituta respeita orçamento, tempo de preparo e gostos do usuário.
+  const budgetMap: Record<string, string> = {
+    economico: 'ECONÔMICO — apenas ingredientes simples e baratos do dia a dia brasileiro (arroz, feijão, frango, ovos, batata, banana). NUNCA carnes nobres, salmão, quinoa, castanhas importadas.',
+    moderado:  'MODERADO — ingredientes comuns de supermercado (frango, carne moída, atum enlatado, ovos, batata doce, legumes comuns). Evite ingredientes exóticos.',
+    premium:   'SEM RESTRIÇÃO — pode usar ingredientes nobres (salmão, filé, quinoa, whey, castanhas).',
+  }
+  const cookingMap: Record<string, string> = {
+    rapido:    'RÁPIDO (menos de 20 min) — preparo simples, sem receitas elaboradas.',
+    moderado:  'NORMAL (20–40 min) — receitas práticas do cotidiano.',
+    elaborado: 'GOSTA DE COZINHAR — pode incluir receitas mais elaboradas.',
+  }
+  const budget   = budgetMap[(profile.food_budget as string) ?? 'moderado'] ?? budgetMap.moderado
+  const cooking  = cookingMap[(profile.cooking_time as string) ?? 'moderado'] ?? cookingMap.moderado
+  const likes    = (profile.food_likes    as string)?.trim()
+  const dislikes = (profile.food_dislikes as string)?.trim()
+
   return `Você é nutricionista especializado em alimentação brasileira.
 
 O usuário quer substituir esta refeição:
@@ -146,8 +164,19 @@ Perfil do usuário:
 - Peso: ${profile.weight}kg | Altura: ${profile.height}cm
 - Restrições alimentares: ${(profile.restrictions as string[])?.join(', ') || 'nenhuma'}
 
-Gere uma refeição substituta com macros similares (±15%) usando alimentos brasileiros acessíveis.
-Respeite o motivo da substituição.
+REALIDADE ALIMENTAR (SEGUIR OBRIGATORIAMENTE):
+- Orçamento: ${budget}
+- Tempo para cozinhar: ${cooking}
+${likes    ? `- Alimentos que GOSTA: ${likes}` : ''}
+${dislikes ? `- Alimentos que EVITA — NÃO inclua: ${dislikes}` : ''}
+
+Antes de gerar o JSON, raciocine internamente (NÃO escreva esse raciocínio na resposta):
+1. Quais macros a refeição original tem? A substituta deve ficar dentro de ±15%.
+2. O motivo "${reason}" pede o quê? (mais leve, sem um ingrediente, mais prático...)
+3. A substituta respeita orçamento, tempo de preparo e os alimentos evitados?
+Depois gere APENAS o JSON final.
+
+Use nomes ESPECÍFICOS de alimentos brasileiros (ex: "Frango grelhado", nunca "proteína magra").
 
 Retorne um objeto JSON com exatamente esta estrutura:
 {
@@ -205,6 +234,12 @@ REGRAS OBRIGATÓRIAS:
 2. O bloco principal DEVE ter no mínimo ${level === 'advanced' ? 7 : level === 'intermediate' ? 6 : 5} exercícios — NUNCA menos.
 3. Se for "dor muscular", foque em grupos diferentes ou faça mobilidade/cardio.
 4. Mantenha duração similar ao original (~${currentWorkout.estimatedDuration} min).
+
+Antes de gerar o JSON, raciocine internamente (NÃO escreva esse raciocínio na resposta):
+1. O motivo "${reason}" pede o quê? (sem equipamento, menos tempo, dor muscular, mais intensidade...)
+2. Que grupos musculares fazem sentido dado o motivo e o foco do usuário?
+3. O bloco principal atinge o mínimo de exercícios do nível e a duração bate com o original?
+Depois gere APENAS o JSON final.
 
 Regras obrigatórias para cada exercício:
 - "tip": 1 frase curta em português explicando como executar o movimento corretamente

@@ -77,7 +77,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model:           'llama-3.3-70b-versatile',
         messages:        [{ role: 'user', content: prompt }],
-        max_tokens:      4000,
+        max_tokens:      6000,  // margem para 7 dias completos sem truncar o JSON
         temperature:     0.6,
         response_format: { type: 'json_object' },
       }),
@@ -228,7 +228,14 @@ Retorne um objeto JSON com a chave "days" contendo array de exatamente 7 objetos
   ]
 }
 
-Inclua breakfast, lunch, dinner e snack em cada dia. Varie os pratos ao longo da semana. Prato principal do almoço e jantar deve ter nome descritivo (ex: "Frango grelhado com arroz e feijão").${feedback ? `\n\nFeedback do usuário sobre a semana anterior:\n"${feedback}"` : ''}`
+Inclua breakfast, lunch, dinner e snack em cada dia. Varie os pratos ao longo da semana. Prato principal do almoço e jantar deve ter nome descritivo (ex: "Frango grelhado com arroz e feijão").${feedback ? `\n\nFeedback do usuário sobre a semana anterior (use para ajustar este novo plano):\n"${feedback}"` : ''}
+
+Antes de gerar o JSON, raciocine internamente (NÃO escreva esse raciocínio — entregue apenas o JSON final):
+1. Calcule a meta calórica diária adequada ao objetivo, peso, altura, idade e nível de atividade do usuário${moodAdjust !== 0 ? ` (aplicando o ajuste de ${moodAdjust} kcal)` : ''}.
+2. Distribua os macros (proteína prioritária para o objetivo) e confira que a soma das refeições bate com a meta do dia (±5%).
+3. Verifique que NENHUM dia usa alimentos evitados e que todos respeitam o orçamento e o tempo de preparo informados.
+4. Garanta variedade real entre os 7 dias — não repita o mesmo almoço/jantar em dias seguidos.
+Só então escreva o JSON.`
 }
 
 function buildWorkoutPrompt(p: Record<string, unknown>, moodAdjust: number, dates: string[], feedback: string) {
@@ -338,7 +345,14 @@ Retorne um objeto JSON com a chave "days" contendo array de exatamente 5 objetos
 Regras obrigatórias para cada exercício:
 - "tip": 1 frase curta em português explicando como executar o movimento corretamente
 - "searchName": nome do exercício em inglês técnico para busca no ExerciseDB (ex: "barbell bench press", "dumbbell curl", "cable row", "leg press", "lat pulldown")
-- "bodyPart": grupo muscular principal em inglês, um destes valores exatos: chest, back, shoulders, upper arms, lower arms, upper legs, lower legs, waist, cardio, neck${feedback ? `\n\nFeedback do usuário sobre a semana anterior (leve em conta para este novo plano):\n"${feedback}"` : ''}`
+- "bodyPart": grupo muscular principal em inglês, um destes valores exatos: chest, back, shoulders, upper arms, lower arms, upper legs, lower legs, waist, cardio, neck${feedback ? `\n\nFeedback do usuário sobre a semana anterior (leve em conta para este novo plano):\n"${feedback}"` : ''}
+
+Antes de gerar o JSON, raciocine internamente (NÃO escreva esse raciocínio — entregue apenas o JSON final):
+1. Defina a divisão dos 5 dias por grupo muscular sem sobrecarregar o mesmo grupo em dias consecutivos (ex: Peito+Tríceps / Costas+Bíceps / Pernas / Ombros+Abdômen / Full body).
+2. Para cada dia, confira que o bloco principal tem o número mínimo de exercícios exigido para o nível e que a duração total bate com estimatedDuration.
+3. Ajuste séries/reps/intensidade conforme a intensidade desta semana (${intensity}).
+4. Confira que searchName está em inglês técnico e bodyPart usa um dos valores válidos.
+Só então escreva o JSON.`
 }
 
 function errorResponse(status: number, message: string) {
