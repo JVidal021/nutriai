@@ -59,7 +59,13 @@
       "expo-font",
       "expo-localization",
       "expo-updates",
-      "@sentry/react-native"
+      [
+        "@sentry/react-native/expo",
+        {
+          "organization": "nutriai-pz",
+          "project": "react-native"
+        }
+      ]
     ],
     "scheme": "nutriai",
     "newArchEnabled": true,
