@@ -403,10 +403,16 @@ export default function OnboardingScreen() {
       </View>
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : insets.top + 12}
         style={{ flex: 1 }}
       >
-      <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={s.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+      >
 
         {step === 0 && (
           <View style={s.step}>
@@ -746,7 +752,7 @@ export default function OnboardingScreen() {
       </ScrollView>
       </KeyboardAvoidingView>
 
-      <View style={s.footer}>
+      <View style={[s.footer, { paddingBottom: Math.max(insets.bottom, 16) + 12 }]}>
         {step > 0 && !isLoginMode && (
           <TouchableOpacity style={s.btnBack} onPress={back} disabled={loading}>
             <Text style={s.btnBackText}>{t('common.back' as any)}</Text>
@@ -780,7 +786,7 @@ const s = StyleSheet.create({
   logoText:       { fontSize: 20, fontWeight: '800', color: Colors.text },
   progressBar:    { height: 3, backgroundColor: Colors.border, borderRadius: 2, overflow: 'hidden' },
   progressFill:   { height: '100%', backgroundColor: Colors.accent, borderRadius: 2 },
-  content:        { padding: Spacing[6], paddingBottom: 120 },
+  content:        { padding: Spacing[6], paddingBottom: 160 },
   step:           { gap: Spacing[3] },
   stepTitle:      { fontSize: 28, fontWeight: '800', color: Colors.text, lineHeight: 34 },
   card:           { backgroundColor: Colors.bg3, borderRadius: Radius.lg, padding: Spacing[4], gap: Spacing[3] },
@@ -823,7 +829,7 @@ const s = StyleSheet.create({
   prefLabel:      { fontSize: 13, fontWeight: '700', color: Colors.text, marginBottom: 6 },
   prefOptional:   { fontWeight: '400', color: Colors.text3, fontSize: 12 },
   inputMulti:     { height: 80, textAlignVertical: 'top', paddingTop: 12 },
-  footer:         { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', gap: 10, padding: Spacing[5], paddingBottom: 36, backgroundColor: Colors.bg, borderTopWidth: 1, borderTopColor: Colors.border },
+  footer:         { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', gap: 10, padding: Spacing[5], backgroundColor: Colors.bg, borderTopWidth: 1, borderTopColor: Colors.border },
   btnBack:        { flex: 1, padding: 14, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.border2, alignItems: 'center', justifyContent: 'center' },
   btnBackText:    { fontSize: 14, fontWeight: '600', color: Colors.text2 },
   btnNext:        { flex: 2, padding: 14, borderRadius: Radius.md, backgroundColor: Colors.accent, alignItems: 'center', justifyContent: 'center' },

@@ -67,13 +67,14 @@ export default function WeeklyFeedbackScreen() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1 }}
     >
     <ScrollView
       style={s.root}
-      contentContainerStyle={[s.content, { paddingTop: insets.top + 20 }]}
+      contentContainerStyle={[s.content, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 40 }]}
       keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="interactive"
     >
       <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
         <Text style={s.backText}>← {t('common.back' as any)}</Text>

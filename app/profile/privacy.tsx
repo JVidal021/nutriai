@@ -96,7 +96,7 @@ export default function PrivacyScreen() {
   )
 
   return (
-    <ScrollView style={s.root} contentContainerStyle={[s.content, { paddingTop: insets.top + 20 }]}>
+    <ScrollView style={s.root} contentContainerStyle={[s.content, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 32 }]}>
       <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
         <Text style={s.backText}>← {t('common.back' as any)}</Text>
       </TouchableOpacity>

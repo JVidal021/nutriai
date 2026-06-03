@@ -552,7 +552,7 @@ export default function ProfileScreen() {
           MODAL: Preferências alimentares
       ════════════════════════════════════════════════════════════════════════ */}
       <Modal visible={editModal === 'food'} transparent animationType="slide">
-        <KeyboardAvoidingView style={s.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <KeyboardAvoidingView style={s.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <View style={[s.modalSheet, { maxHeight: '90%' }]}>
             <View style={s.modalHandle} />
             <Text style={s.modalTitle}>{t('profile.modal_food_title')}</Text>
@@ -653,7 +653,7 @@ export default function ProfileScreen() {
           MODAL: Código de convite
       ════════════════════════════════════════════════════════════════════════ */}
       <Modal visible={editModal === 'promo'} transparent animationType="slide">
-        <KeyboardAvoidingView style={s.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <KeyboardAvoidingView style={s.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <View style={s.modalSheet}>
             <View style={s.modalHandle} />
             <Text style={s.modalTitle}>{t('profile.promo_title')}</Text>
@@ -682,7 +682,7 @@ export default function ProfileScreen() {
 
       {/* Modal de peso */}
       <Modal visible={weightModal} transparent animationType="slide">
-        <KeyboardAvoidingView style={s.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <KeyboardAvoidingView style={s.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <View style={s.modalSheet}>
             <View style={s.modalHandle} />
             <Text style={s.modalTitle}>{t('profile.new_weight')}</Text>

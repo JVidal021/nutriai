@@ -202,7 +202,7 @@ export default function LGPDConsentScreen({ onAccept, onDecline }: Props) {
       </ScrollView>
 
       {/* Footer com botões */}
-      <View style={s.footer}>
+      <View style={[s.footer, { paddingBottom: Math.max(insets.bottom, 16) + 12 }]}>
         <Text style={s.footerHint}>
           {allRequiredAccepted
             ? t('lgpd_consent.all_accepted' as any)
@@ -265,7 +265,7 @@ const s = StyleSheet.create({
   rightsTitle:       { fontSize: 13, fontWeight: '600', color: Colors.text, marginBottom: 8 },
   rightsText:        { fontSize: 12, color: Colors.text2, lineHeight: 19 },
   rightsContact:     { fontSize: 11, color: Colors.text3, marginTop: 10 },
-  footer:            { padding: Spacing[5], paddingBottom: 36, backgroundColor: Colors.bg, borderTopWidth: 1, borderTopColor: Colors.border },
+  footer:            { padding: Spacing[5], backgroundColor: Colors.bg, borderTopWidth: 1, borderTopColor: Colors.border },
   footerHint:        { fontSize: 12, color: Colors.text2, textAlign: 'center', marginBottom: 12 },
   btnRow:            { flexDirection: 'row', gap: 10 },
   btnDecline:        { flex: 1, padding: 14, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.border2, alignItems: 'center', justifyContent: 'center' },

@@ -49,7 +49,7 @@ export default function NotificationsScreen() {
   }
 
   return (
-    <ScrollView style={s.root} contentContainerStyle={[s.content, { paddingTop: insets.top + 20 }]} showsVerticalScrollIndicator={false}>
+    <ScrollView style={s.root} contentContainerStyle={[s.content, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 32 }]} showsVerticalScrollIndicator={false}>
       <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
         <Text style={s.backText}>← {t('common.back' as any)}</Text>
       </TouchableOpacity>
