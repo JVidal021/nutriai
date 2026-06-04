@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import {
   Modal, View, Text, StyleSheet, TouchableOpacity,
   TextInput, ScrollView, ActivityIndicator,
+  KeyboardAvoidingView, Platform,
 } from 'react-native'
 import { Colors, Radius, Spacing } from '@constants/index'
 import { useT } from '@/i18n/useT'
@@ -50,6 +51,10 @@ export default function SwapItemModal({ visible, type, title, loading, onClose, 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <TouchableOpacity style={s.backdrop} activeOpacity={1} onPress={onClose} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={s.kavWrap}
+      >
       <View style={s.sheet}>
         <View style={s.handle} />
 
@@ -99,12 +104,14 @@ export default function SwapItemModal({ visible, type, title, loading, onClose, 
           </TouchableOpacity>
         </View>
       </View>
+      </KeyboardAvoidingView>
     </Modal>
   )
 }
 
 const s = StyleSheet.create({
-  backdrop:        { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' },
+  backdrop:        { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)' },
+  kavWrap:         { flex: 1, justifyContent: 'flex-end' },
   sheet:           { backgroundColor: Colors.bg2, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: Spacing[5], paddingTop: 12, maxHeight: '85%' },
   handle:          { width: 40, height: 4, borderRadius: 2, backgroundColor: Colors.border2, alignSelf: 'center', marginBottom: 16 },
   title:           { fontSize: 18, fontWeight: '800', color: Colors.text, marginBottom: 4 },

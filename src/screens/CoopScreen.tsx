@@ -109,7 +109,7 @@ export default function CoopScreen() {
 
   // No active session — show invite screen
   if (!session) return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
     <ScrollView style={s.root} contentContainerStyle={[s.content, { paddingTop: insets.top + 20 }]} showsVerticalScrollIndicator={false}>
       <Text style={s.title}>{t('coop.title' as any)}</Text>
       <Text style={s.sub}>{t('coop.sub' as any)}</Text>
