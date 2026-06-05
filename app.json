@@ -2,7 +2,7 @@
   "expo": {
     "name": "NutriAI",
     "slug": "nutriai",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -17,7 +17,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.nutriai.app",
-      "buildNumber": "6",
+      "buildNumber": "7",
       "infoPlist": {
         "NSCameraUsageDescription": "O NutriAI usa a câmera para fotografar seus pratos e analisar as calorias.",
         "NSPhotoLibraryUsageDescription": "O NutriAI acessa sua galeria para analisar fotos de refeições."
@@ -29,7 +29,7 @@
         "backgroundColor": "#0A0A0A"
       },
       "package": "com.nutriai.app",
-      "versionCode": 6,
+      "versionCode": 7,
       "jsEngine": "hermes",
       "softwareKeyboardLayoutMode": "resize",
       "blockedPermissions": [
